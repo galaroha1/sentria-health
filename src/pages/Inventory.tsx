@@ -1,9 +1,10 @@
-import { Search, Filter, AlertTriangle } from 'lucide-react';
+import { Search, Filter, AlertTriangle, ScanLine } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
+import { BarcodeScanner } from '../components/common/BarcodeScanner';
 import type { Site } from '../types/location';
 
 export function Inventory() {
@@ -11,6 +12,7 @@ export function Inventory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
     const [transferTarget, setTransferTarget] = useState<{ site: Site, drug: string } | null>(null);
+    const [showScanner, setShowScanner] = useState(false);
 
     // Flatten inventory for the table view (simplified for this demo)
     // In a real app, we might group by site or have a site selector
@@ -42,6 +44,12 @@ export function Inventory() {
         }
     };
 
+    const handleScan = (decodedText: string) => {
+        setSearchTerm(decodedText);
+        setShowScanner(false);
+        // Optional: Play a success sound or show a toast
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -50,6 +58,13 @@ export function Inventory() {
                     <p className="text-sm text-slate-500">Track stock levels across all {sites.length} locations.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowScanner(true)}
+                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm"
+                    >
+                        <ScanLine className="h-4 w-4" />
+                        Scan Item
+                    </button>
                     <div className="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-2 shadow-sm">
                         <AlertTriangle className="h-4 w-4 text-amber-500" />
                         <span className="text-sm font-medium text-slate-700">{lowStockCount} Low Stock Alerts</span>
@@ -123,6 +138,13 @@ export function Inventory() {
                     </tbody>
                 </table>
             </div>
+
+            {showScanner && (
+                <BarcodeScanner
+                    onScan={handleScan}
+                    onClose={() => setShowScanner(false)}
+                />
+            )}
 
             {locatorDrug && (
                 <StockLocatorModal
