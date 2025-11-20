@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Site, SiteInventory } from '../../types/location';
@@ -7,7 +8,70 @@ import './location.css';
 interface InteractiveMapProps {
     sites: Site[];
     inventories: SiteInventory[];
-    onSiteClick?: (site: Site) => void;
+    onSiteClick?: (site: Site, departmentId?: string) => void;
+}
+
+function SitePopup({ site, summary, onAction }: { site: Site, summary: any, onAction: (site: Site, deptId?: string) => void }) {
+    const [selectedDept, setSelectedDept] = useState(site.departments?.[0]?.id || '');
+
+    return (
+        <div className="p-4 min-w-[200px]">
+            <h3 className="font-bold text-slate-900">{site.name}</h3>
+            <p className="mt-1 text-xs text-slate-500">{site.type.toUpperCase()}</p>
+            <p className="mt-2 text-xs text-slate-600">{site.address}</p>
+            <p className="mt-1 text-xs text-slate-600">Manager: {site.manager}</p>
+
+            {site.departments && site.departments.length > 0 && (
+                <div className="mt-3">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Department</label>
+                    <select
+                        value={selectedDept}
+                        onChange={(e) => setSelectedDept(e.target.value)}
+                        className="w-full rounded border border-slate-200 px-2 py-1 text-xs outline-none focus:border-slate-900"
+                        onClick={(e) => e.stopPropagation()} // Prevent map click
+                    >
+                        {site.departments.map(dept => (
+                            <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            {summary && (
+                <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                    <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-600">Total Medications:</span>
+                        <span className="font-medium text-slate-900">{summary.totalDrugs}</span>
+                    </div>
+                    {summary.criticalCount > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-red-600">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span>{summary.criticalCount} critical low</span>
+                        </div>
+                    )}
+                    {summary.lowCount > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-amber-600">
+                            <Package className="h-3 w-3" />
+                            <span>{summary.lowCount} low stock</span>
+                        </div>
+                    )}
+                    {summary.criticalCount === 0 && summary.lowCount === 0 && (
+                        <div className="flex items-center gap-1 text-xs text-emerald-600">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>All stock levels good</span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <button
+                onClick={() => onAction(site, selectedDept)}
+                className="mt-3 w-full rounded bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+            >
+                View Details
+            </button>
+        </div>
+    );
 }
 
 export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveMapProps) {
@@ -69,51 +133,13 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
                         key={site.id}
                         position={[site.coordinates.lat, site.coordinates.lng] as [number, number]}
                         icon={createCustomIcon(site)}
-                        eventHandlers={{
-                            click: () => onSiteClick?.(site),
-                        }}
                     >
                         <Popup>
-                            <div className="p-4">
-                                <h3 className="font-bold text-slate-900">{site.name}</h3>
-                                <p className="mt-1 text-xs text-slate-500">{site.type.toUpperCase()}</p>
-                                <p className="mt-2 text-xs text-slate-600">{site.address}</p>
-                                <p className="mt-1 text-xs text-slate-600">Manager: {site.manager}</p>
-
-                                {summary && (
-                                    <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-600">Total Medications:</span>
-                                            <span className="font-medium text-slate-900">{summary.totalDrugs}</span>
-                                        </div>
-                                        {summary.criticalCount > 0 && (
-                                            <div className="flex items-center gap-1 text-xs text-red-600">
-                                                <AlertTriangle className="h-3 w-3" />
-                                                <span>{summary.criticalCount} critical low</span>
-                                            </div>
-                                        )}
-                                        {summary.lowCount > 0 && (
-                                            <div className="flex items-center gap-1 text-xs text-amber-600">
-                                                <Package className="h-3 w-3" />
-                                                <span>{summary.lowCount} low stock</span>
-                                            </div>
-                                        )}
-                                        {summary.criticalCount === 0 && summary.lowCount === 0 && (
-                                            <div className="flex items-center gap-1 text-xs text-emerald-600">
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                <span>All stock levels good</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={() => onSiteClick?.(site)}
-                                    className="mt-3 w-full rounded bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
-                                >
-                                    View Details
-                                </button>
-                            </div>
+                            <SitePopup
+                                site={site}
+                                summary={summary}
+                                onAction={(s, d) => onSiteClick?.(s, d)}
+                            />
                         </Popup>
                     </Marker>
                 );

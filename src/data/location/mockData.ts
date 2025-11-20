@@ -7,6 +7,12 @@ export const sites: Site[] = [
         id: 'site-1',
         name: 'Hospital of the Univ. of Pennsylvania',
         type: 'hospital',
+        departments: [
+            { id: 'dept-1-1', name: 'Main Pharmacy', type: 'pharmacy' },
+            { id: 'dept-1-2', name: 'Emergency Dept', type: 'clinical' },
+            { id: 'dept-1-3', name: 'ICU', type: 'clinical' },
+            { id: 'dept-1-4', name: 'Oncology', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9500, lng: -75.1936 }, // University City
         address: '3400 Spruce St, Philadelphia, PA 19104',
         phone: '(215) 662-4000',
@@ -19,6 +25,11 @@ export const sites: Site[] = [
         id: 'site-2',
         name: 'Penn Presbyterian Medical Center',
         type: 'hospital',
+        departments: [
+            { id: 'dept-2-1', name: 'Inpatient Pharmacy', type: 'pharmacy' },
+            { id: 'dept-2-2', name: 'Trauma Center', type: 'clinical' },
+            { id: 'dept-2-3', name: 'Cardiology', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9550, lng: -75.1928 }, // University City
         address: '51 N 39th St, Philadelphia, PA 19104',
         phone: '(215) 662-8000',
@@ -31,6 +42,11 @@ export const sites: Site[] = [
         id: 'site-3',
         name: 'Pennsylvania Hospital',
         type: 'hospital',
+        departments: [
+            { id: 'dept-3-1', name: 'Pharmacy', type: 'pharmacy' },
+            { id: 'dept-3-2', name: 'Maternity', type: 'clinical' },
+            { id: 'dept-3-3', name: 'Surgery', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9448, lng: -75.1563 }, // Center City
         address: '800 Spruce St, Philadelphia, PA 19107',
         phone: '(215) 829-3000',
@@ -45,6 +61,10 @@ export const sites: Site[] = [
         id: 'site-4',
         name: 'Chester County Hospital',
         type: 'hospital',
+        departments: [
+            { id: 'dept-4-1', name: 'Pharmacy', type: 'pharmacy' },
+            { id: 'dept-4-2', name: 'Emergency', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9714, lng: -75.6022 }, // West Chester
         address: '701 E Marshall St, West Chester, PA 19380',
         phone: '(610) 431-5000',
@@ -57,6 +77,10 @@ export const sites: Site[] = [
         id: 'site-5',
         name: 'Lancaster General Hospital',
         type: 'hospital',
+        departments: [
+            { id: 'dept-5-1', name: 'Pharmacy', type: 'pharmacy' },
+            { id: 'dept-5-2', name: 'Trauma', type: 'clinical' }
+        ],
         coordinates: { lat: 40.0470, lng: -76.3040 }, // Lancaster
         address: '555 N Duke St, Lancaster, PA 17602',
         phone: '(717) 544-5511',
@@ -69,6 +93,10 @@ export const sites: Site[] = [
         id: 'site-6',
         name: 'Princeton Medical Center',
         type: 'hospital',
+        departments: [
+            { id: 'dept-6-1', name: 'Pharmacy', type: 'pharmacy' },
+            { id: 'dept-6-2', name: 'General Care', type: 'clinical' }
+        ],
         coordinates: { lat: 40.3391, lng: -74.6237 }, // Plainsboro, NJ
         address: '1 Plainsboro Rd, Plainsboro Township, NJ 08536',
         phone: '(609) 853-7000',
@@ -83,6 +111,10 @@ export const sites: Site[] = [
         id: 'site-7',
         name: 'Penn Medicine Radnor',
         type: 'clinic',
+        departments: [
+            { id: 'dept-7-1', name: 'Dispensary', type: 'pharmacy' },
+            { id: 'dept-7-2', name: 'Family Medicine', type: 'clinical' }
+        ],
         coordinates: { lat: 40.0460, lng: -75.3600 }, // Radnor
         address: '250 King of Prussia Rd, Radnor, PA 19087',
         phone: '(610) 902-2000',
@@ -95,6 +127,10 @@ export const sites: Site[] = [
         id: 'site-8',
         name: 'Penn Medicine Valley Forge',
         type: 'clinic',
+        departments: [
+            { id: 'dept-8-1', name: 'Dispensary', type: 'pharmacy' },
+            { id: 'dept-8-2', name: 'Urgent Care', type: 'clinical' }
+        ],
         coordinates: { lat: 40.0700, lng: -75.4500 }, // Berwyn
         address: '1001 Chesterbrook Blvd, Berwyn, PA 19312',
         phone: '(610) 576-7500',
@@ -107,6 +143,10 @@ export const sites: Site[] = [
         id: 'site-9',
         name: 'Penn Medicine University City',
         type: 'clinic',
+        departments: [
+            { id: 'dept-9-1', name: 'Dispensary', type: 'pharmacy' },
+            { id: 'dept-9-2', name: 'Specialty Care', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9570, lng: -75.1950 }, // University City
         address: '3737 Market St, Philadelphia, PA 19104',
         phone: '(215) 662-3000',
@@ -119,6 +159,10 @@ export const sites: Site[] = [
         id: 'site-10',
         name: 'Penn Medicine Cherry Hill',
         type: 'clinic',
+        departments: [
+            { id: 'dept-10-1', name: 'Dispensary', type: 'pharmacy' },
+            { id: 'dept-10-2', name: 'Primary Care', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9050, lng: -74.9900 }, // Cherry Hill, NJ
         address: '1865 Route 70 East, Cherry Hill, NJ 08003',
         phone: '(800) 789-7366',
@@ -131,6 +175,10 @@ export const sites: Site[] = [
         id: 'site-11',
         name: 'Penn Medicine Rittenhouse',
         type: 'clinic',
+        departments: [
+            { id: 'dept-11-1', name: 'Dispensary', type: 'pharmacy' },
+            { id: 'dept-11-2', name: 'Rehabilitation', type: 'clinical' }
+        ],
         coordinates: { lat: 39.9450, lng: -75.1700 }, // Rittenhouse
         address: '1800 Lombard St, Philadelphia, PA 19146',
         phone: '(215) 893-2000',
@@ -145,6 +193,11 @@ export const sites: Site[] = [
         id: 'site-12',
         name: 'Penn Medicine Distribution Center',
         type: 'warehouse',
+        departments: [
+            { id: 'dept-12-1', name: 'Main Inventory', type: 'logistics' },
+            { id: 'dept-12-2', name: 'Cold Chain', type: 'logistics' },
+            { id: 'dept-12-3', name: 'Shipping/Receiving', type: 'logistics' }
+        ],
         coordinates: { lat: 39.9000, lng: -75.2200 }, // Southwest Philly (Approx)
         address: '7000 Lindbergh Blvd, Philadelphia, PA 19153',
         phone: '(215) 555-0199',

@@ -1,16 +1,22 @@
 import { useState } from 'react';
 import { Package, AlertTriangle, CheckCircle2, X } from 'lucide-react';
-import { departments } from '../../data/transfers/mockData';
+import { useApp } from '../../context/AppContext';
 import type { PolicyCheck } from '../../types/transfer';
 
 export function TransferRequestForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
-    const [sourceDept, setSourceDept] = useState('');
-    const [destDept, setDestDept] = useState('');
+    const { sites } = useApp();
+    const [sourceSiteId, setSourceSiteId] = useState('');
+    const [sourceDeptId, setSourceDeptId] = useState('');
+    const [destSiteId, setDestSiteId] = useState('');
+    const [destDeptId, setDestDeptId] = useState('');
     const [drugName, setDrugName] = useState('');
     const [ndc, setNdc] = useState('');
     const [lotNumber, setLotNumber] = useState('');
     const [quantity, setQuantity] = useState('');
     const [reason, setReason] = useState('');
+
+    const sourceSite = sites.find(s => s.id === sourceSiteId);
+    const destSite = sites.find(s => s.id === destSiteId);
 
     const policyChecks: PolicyCheck[] = [
         { id: '1', name: 'Expiration Date', passed: true, message: 'Sufficient shelf life (8+ months)' },
@@ -22,8 +28,8 @@ export function TransferRequestForm({ onClose, onSubmit }: { onClose: () => void
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
-            sourceDept,
-            destDept,
+            sourceDept: sourceDeptId, // Keeping key name for compatibility but passing ID
+            destDept: destDeptId,
             drugName,
             ndc,
             lotNumber,
@@ -51,34 +57,76 @@ export function TransferRequestForm({ onClose, onSubmit }: { onClose: () => void
 
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="grid gap-6 md:grid-cols-2">
-                        <div>
-                            <label className="mb-2 block text-sm font-medium text-slate-700">Source Department</label>
-                            <select
-                                value={sourceDept}
-                                onChange={(e) => setSourceDept(e.target.value)}
-                                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                                required
-                            >
-                                <option value="">Select department...</option>
-                                {departments.map(dept => (
-                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                                ))}
-                            </select>
+                        {/* Source Selection */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Source Location</label>
+                                <select
+                                    value={sourceSiteId}
+                                    onChange={(e) => {
+                                        setSourceSiteId(e.target.value);
+                                        setSourceDeptId('');
+                                    }}
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    required
+                                >
+                                    <option value="">Select location...</option>
+                                    {sites.map(site => (
+                                        <option key={site.id} value={site.id}>{site.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Source Department</label>
+                                <select
+                                    value={sourceDeptId}
+                                    onChange={(e) => setSourceDeptId(e.target.value)}
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    required
+                                    disabled={!sourceSiteId}
+                                >
+                                    <option value="">Select department...</option>
+                                    {sourceSite?.departments?.map(dept => (
+                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="mb-2 block text-sm font-medium text-slate-700">Destination Department</label>
-                            <select
-                                value={destDept}
-                                onChange={(e) => setDestDept(e.target.value)}
-                                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                                required
-                            >
-                                <option value="">Select department...</option>
-                                {departments.map(dept => (
-                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                                ))}
-                            </select>
+                        {/* Destination Selection */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Destination Location</label>
+                                <select
+                                    value={destSiteId}
+                                    onChange={(e) => {
+                                        setDestSiteId(e.target.value);
+                                        setDestDeptId('');
+                                    }}
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    required
+                                >
+                                    <option value="">Select location...</option>
+                                    {sites.filter(s => s.id !== sourceSiteId).map(site => (
+                                        <option key={site.id} value={site.id}>{site.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Destination Department</label>
+                                <select
+                                    value={destDeptId}
+                                    onChange={(e) => setDestDeptId(e.target.value)}
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    required
+                                    disabled={!destSiteId}
+                                >
+                                    <option value="">Select department...</option>
+                                    {destSite?.departments?.map(dept => (
+                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         <div>

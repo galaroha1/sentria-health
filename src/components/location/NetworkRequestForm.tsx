@@ -17,6 +17,8 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
     const [reason, setReason] = useState('');
     const [urgency, setUrgency] = useState<'routine' | 'urgent' | 'emergency'>('routine');
     const [destSite, setDestSite] = useState(destinationSite?.id || '');
+    const [sourceDeptId, setSourceDeptId] = useState(sourceSite.departments?.[0]?.id || '');
+    const [destDeptId, setDestDeptId] = useState('');
 
     const sourceInventory = inventories.find(inv => inv.siteId === sourceSite.id);
     const availableDrugs = sourceInventory?.drugs || [];
@@ -35,7 +37,9 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
             id: `NR-${Date.now()}`,
             requestedBy: 'Current User',
             requestedBySite: sourceSite,
+            sourceDepartmentId: sourceDeptId,
             targetSite: targetSite,
+            targetDepartmentId: destDeptId,
             drug: {
                 name: selectedDrugInfo.drugName,
                 ndc: selectedDrugInfo.ndc,
@@ -70,21 +74,55 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
                                 disabled
                                 className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm"
                             />
+                            {sourceSite.departments && sourceSite.departments.length > 0 && (
+                                <div className="mt-2">
+                                    <label className="mb-1 block text-xs font-medium text-slate-700">Department</label>
+                                    <select
+                                        value={sourceDeptId}
+                                        onChange={(e) => setSourceDeptId(e.target.value)}
+                                        className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    >
+                                        {sourceSite.departments.map(dept => (
+                                            <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
-                        <div>
-                            <label className="mb-2 block text-sm font-medium text-slate-700">To (Destination)</label>
-                            <select
-                                value={destSite}
-                                onChange={(e) => setDestSite(e.target.value)}
-                                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                                required
-                            >
-                                <option value="">Select destination...</option>
-                                {allSites.filter(s => s.id !== sourceSite.id).map(site => (
-                                    <option key={site.id} value={site.id}>{site.name}</option>
-                                ))}
-                            </select>
+                        <div className="space-y-2">
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">To (Destination)</label>
+                                <select
+                                    value={destSite}
+                                    onChange={(e) => {
+                                        setDestSite(e.target.value);
+                                        setDestDeptId('');
+                                    }}
+                                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    required
+                                >
+                                    <option value="">Select destination...</option>
+                                    {allSites.filter(s => s.id !== sourceSite.id).map(site => (
+                                        <option key={site.id} value={site.id}>{site.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {destSite && (
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium text-slate-700">Department</label>
+                                    <select
+                                        value={destDeptId}
+                                        onChange={(e) => setDestDeptId(e.target.value)}
+                                        className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                                    >
+                                        <option value="">Select department...</option>
+                                        {allSites.find(s => s.id === destSite)?.departments?.map(dept => (
+                                            <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
                         <div>

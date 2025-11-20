@@ -1,7 +1,14 @@
+export interface Department {
+    id: string;
+    name: string;
+    type: 'clinical' | 'administrative' | 'pharmacy' | 'logistics';
+}
+
 export interface Site {
     id: string;
     name: string;
     type: 'hospital' | 'clinic' | 'warehouse' | 'pharmacy';
+    departments: Department[];
     coordinates: {
         lat: number;
         lng: number;
@@ -34,7 +41,9 @@ export interface NetworkRequest {
     id: string;
     requestedBy: string;
     requestedBySite: Site;
+    sourceDepartmentId?: string; // Optional for backward compatibility
     targetSite: Site;
+    targetDepartmentId?: string; // Optional for backward compatibility
     drug: {
         name: string;
         ndc: string;
