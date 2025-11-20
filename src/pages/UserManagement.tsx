@@ -1,18 +1,50 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Users, Search, UserPlus, Edit2, Ban, RotateCw, Eye } from 'lucide-react';
-import { MOCK_USERS_DB } from '../data/users/mockData';
-import { UserStatus } from '../types';
+import { UserStatus, type User } from '../types';
+import { useUsers } from '../context/UserContext';
+import { UserModal } from '../components/users/UserModal';
+import { UserActivityModal } from '../components/users/UserActivityModal';
 
 export function UserManagement() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | UserStatus>('all');
-    const [roleFilter, setRoleFilter] = useState<string>('all');
+    const { users, addUser, updateUser, toggleUserStatus } = useUsers();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    // Get all users from mock database
-    const allUsers = Object.values(MOCK_USERS_DB).map(record => record.user);
+    // Modal states
+    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Filter states from URL
+    const searchTerm = searchParams.get('search') || '';
+    const statusFilter = (searchParams.get('status') as UserStatus | 'all') || 'all';
+    const roleFilter = searchParams.get('role') || 'all';
+
+    // Update URL helpers
+    const updateSearch = (term: string) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (term) newParams.set('search', term);
+        else newParams.delete('search');
+        setSearchParams(newParams);
+    };
+
+    const updateStatus = (status: string) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (status !== 'all') newParams.set('status', status);
+        else newParams.delete('status');
+        setSearchParams(newParams);
+    };
+
+    const updateRole = (role: string) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (role !== 'all') newParams.set('role', role);
+        else newParams.delete('role');
+        setSearchParams(newParams);
+    };
 
     // Filter users
-    const filteredUsers = allUsers.filter(user => {
+    const filteredUsers = users.filter(user => {
         const matchesSearch =
             user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -23,8 +55,34 @@ export function UserManagement() {
         return matchesSearch && matchesStatus && matchesRole;
     });
 
-    const activeUsers = allUsers.filter(u => u.status === UserStatus.ACTIVE).length;
-    const inactiveUsers = allUsers.filter(u => u.status === UserStatus.INACTIVE).length;
+    const activeUsers = users.filter(u => u.status === UserStatus.ACTIVE).length;
+    const inactiveUsers = users.filter(u => u.status === UserStatus.INACTIVE).length;
+
+    const handleAddUser = () => {
+        setSelectedUser(undefined);
+        setIsEditing(false);
+        setIsUserModalOpen(true);
+    };
+
+    const handleEditUser = (user: User) => {
+        setSelectedUser(user);
+        setIsEditing(true);
+        setIsUserModalOpen(true);
+    };
+
+    const handleViewActivity = (user: User) => {
+        setSelectedUser(user);
+        setIsActivityModalOpen(true);
+    };
+
+    const handleSaveUser = (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => {
+        if (isEditing && selectedUser) {
+            updateUser(selectedUser.id, userData);
+        } else {
+            addUser(userData);
+        }
+        setIsUserModalOpen(false);
+    };
 
     const getStatusBadge = (status: UserStatus) => {
         switch (status) {
@@ -90,7 +148,10 @@ export function UserManagement() {
                     <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
                     <p className="text-sm text-slate-500">Manage users, roles, and permissions</p>
                 </div>
-                <button className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+                <button
+                    onClick={handleAddUser}
+                    className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                >
                     <UserPlus className="h-4 w-4" />
                     Add User
                 </button>
@@ -105,7 +166,7 @@ export function UserManagement() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-slate-500">Total Users</p>
-                            <p className="text-2xl font-bold text-slate-900">{allUsers.length}</p>
+                            <p className="text-2xl font-bold text-slate-900">{users.length}</p>
                         </div>
                     </div>
                 </div>
@@ -128,7 +189,7 @@ export function UserManagement() {
                     <div>
                         <p className="text-sm font-medium text-slate-500">Super Admins</p>
                         <p className="text-2xl font-bold text-slate-900">
-                            {allUsers.filter(u => u.role === 'Super Admin').length}
+                            {users.filter(u => u.role === 'Super Admin').length}
                         </p>
                     </div>
                 </div>
@@ -144,14 +205,14 @@ export function UserManagement() {
                                 type="text"
                                 placeholder="Search by name or email..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => updateSearch(e.target.value)}
                                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                             />
                         </div>
                         <div className="flex gap-2">
                             <select
                                 value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                                onChange={(e) => updateStatus(e.target.value)}
                                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500"
                             >
                                 <option value="all">All Status</option>
@@ -161,7 +222,7 @@ export function UserManagement() {
                             </select>
                             <select
                                 value={roleFilter}
-                                onChange={(e) => setRoleFilter(e.target.value)}
+                                onChange={(e) => updateRole(e.target.value)}
                                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500"
                             >
                                 <option value="all">All Roles</option>
@@ -212,12 +273,14 @@ export function UserManagement() {
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <button
+                                                onClick={() => handleEditUser(user)}
                                                 title="Edit User"
                                                 className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                             >
                                                 <Edit2 className="h-4 w-4" />
                                             </button>
                                             <button
+                                                onClick={() => handleViewActivity(user)}
                                                 title="View Activity"
                                                 className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                             >
@@ -225,6 +288,7 @@ export function UserManagement() {
                                             </button>
                                             {user.status === UserStatus.ACTIVE ? (
                                                 <button
+                                                    onClick={() => toggleUserStatus(user.id)}
                                                     title="Deactivate User"
                                                     className="rounded p-1 text-slate-400 hover:bg-red-100 hover:text-red-600"
                                                 >
@@ -232,6 +296,7 @@ export function UserManagement() {
                                                 </button>
                                             ) : (
                                                 <button
+                                                    onClick={() => toggleUserStatus(user.id)}
                                                     title="Reactivate User"
                                                     className="rounded p-1 text-slate-400 hover:bg-emerald-100 hover:text-emerald-600"
                                                 >
@@ -252,6 +317,22 @@ export function UserManagement() {
                     </div>
                 )}
             </div>
+
+            <UserModal
+                isOpen={isUserModalOpen}
+                onClose={() => setIsUserModalOpen(false)}
+                onSave={handleSaveUser}
+                initialData={selectedUser}
+                isEditing={isEditing}
+            />
+
+            {selectedUser && (
+                <UserActivityModal
+                    isOpen={isActivityModalOpen}
+                    onClose={() => setIsActivityModalOpen(false)}
+                    user={selectedUser}
+                />
+            )}
         </div>
     );
 }
