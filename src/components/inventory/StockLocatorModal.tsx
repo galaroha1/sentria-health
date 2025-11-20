@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Truck, X, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { findTransferCandidates, TransferCandidate } from '../../utils/transferOptimization';
+import { findTransferCandidates, type TransferCandidate } from '../../utils/transferOptimization';
 
 interface StockLocatorModalProps {
     drugName: string;

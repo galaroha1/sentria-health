@@ -1,14 +1,13 @@
-import { Search, Filter, Download, Package, AlertTriangle, RefreshCw } from 'lucide-react';
-import { InventoryTable } from '../components/inventory/InventoryTable';
+import { Search, Filter, AlertTriangle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
-import { ArrowUpDown, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
 import type { Site } from '../types/location';
 
 export function Inventory() {
-    const { inventories, sites, addNetworkRequest } = useApp();
+    const { inventories, sites, addRequest } = useApp();
     const [searchTerm, setSearchTerm] = useState('');
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
     const [transferTarget, setTransferTarget] = useState<{ site: Site, drug: string } | null>(null);
@@ -101,9 +100,9 @@ export function Inventory() {
                                 <td className="px-6 py-4 font-medium text-slate-900">{item.quantity}</td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.status === 'critical' ? 'bg-red-100 text-red-800' :
-                                            item.status === 'low' ? 'bg-amber-100 text-amber-800' :
-                                                item.status === 'overstocked' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-emerald-100 text-emerald-800'
+                                        item.status === 'low' ? 'bg-amber-100 text-amber-800' :
+                                            item.status === 'overstocked' ? 'bg-blue-100 text-blue-800' :
+                                                'bg-emerald-100 text-emerald-800'
                                         }`}>
                                         {item.status.replace('_', ' ').toUpperCase()}
                                     </span>
@@ -143,7 +142,7 @@ export function Inventory() {
                             inventories={inventories}
                             onClose={() => setTransferTarget(null)}
                             onSubmit={(req) => {
-                                addNetworkRequest(req);
+                                addRequest(req);
                                 setTransferTarget(null);
                             }}
                         />
