@@ -58,6 +58,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
+    // Check inventory levels and generate alerts
+    useEffect(() => {
+        const newNotifications: Notification[] = [];
+
+        siteInventories.forEach(siteInv => {
+            const site = sites.find(s => s.id === siteInv.siteId);
+            if (!site) return;
+
+            siteInv.drugs.forEach(drug => {
+                if (drug.status === 'low' || drug.status === 'critical') {
+                    // Check if we already have an active notification for this item today
+                    const today = new Date().toISOString().split('T')[0];
+                    const hasNotification = notifications.some(n =>
+                        n.title.includes(drug.drugName) &&
+                        n.message.includes(site.name) &&
+                        n.timestamp.startsWith(today)
+                    );
+
+                    if (!hasNotification) {
+                        newNotifications.push({
+                            id: `alert-${site.id}-${drug.ndc}-${Date.now()}`,
+                            type: drug.status === 'critical' ? 'critical' : 'warning',
+                            category: 'alert',
+                            title: `${drug.status === 'critical' ? 'Critical' : 'Low'} Stock: ${drug.drugName}`,
+                            message: `${site.name} is running low on ${drug.drugName}. Current quantity: ${drug.quantity} (Min: ${drug.minLevel})`,
+                            timestamp: new Date().toISOString(),
+                            read: false,
+                            link: '/inventory',
+                            actionUrl: `/transfers?source=${site.id}&drug=${drug.ndc}` // Suggest transfer
+                        });
+                    }
+                }
+            });
+        });
+
+        if (newNotifications.length > 0) {
+            setNotifications(prev => [...newNotifications, ...prev]);
+        }
+    }, []); // Run once on mount (in a real app, this might run on a schedule or inventory update)
+
     // Request Handlers
     const addRequest = (request: NetworkRequest) => {
         const newRequests = [request, ...requests];
