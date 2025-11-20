@@ -1,5 +1,5 @@
-import { AuditLogEntry } from '../types/audit';
-import { DrugInventoryItem } from '../types/location';
+import type { AuditLogEntry } from '../types/audit';
+import type { DrugInventoryItem } from '../types/location';
 
 export interface StockoutPrediction {
     drugName: string;
@@ -58,7 +58,7 @@ export function predictStockouts(
                 currentStock: item.quantity,
                 dailyConsumption: 0,
                 daysUntilStockout: Infinity,
-                severity: 'stable',
+                severity: 'stable' as const,
                 recommendedAction: 'Monitor usage'
             };
         }
