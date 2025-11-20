@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
@@ -13,6 +12,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { Transfers } from './pages/Transfers';
 import { LocationMap } from './pages/LocationMap';
 import { UserManagement } from './pages/UserManagement';
+import { AuditLog } from './pages/AuditLog';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -82,6 +82,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route path="audit-log" element={<AuditLog />} />
                 </Route>
               </Routes>
             </BrowserRouter>

@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { NetworkRequest, Site, SiteInventory } from '../types/location';
 import type { Notification } from '../types/notification';
-import { networkRequests as initialRequests, sites, siteInventories } from '../data/location/mockData';
+import type { AuditLogEntry } from '../types/audit';
+import { networkRequests as initialRequests, sites, siteInventories as initialInventories } from '../data/location/mockData';
 import { mockNotifications as initialNotifications } from '../data/notifications/mockData';
 
 interface AppContextType {
@@ -13,11 +14,17 @@ interface AppContextType {
     addRequest: (request: NetworkRequest) => void;
     updateRequestStatus: (id: string, status: NetworkRequest['status'], approvedBy?: string) => void;
 
+    // Inventory Management
+    updateInventory: (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => void;
+
     // Notifications
     notifications: Notification[];
     addNotification: (notification: Notification) => void;
     markNotificationAsRead: (id: string) => void;
     markAllNotificationsAsRead: () => void;
+
+    // Audit Logs
+    auditLogs: AuditLogEntry[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -34,6 +41,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return saved ? JSON.parse(saved) : initialNotifications;
     });
 
+    const [inventories, setInventories] = useState<SiteInventory[]>(() => {
+        const saved = localStorage.getItem('sentria_inventories');
+        return saved ? JSON.parse(saved) : initialInventories;
+    });
+
+    const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => {
+        const saved = localStorage.getItem('sentria_audit_logs');
+        return saved ? JSON.parse(saved) : [];
+    });
+
     // Persist to localStorage whenever state changes
     useEffect(() => {
         localStorage.setItem('sentria_requests', JSON.stringify(requests));
@@ -43,6 +60,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('sentria_notifications', JSON.stringify(notifications));
     }, [notifications]);
 
+    useEffect(() => {
+        localStorage.setItem('sentria_inventories', JSON.stringify(inventories));
+    }, [inventories]);
+
+    useEffect(() => {
+        localStorage.setItem('sentria_audit_logs', JSON.stringify(auditLogs));
+    }, [auditLogs]);
+
     // Sync across tabs
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
@@ -51,6 +76,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
             if (e.key === 'sentria_notifications' && e.newValue) {
                 setNotifications(JSON.parse(e.newValue));
+            }
+            if (e.key === 'sentria_inventories' && e.newValue) {
+                setInventories(JSON.parse(e.newValue));
+            }
+            if (e.key === 'sentria_audit_logs' && e.newValue) {
+                setAuditLogs(JSON.parse(e.newValue));
             }
         };
 
@@ -62,7 +93,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const newNotifications: Notification[] = [];
 
-        siteInventories.forEach(siteInv => {
+        inventories.forEach(siteInv => {
             const site = sites.find(s => s.id === siteInv.siteId);
             if (!site) return;
 
@@ -96,7 +127,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (newNotifications.length > 0) {
             setNotifications(prev => [...newNotifications, ...prev]);
         }
-    }, []); // Run once on mount (in a real app, this might run on a schedule or inventory update)
+    }, [inventories]); // Run when inventories change
+
+    // Inventory Management
+    const updateInventory = (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {
+        let updatedDrugName = '';
+        let newQuantity = 0;
+
+        setInventories(prev => prev.map(inv => {
+            if (inv.siteId !== siteId) return inv;
+
+            return {
+                ...inv,
+                lastUpdated: new Date().toISOString(),
+                drugs: inv.drugs.map(drug => {
+                    if (drug.ndc !== ndc) return drug;
+
+                    updatedDrugName = drug.drugName;
+                    newQuantity = Math.max(0, drug.quantity + quantityChange);
+
+                    // Recalculate status
+                    let status: 'well_stocked' | 'low' | 'critical' | 'overstocked' = 'well_stocked';
+                    if (newQuantity <= drug.minLevel / 2) status = 'critical';
+                    else if (newQuantity <= drug.minLevel) status = 'low';
+                    else if (newQuantity >= drug.maxLevel * 1.2) status = 'overstocked';
+
+                    return {
+                        ...drug,
+                        quantity: newQuantity,
+                        status
+                    };
+                })
+            };
+        }));
+
+        // Create Audit Log
+        const site = sites.find(s => s.id === siteId);
+        const logEntry: AuditLogEntry = {
+            id: `audit-${Date.now()}`,
+            action: quantityChange > 0 ? 'add' : 'remove',
+            drugName: updatedDrugName,
+            ndc,
+            quantityChange,
+            newQuantity,
+            siteId,
+            siteName: site?.name || 'Unknown Site',
+            userId,
+            userName,
+            timestamp: new Date().toISOString(),
+            reason
+        };
+
+        setAuditLogs(prev => [logEntry, ...prev]);
+    };
 
     // Request Handlers
     const addRequest = (request: NetworkRequest) => {
@@ -153,6 +236,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 link: '/locations'
             };
             addNotification(newNotification);
+
+            // If completed, update inventory
+            if (status === 'completed') {
+                // Deduct from source
+                updateInventory(
+                    updatedRequest.requestedBySite.id, // When 'completed', add to requester.
+                    updatedRequest.drug.ndc,
+                    updatedRequest.drug.quantity,
+                    `Transfer completed from ${updatedRequest.targetSite.name}`,
+                    'system',
+                    'System'
+                );
+            }
         }
     };
 
@@ -175,13 +271,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <AppContext.Provider value={{
             requests,
             sites,
-            inventories: siteInventories,
+            inventories,
             addRequest,
             updateRequestStatus,
+            updateInventory,
             notifications,
             addNotification,
             markNotificationAsRead,
-            markAllNotificationsAsRead
+            markAllNotificationsAsRead,
+            auditLogs
         }}>
             {children}
         </AppContext.Provider>
