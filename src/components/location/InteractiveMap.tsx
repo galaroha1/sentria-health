@@ -1,0 +1,123 @@
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import type { Site, SiteInventory } from '../../types/location';
+import { Package, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import './location.css';
+
+interface InteractiveMapProps {
+    sites: Site[];
+    inventories: SiteInventory[];
+    onSiteClick?: (site: Site) => void;
+}
+
+export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveMapProps) {
+    const getSiteStatus = (siteId: string): 'well_stocked' | 'low' | 'critical' | 'overstocked' => {
+        const inventory = inventories.find(inv => inv.siteId === siteId);
+        if (!inventory || inventory.drugs.length === 0) return 'well_stocked';
+
+        const statuses = inventory.drugs.map(d => d.status);
+        if (statuses.includes('critical')) return 'critical';
+        if (statuses.includes('low')) return 'low';
+        if (statuses.includes('overstocked')) return 'overstocked';
+        return 'well_stocked';
+    };
+
+    const createCustomIcon = (site: Site) => {
+        const status = getSiteStatus(site.id);
+        const iconHtml = `
+            <div class="custom-marker marker-${status}">
+                ${site.type === 'hospital' ? '🏥' : site.type === 'warehouse' ? '📦' : site.type === 'pharmacy' ? '💊' : '🏨'}
+            </div>
+        `;
+
+        return L.divIcon({
+            html: iconHtml,
+            className: '',
+            iconSize: [40, 40] as [number, number],
+            iconAnchor: [20, 20] as [number, number],
+            popupAnchor: [0, -20] as [number, number],
+        });
+    };
+
+    const getInventorySummary = (siteId: string) => {
+        const inventory = inventories.find(inv => inv.siteId === siteId);
+        if (!inventory) return null;
+
+        const criticalCount = inventory.drugs.filter(d => d.status === 'critical').length;
+        const lowCount = inventory.drugs.filter(d => d.status === 'low').length;
+        const totalDrugs = inventory.drugs.length;
+
+        return { criticalCount, lowCount, totalDrugs };
+    };
+
+    return (
+        <MapContainer
+            center={[34.0522, -118.2437] as [number, number]}
+            zoom={11}
+            className="location-map-container"
+        >
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {sites.map((site) => {
+                const summary = getInventorySummary(site.id);
+
+                return (
+                    <Marker
+                        key={site.id}
+                        position={[site.coordinates.lat, site.coordinates.lng] as [number, number]}
+                        icon={createCustomIcon(site)}
+                        eventHandlers={{
+                            click: () => onSiteClick?.(site),
+                        }}
+                    >
+                        <Popup>
+                            <div className="p-4">
+                                <h3 className="font-bold text-slate-900">{site.name}</h3>
+                                <p className="mt-1 text-xs text-slate-500">{site.type.toUpperCase()}</p>
+                                <p className="mt-2 text-xs text-slate-600">{site.address}</p>
+                                <p className="mt-1 text-xs text-slate-600">Manager: {site.manager}</p>
+
+                                {summary && (
+                                    <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-600">Total Medications:</span>
+                                            <span className="font-medium text-slate-900">{summary.totalDrugs}</span>
+                                        </div>
+                                        {summary.criticalCount > 0 && (
+                                            <div className="flex items-center gap-1 text-xs text-red-600">
+                                                <AlertTriangle className="h-3 w-3" />
+                                                <span>{summary.criticalCount} critical low</span>
+                                            </div>
+                                        )}
+                                        {summary.lowCount > 0 && (
+                                            <div className="flex items-center gap-1 text-xs text-amber-600">
+                                                <Package className="h-3 w-3" />
+                                                <span>{summary.lowCount} low stock</span>
+                                            </div>
+                                        )}
+                                        {summary.criticalCount === 0 && summary.lowCount === 0 && (
+                                            <div className="flex items-center gap-1 text-xs text-emerald-600">
+                                                <CheckCircle2 className="h-3 w-3" />
+                                                <span>All stock levels good</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => onSiteClick?.(site)}
+                                    className="mt-3 w-full rounded bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                                >
+                                    View Details
+                                </button>
+                            </div>
+                        </Popup>
+                    </Marker>
+                );
+            })}
+        </MapContainer>
+    );
+}
