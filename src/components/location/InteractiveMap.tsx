@@ -52,7 +52,7 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
 
     return (
         <MapContainer
-            center={[34.0522, -118.2437] as [number, number]}
+            center={[39.9526, -75.1652] as [number, number]}
             zoom={11}
             className="location-map-container"
         >

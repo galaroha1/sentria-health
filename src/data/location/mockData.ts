@@ -1,195 +1,157 @@
 import type { Site, SiteInventory, NetworkRequest, SupplyLevel } from '../../types/location';
 
-// Hospital sites across the network (using real coordinates in US - Los Angeles area)
+// UPenn Health System sites (Philadelphia & Surrounding Area)
 export const sites: Site[] = [
-    // Central LA
+    // City Hospitals
     {
         id: 'site-1',
-        name: 'Memorial Regional Hospital',
+        name: 'Hospital of the Univ. of Pennsylvania',
         type: 'hospital',
-        coordinates: { lat: 34.0522, lng: -118.2437 }, // Downtown LA
-        address: '1234 Medical Center Dr, Los Angeles, CA 90017',
-        phone: '(213) 555-0100',
+        coordinates: { lat: 39.9500, lng: -75.1936 }, // University City
+        address: '3400 Spruce St, Philadelphia, PA 19104',
+        phone: '(215) 662-4000',
         manager: 'Dr. Lisa Rodriguez',
         status: 'operational',
-        capacity: 10000,
-        currentUtilization: 75,
-    },
-    {
-        id: 'site-2',
-        name: 'Downtown Community Clinic',
-        type: 'clinic',
-        coordinates: { lat: 34.0489, lng: -118.2573 }, // Downtown West
-        address: '567 Hope St, Los Angeles, CA 90013',
-        phone: '(213) 555-0200',
-        manager: 'Sarah Chen',
-        status: 'operational',
-        capacity: 2000,
+        capacity: 12000,
         currentUtilization: 85,
     },
     {
-        id: 'site-3',
-        name: 'Central Pharmacy Warehouse',
-        type: 'warehouse',
-        coordinates: { lat: 34.0307, lng: -118.2368 }, // Industrial District
-        address: '890 Commerce Way, Los Angeles, CA 90021',
-        phone: '(213) 555-0300',
-        manager: 'Mike Thompson',
-        status: 'operational',
-        capacity: 50000,
-        currentUtilization: 60,
-    },
-
-    // Westside
-    {
-        id: 'site-4',
-        name: 'Westside Medical Center',
+        id: 'site-2',
+        name: 'Penn Presbyterian Medical Center',
         type: 'hospital',
-        coordinates: { lat: 34.0622, lng: -118.4487 }, // UCLA area
-        address: '1111 Ocean Ave, Santa Monica, CA 90401',
-        phone: '(310) 555-0400',
-        manager: 'Dr. James Park',
+        coordinates: { lat: 39.9550, lng: -75.1928 }, // University City
+        address: '51 N 39th St, Philadelphia, PA 19104',
+        phone: '(215) 662-8000',
+        manager: 'Sarah Chen',
         status: 'operational',
         capacity: 8000,
-        currentUtilization: 90,
+        currentUtilization: 78,
+    },
+    {
+        id: 'site-3',
+        name: 'Pennsylvania Hospital',
+        type: 'hospital',
+        coordinates: { lat: 39.9448, lng: -75.1563 }, // Center City
+        address: '800 Spruce St, Philadelphia, PA 19107',
+        phone: '(215) 829-3000',
+        manager: 'Mike Thompson',
+        status: 'operational',
+        capacity: 6000,
+        currentUtilization: 72,
+    },
+
+    // Regional Hospitals
+    {
+        id: 'site-4',
+        name: 'Chester County Hospital',
+        type: 'hospital',
+        coordinates: { lat: 39.9714, lng: -75.6022 }, // West Chester
+        address: '701 E Marshall St, West Chester, PA 19380',
+        phone: '(610) 431-5000',
+        manager: 'Dr. James Park',
+        status: 'operational',
+        capacity: 5000,
+        currentUtilization: 65,
     },
     {
         id: 'site-5',
-        name: 'Santa Monica Urgent Care',
-        type: 'clinic',
-        coordinates: { lat: 34.0195, lng: -118.4912 }, // Santa Monica
-        address: '2400 Wilshire Blvd, Santa Monica, CA 90403',
-        phone: '(310) 555-0450',
+        name: 'Lancaster General Hospital',
+        type: 'hospital',
+        coordinates: { lat: 40.0470, lng: -76.3040 }, // Lancaster
+        address: '555 N Duke St, Lancaster, PA 17602',
+        phone: '(717) 544-5511',
         manager: 'Dr. Robert Kim',
         status: 'operational',
-        capacity: 1500,
-        currentUtilization: 40,
+        capacity: 7000,
+        currentUtilization: 82,
     },
     {
         id: 'site-6',
-        name: 'Beverly Hills Specialist Center',
-        type: 'clinic',
-        coordinates: { lat: 34.0736, lng: -118.4004 }, // Beverly Hills
-        address: '9000 Wilshire Blvd, Beverly Hills, CA 90211',
-        phone: '(310) 555-0900',
+        name: 'Princeton Medical Center',
+        type: 'hospital',
+        coordinates: { lat: 40.3391, lng: -74.6237 }, // Plainsboro, NJ
+        address: '1 Plainsboro Rd, Plainsboro Township, NJ 08536',
+        phone: '(609) 853-7000',
         manager: 'Dr. Amanda White',
         status: 'operational',
-        capacity: 1200,
-        currentUtilization: 65,
+        capacity: 5500,
+        currentUtilization: 70,
     },
 
-    // Valley
+    // Clinics & Outpatient
     {
         id: 'site-7',
-        name: 'East Valley Clinic',
+        name: 'Penn Medicine Radnor',
         type: 'clinic',
-        coordinates: { lat: 34.1808, lng: -118.3090 }, // Burbank
-        address: '2222 Burbank Blvd, Burbank, CA 91505',
-        phone: '(818) 555-0500',
+        coordinates: { lat: 40.0460, lng: -75.3600 }, // Radnor
+        address: '250 King of Prussia Rd, Radnor, PA 19087',
+        phone: '(610) 902-2000',
         manager: 'Dr. Emily Martinez',
         status: 'operational',
-        capacity: 1500,
+        capacity: 2000,
         currentUtilization: 45,
     },
     {
         id: 'site-8',
-        name: 'Valley General Hospital',
-        type: 'hospital',
-        coordinates: { lat: 34.2012, lng: -118.4484 }, // Van Nuys
-        address: '1500 Van Nuys Blvd, Van Nuys, CA 91401',
-        phone: '(818) 555-0800',
+        name: 'Penn Medicine Valley Forge',
+        type: 'clinic',
+        coordinates: { lat: 40.0700, lng: -75.4500 }, // Berwyn
+        address: '1001 Chesterbrook Blvd, Berwyn, PA 19312',
+        phone: '(610) 576-7500',
         manager: 'Dr. David Chen',
         status: 'operational',
-        capacity: 6000,
-        currentUtilization: 80,
-    },
-    {
-        id: 'site-9',
-        name: 'Northridge Pharmacy Hub',
-        type: 'pharmacy',
-        coordinates: { lat: 34.2381, lng: -118.5301 }, // Northridge
-        address: '9500 Reseda Blvd, Northridge, CA 91324',
-        phone: '(818) 555-0950',
-        manager: 'Jennifer Wu',
-        status: 'operational',
-        capacity: 2500,
-        currentUtilization: 55,
-    },
-
-    // South Bay
-    {
-        id: 'site-10',
-        name: 'South Bay Pharmacy',
-        type: 'pharmacy',
-        coordinates: { lat: 33.8358, lng: -118.3406 }, // Torrance
-        address: '3333 Hawthorne Blvd, Torrance, CA 90503',
-        phone: '(310) 555-0600',
-        manager: 'Rachel Kim',
-        status: 'operational',
-        capacity: 3000,
-        currentUtilization: 70,
-    },
-    {
-        id: 'site-11',
-        name: 'Long Beach Memorial',
-        type: 'hospital',
-        coordinates: { lat: 33.8121, lng: -118.1883 }, // Long Beach
-        address: '2801 Atlantic Ave, Long Beach, CA 90806',
-        phone: '(562) 555-1100',
-        manager: 'Dr. Thomas Anderson',
-        status: 'operational',
-        capacity: 9000,
-        currentUtilization: 88,
-    },
-
-    // East LA / SGV
-    {
-        id: 'site-12',
-        name: 'Pasadena Care Center',
-        type: 'clinic',
-        coordinates: { lat: 34.1478, lng: -118.1445 }, // Pasadena
-        address: '100 W California Blvd, Pasadena, CA 91105',
-        phone: '(626) 555-1200',
-        manager: 'Dr. Maria Garcia',
-        status: 'operational',
-        capacity: 1800,
+        capacity: 1500,
         currentUtilization: 50,
     },
     {
-        id: 'site-13',
-        name: 'Eastside Distribution Center',
-        type: 'warehouse',
-        coordinates: { lat: 34.0687, lng: -118.0276 }, // El Monte
-        address: '4500 Rosemead Blvd, El Monte, CA 91731',
-        phone: '(626) 555-1300',
-        manager: 'Kevin Zhang',
+        id: 'site-9',
+        name: 'Penn Medicine University City',
+        type: 'clinic',
+        coordinates: { lat: 39.9570, lng: -75.1950 }, // University City
+        address: '3737 Market St, Philadelphia, PA 19104',
+        phone: '(215) 662-3000',
+        manager: 'Jennifer Wu',
         status: 'operational',
-        capacity: 40000,
-        currentUtilization: 35,
-    },
-    {
-        id: 'site-14',
-        name: 'Alhambra Community Pharmacy',
-        type: 'pharmacy',
-        coordinates: { lat: 34.0953, lng: -118.1270 }, // Alhambra
-        address: '1200 S Garfield Ave, Alhambra, CA 91801',
-        phone: '(626) 555-1400',
-        manager: 'Linda Nguyen',
-        status: 'operational',
-        capacity: 2000,
+        capacity: 2500,
         currentUtilization: 60,
     },
     {
-        id: 'site-15',
-        name: 'Glendale Medical Plaza',
+        id: 'site-10',
+        name: 'Penn Medicine Cherry Hill',
         type: 'clinic',
-        coordinates: { lat: 34.1425, lng: -118.2551 }, // Glendale
-        address: '1500 Verdugo Rd, Glendale, CA 91208',
-        phone: '(818) 555-1500',
-        manager: 'Dr. Steven Lee',
+        coordinates: { lat: 39.9050, lng: -74.9900 }, // Cherry Hill, NJ
+        address: '1865 Route 70 East, Cherry Hill, NJ 08003',
+        phone: '(800) 789-7366',
+        manager: 'Rachel Kim',
         status: 'operational',
-        capacity: 2200,
-        currentUtilization: 72,
+        capacity: 1800,
+        currentUtilization: 55,
+    },
+    {
+        id: 'site-11',
+        name: 'Penn Medicine Rittenhouse',
+        type: 'clinic',
+        coordinates: { lat: 39.9450, lng: -75.1700 }, // Rittenhouse
+        address: '1800 Lombard St, Philadelphia, PA 19146',
+        phone: '(215) 893-2000',
+        manager: 'Dr. Thomas Anderson',
+        status: 'operational',
+        capacity: 1200,
+        currentUtilization: 40,
+    },
+
+    // Warehouses / Support
+    {
+        id: 'site-12',
+        name: 'Penn Medicine Distribution Center',
+        type: 'warehouse',
+        coordinates: { lat: 39.9000, lng: -75.2200 }, // Southwest Philly (Approx)
+        address: '7000 Lindbergh Blvd, Philadelphia, PA 19153',
+        phone: '(215) 555-0199',
+        manager: 'Kevin Zhang',
+        status: 'operational',
+        capacity: 60000,
+        currentUtilization: 65,
     },
 ];
 
@@ -251,8 +213,8 @@ export const networkRequests: NetworkRequest[] = [
     {
         id: 'NR-001',
         requestedBy: 'Sarah Chen',
-        requestedBySite: sites[1], // Downtown Community Clinic
-        targetSite: sites[0], // Memorial Regional Hospital
+        requestedBySite: sites[1], // Penn Presbyterian
+        targetSite: sites[0], // HUP
         drug: {
             name: 'Keytruda (Pembrolizumab)',
             ndc: '0006-3026-02',
@@ -266,8 +228,8 @@ export const networkRequests: NetworkRequest[] = [
     {
         id: 'NR-002',
         requestedBy: 'Dr. James Park',
-        requestedBySite: sites[3], // Westside Medical Center
-        targetSite: sites[2], // Central Pharmacy Warehouse
+        requestedBySite: sites[3], // Chester County
+        targetSite: sites[11], // Distribution Center
         drug: {
             name: 'Remicade (Infliximab)',
             ndc: '57894-030-01',
@@ -284,8 +246,8 @@ export const networkRequests: NetworkRequest[] = [
     {
         id: 'NR-003',
         requestedBy: 'Dr. Emily Martinez',
-        requestedBySite: sites[6], // East Valley Clinic
-        targetSite: sites[2], // Central Pharmacy Warehouse
+        requestedBySite: sites[6], // Radnor
+        targetSite: sites[11], // Distribution Center
         drug: {
             name: 'Humira (Adalimumab)',
             ndc: '0074-3799-02',
@@ -302,8 +264,8 @@ export const networkRequests: NetworkRequest[] = [
     {
         id: 'NR-004',
         requestedBy: 'Dr. Robert Kim',
-        requestedBySite: sites[4], // Santa Monica Urgent Care
-        targetSite: sites[3], // Westside Medical Center
+        requestedBySite: sites[4], // Lancaster General
+        targetSite: sites[0], // HUP
         drug: {
             name: 'Opdivo (Nivolumab)',
             ndc: '0003-3772-11',
@@ -317,8 +279,8 @@ export const networkRequests: NetworkRequest[] = [
     {
         id: 'NR-005',
         requestedBy: 'Rachel Kim',
-        requestedBySite: sites[9], // South Bay Pharmacy
-        targetSite: sites[10], // Long Beach Memorial
+        requestedBySite: sites[9], // Cherry Hill
+        targetSite: sites[2], // Pennsylvania Hospital
         drug: {
             name: 'Herceptin (Trastuzumab)',
             ndc: '63020-052-01',
