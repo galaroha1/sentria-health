@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generatePatientData, getPatientDisplayName } from '../ml/dataGenerator';
 import { DrugPredictor } from '../ml/DrugPredictor';
 import type { DrugRecommendation, VisitType, PatientEHR } from '../ml/clinicalRules';
-import { Brain, Activity, User, Stethoscope, AlertTriangle, CheckCircle, TrendingUp, Pill } from 'lucide-react';
+import { Brain, Activity, User, Stethoscope, AlertTriangle, CheckCircle, TrendingUp, Pill, Download, Upload, Edit, Trash2 } from 'lucide-react';
 
 export const DemandPrediction = () => {
     const [selectedPatientId, setSelectedPatientId] = useState<string>('');
@@ -10,9 +10,70 @@ export const DemandPrediction = () => {
     const [recommendations, setRecommendations] = useState<DrugRecommendation[]>([]);
     const [showResults, setShowResults] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [customPatients, setCustomPatients] = useState<PatientEHR[]>([]);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingPatient, setEditingPatient] = useState<PatientEHR | null>(null);
+    const [customPatients, setCustomPatients] = useState<PatientEHR[]>(() => {
+        // Load from localStorage on initial render
+        const saved = localStorage.getItem('customPatients');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     const drugPredictor = new DrugPredictor();
+
+    // Save to localStorage whenever customPatients changes
+    useEffect(() => {
+        localStorage.setItem('customPatients', JSON.stringify(customPatients));
+    }, [customPatients]);
+
+    const exportPatients = () => {
+        const dataStr = JSON.stringify(customPatients, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `patients-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const importPatients = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const imported = JSON.parse(e.target?.result as string) as PatientEHR[];
+                // Merge with existing, avoiding duplicates by ID
+                const merged = [...customPatients];
+                imported.forEach(patient => {
+                    if (!merged.find(p => p.id === patient.id)) {
+                        merged.push(patient);
+                    }
+                });
+                setCustomPatients(merged);
+                alert(`Imported ${imported.length} patient(s)`);
+            } catch {
+                alert('Error importing patients: Invalid JSON format');
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const deletePatient = (patientId: string) => {
+        if (confirm('Delete this patient?')) {
+            setCustomPatients(customPatients.filter(p => p.id !== patientId));
+            if (selectedPatientId === patientId) {
+                setSelectedPatientId('');
+                setShowResults(false);
+            }
+        }
+    };
+
+    const editPatient = (patient: PatientEHR) => {
+        setEditingPatient(patient);
+        setShowEditModal(true);
+    };
 
     const generatedPatients = generatePatientData();
     const patients = [...customPatients, ...generatedPatients];
@@ -88,12 +149,35 @@ export const DemandPrediction = () => {
                                 <User className="h-5 w-5 text-slate-600" />
                                 <h2 className="text-lg font-bold text-slate-900">Select Patient</h2>
                             </div>
-                            <button
-                                onClick={() => setShowCreateModal(true)}
-                                className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
-                            >
-                                + Add Patient
-                            </button>
+                            <div className="flex gap-2">
+                                {customPatients.length > 0 && (
+                                    <button
+                                        onClick={exportPatients}
+                                        title="Export custom patients"
+                                        className="rounded-lg bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                    </button>
+                                )}
+                                <label
+                                    title="Import patients from JSON"
+                                    className="cursor-pointer rounded-lg bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+                                >
+                                    <Upload className="h-4 w-4" />
+                                    <input
+                                        type="file"
+                                        accept="application/json"
+                                        onChange={importPatients}
+                                        className="hidden"
+                                    />
+                                </label>
+                                <button
+                                    onClick={() => setShowCreateModal(true)}
+                                    className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+                                >
+                                    + Add Patient
+                                </button>
+                            </div>
                         </div>
                         <select
                             value={selectedPatientId}
@@ -121,6 +205,36 @@ export const DemandPrediction = () => {
                                 ))}
                             </optgroup>
                         </select>
+
+                        {/* Custom Patient Management */}
+                        {customPatients.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                                <h3 className="text-sm font-semibold text-slate-700">Custom Patients ({customPatients.length})</h3>
+                                <div className="max-h-48 space-y-2 overflow-y-auto">
+                                    {customPatients.map(patient => (
+                                        <div key={patient.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-2">
+                                            <span className="text-sm text-slate-700">{getPatientDisplayName(patient)}</span>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => editPatient(patient)}
+                                                    className="rounded p-1 text-blue-600 hover:bg-blue-100"
+                                                    title="Edit patient"
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => deletePatient(patient.id)}
+                                                    className="rounded p-1 text-red-600 hover:bg-red-100"
+                                                    title="Delete patient"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Visit Type Selector */}
@@ -575,6 +689,225 @@ export const DemandPrediction = () => {
                                     className="flex-1 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-white hover:bg-primary-700"
                                 >
                                     Create Patient
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Patient Edit Modal */}
+            {showEditModal && editingPatient && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl">
+                        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-6 py-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-slate-900">Edit Patient: {editingPatient.id}</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowEditModal(false);
+                                        setEditingPatient(null);
+                                    }}
+                                    className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.currentTarget);
+
+                                const updatedPatient: PatientEHR = {
+                                    id: editingPatient.id,
+                                    demographics: {
+                                        age: parseInt(formData.get('age') as string),
+                                        gender: formData.get('gender') as 'M' | 'F',
+                                        bmi: parseFloat(formData.get('bmi') as string)
+                                    },
+                                    conditions: (formData.get('conditions') as string).split(',').map(c => c.trim()).filter(c => c),
+                                    vitals: {
+                                        systolic: parseInt(formData.get('systolic') as string),
+                                        diastolic: parseInt(formData.get('diastolic') as string),
+                                        heartRate: parseInt(formData.get('heartRate') as string),
+                                        temperature: parseFloat(formData.get('temperature') as string) || undefined
+                                    },
+                                    labs: {
+                                        wbc: parseFloat(formData.get('wbc') as string),
+                                        hemoglobin: parseFloat(formData.get('hemoglobin') as string),
+                                        platelets: parseFloat(formData.get('platelets') as string),
+                                        creatinine: parseFloat(formData.get('creatinine') as string),
+                                        alt: parseFloat(formData.get('alt') as string),
+                                        inr: parseFloat(formData.get('inr') as string) || undefined,
+                                        ferritin: parseFloat(formData.get('ferritin') as string) || undefined
+                                    },
+                                    currentMedications: (formData.get('medications') as string || '').split(',').map(m => m.trim()).filter(m => m),
+                                    allergies: (formData.get('allergies') as string || '').split(',').map(a => a.trim()).filter(a => a),
+                                    cancerDiagnosis: formData.get('cancerType') ? {
+                                        type: formData.get('cancerType') as string,
+                                        stage: formData.get('cancerStage') as string,
+                                        her2Status: (formData.get('her2Status') as string || undefined) as 'Positive' | 'Negative' | undefined,
+                                        pdl1Expression: parseFloat(formData.get('pdl1') as string) || undefined
+                                    } : undefined
+                                };
+
+                                setCustomPatients(customPatients.map(p =>
+                                    p.id === editingPatient.id ? updatedPatient : p
+                                ));
+                                setShowEditModal(false);
+                                setEditingPatient(null);
+                            }}
+                            className="space-y-6 p-6"
+                        >
+                            {/* Demographics */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Demographics</h3>
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Age *</label>
+                                        <input type="number" name="age" required defaultValue={editingPatient.demographics.age} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Gender *</label>
+                                        <select name="gender" required defaultValue={editingPatient.demographics.gender} className="w-full rounded-lg border border-slate-200 px-3 py-2">
+                                            <option value="M">Male</option>
+                                            <option value="F">Female</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">BMI *</label>
+                                        <input type="number" step="0.1" name="bmi" required defaultValue={editingPatient.demographics.bmi} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Conditions */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Conditions</h3>
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Conditions (comma-separated) *</label>
+                                    <input type="text" name="conditions" required defaultValue={editingPatient.conditions.join(', ')} placeholder="e.g., Breast Cancer, Hypertension" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                </div>
+                            </div>
+
+                            {/* Vitals */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Vitals</h3>
+                                <div className="grid gap-4 md:grid-cols-4">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Systolic BP *</label>
+                                        <input type="number" name="systolic" required defaultValue={editingPatient.vitals.systolic} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Diastolic BP *</label>
+                                        <input type="number" name="diastolic" required defaultValue={editingPatient.vitals.diastolic} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Heart Rate *</label>
+                                        <input type="number" name="heartRate" required defaultValue={editingPatient.vitals.heartRate} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Temp (°F)</label>
+                                        <input type="number" step="0.1" name="temperature" defaultValue={editingPatient.vitals.temperature} placeholder="98.6" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Labs */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Laboratory Values</h3>
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">WBC (K/µL) *</label>
+                                        <input type="number" step="0.1" name="wbc" required defaultValue={editingPatient.labs.wbc} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Hemoglobin (g/dL) *</label>
+                                        <input type="number" step="0.1" name="hemoglobin" required defaultValue={editingPatient.labs.hemoglobin} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Platelets (K/µL) *</label>
+                                        <input type="number" name="platelets" required defaultValue={editingPatient.labs.platelets} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Creatinine (mg/dL) *</label>
+                                        <input type="number" step="0.1" name="creatinine" required defaultValue={editingPatient.labs.creatinine} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">ALT (U/L) *</label>
+                                        <input type="number" name="alt" required defaultValue={editingPatient.labs.alt} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Ferritin (ng/mL)</label>
+                                        <input type="number" name="ferritin" defaultValue={editingPatient.labs.ferritin} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">INR</label>
+                                        <input type="number" step="0.1" name="inr" defaultValue={editingPatient.labs.inr} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cancer Diagnosis (Optional) */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Cancer Diagnosis (Optional)</h3>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Cancer Type</label>
+                                        <input type="text" name="cancerType" defaultValue={editingPatient.cancerDiagnosis?.type} placeholder="e.g., Breast Cancer" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Stage</label>
+                                        <input type="text" name="cancerStage" defaultValue={editingPatient.cancerDiagnosis?.stage} placeholder="e.g., IIB" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">HER2 Status</label>
+                                        <select name="her2Status" defaultValue={editingPatient.cancerDiagnosis?.her2Status || ''} className="w-full rounded-lg border border-slate-200 px-3 py-2">
+                                            <option value="">Not Tested</option>
+                                            <option value="Positive">Positive</option>
+                                            <option value="Negative">Negative</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">PD-L1 Expression (%)</label>
+                                        <input type="number" name="pdl1" defaultValue={editingPatient.cancerDiagnosis?.pdl1Expression} placeholder="0-100" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Medications & Allergies */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Medications & Allergies</h3>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Current Medications (comma-separated)</label>
+                                        <input type="text" name="medications" defaultValue={editingPatient.currentMedications.join(', ')} placeholder="e.g., Methotrexate, Prednisone" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Allergies (comma-separated)</label>
+                                        <input type="text" name="allergies" defaultValue={editingPatient.allergies.join(', ')} placeholder="e.g., Penicillin, Sulfa" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="flex gap-3 border-t border-slate-200 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowEditModal(false);
+                                        setEditingPatient(null);
+                                    }}
+                                    className="flex-1 rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-white hover:bg-primary-700"
+                                >
+                                    Update Patient
                                 </button>
                             </div>
                         </form>
