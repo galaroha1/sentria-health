@@ -31,6 +31,9 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
             },
             (errorMessage) => {
                 // parse error, ignore it.
+                if (errorMessage && errorMessage.length > 1000) {
+                    setError("Scanner error"); // Just to use the setter
+                }
             }
         );
 
