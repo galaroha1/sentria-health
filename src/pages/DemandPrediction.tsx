@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generatePatientData, getPatientDisplayName } from '../ml/dataGenerator';
-import { drugPredictor } from '../ml/DrugPredictor';
-import type { VisitType, DrugRecommendation } from '../ml/clinicalRules';
+import { DrugPredictor } from '../ml/DrugPredictor';
+import type { DrugRecommendation, VisitType, PatientEHR } from '../ml/clinicalRules';
 import { Brain, Activity, User, Stethoscope, AlertTriangle, CheckCircle, TrendingUp, Pill } from 'lucide-react';
 
 export const DemandPrediction = () => {
@@ -9,8 +9,13 @@ export const DemandPrediction = () => {
     const [visitType, setVisitType] = useState<VisitType>('Oncology');
     const [recommendations, setRecommendations] = useState<DrugRecommendation[]>([]);
     const [showResults, setShowResults] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [customPatients, setCustomPatients] = useState<PatientEHR[]>([]);
 
-    const patients = generatePatientData();
+    const drugPredictor = new DrugPredictor();
+
+    const generatedPatients = generatePatientData();
+    const patients = [...customPatients, ...generatedPatients];
     const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
     const visitTypes: VisitType[] = [
@@ -78,9 +83,17 @@ export const DemandPrediction = () => {
                 <div className="lg:col-span-1 space-y-6">
                     {/* Patient Selector */}
                     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div className="mb-4 flex items-center gap-2">
-                            <User className="h-5 w-5 text-slate-600" />
-                            <h2 className="text-lg font-bold text-slate-900">Select Patient</h2>
+                        <div className="mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <User className="h-5 w-5 text-slate-600" />
+                                <h2 className="text-lg font-bold text-slate-900">Select Patient</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+                            >
+                                + Add Patient
+                            </button>
                         </div>
                         <select
                             value={selectedPatientId}
@@ -91,11 +104,22 @@ export const DemandPrediction = () => {
                             className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                         >
                             <option value="">Choose a patient...</option>
-                            {patients.map(patient => (
-                                <option key={patient.id} value={patient.id}>
-                                    {getPatientDisplayName(patient)} - {patient.conditions[0]}
-                                </option>
-                            ))}
+                            {customPatients.length > 0 && (
+                                <optgroup label="Custom Patients">
+                                    {customPatients.map(patient => (
+                                        <option key={patient.id} value={patient.id}>
+                                            {getPatientDisplayName(patient)} - {patient.conditions[0]}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                            <optgroup label="Sample Patients">
+                                {generatedPatients.map(patient => (
+                                    <option key={patient.id} value={patient.id}>
+                                        {getPatientDisplayName(patient)} - {patient.conditions[0]}
+                                    </option>
+                                ))}
+                            </optgroup>
                         </select>
                     </div>
 
@@ -269,7 +293,7 @@ export const DemandPrediction = () => {
                                                         <p className="text-xs text-slate-500">NDC: {rec.drug.ndc} • {rec.drug.category}</p>
                                                     </div>
                                                 </div>
-                                                <div className={`rounded-full border px-3 py-1 text-xs font-bold ${getConfidenceBadge(rec.confidence)}`}>
+                                                <div className={`rounded - full border px - 3 py - 1 text - xs font - bold ${getConfidenceBadge(rec.confidence)} `}>
                                                     {Math.round(rec.confidence * 100)}% Confidence
                                                 </div>
                                             </div>
@@ -346,6 +370,217 @@ export const DemandPrediction = () => {
                     )}
                 </div>
             </div>
+
+            {/* Patient Creation Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl">
+                        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-6 py-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-slate-900">Create New Patient</h2>
+                                <button
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.currentTarget);
+
+                                const newPatient: PatientEHR = {
+                                    id: `CUSTOM${customPatients.length + 1}`,
+                                    demographics: {
+                                        age: parseInt(formData.get('age') as string),
+                                        gender: formData.get('gender') as 'M' | 'F',
+                                        bmi: parseFloat(formData.get('bmi') as string)
+                                    },
+                                    conditions: (formData.get('conditions') as string).split(',').map(c => c.trim()).filter(c => c),
+                                    vitals: {
+                                        systolic: parseInt(formData.get('systolic') as string),
+                                        diastolic: parseInt(formData.get('diastolic') as string),
+                                        heartRate: parseInt(formData.get('heartRate') as string),
+                                        temperature: parseFloat(formData.get('temperature') as string) || undefined
+                                    },
+                                    labs: {
+                                        wbc: parseFloat(formData.get('wbc') as string),
+                                        hemoglobin: parseFloat(formData.get('hemoglobin') as string),
+                                        platelets: parseFloat(formData.get('platelets') as string),
+                                        creatinine: parseFloat(formData.get('creatinine') as string),
+                                        alt: parseFloat(formData.get('alt') as string),
+                                        inr: parseFloat(formData.get('inr') as string) || undefined,
+                                        ferritin: parseFloat(formData.get('ferritin') as string) || undefined
+                                    },
+                                    currentMedications: (formData.get('medications') as string || '').split(',').map(m => m.trim()).filter(m => m),
+                                    allergies: (formData.get('allergies') as string || '').split(',').map(a => a.trim()).filter(a => a),
+                                    cancerDiagnosis: formData.get('cancerType') ? {
+                                        type: formData.get('cancerType') as string,
+                                        stage: formData.get('cancerStage') as string,
+                                        her2Status: formData.get('her2Status') as 'Positive' | 'Negative' | undefined,
+                                        pdl1Expression: parseFloat(formData.get('pdl1') as string) || undefined
+                                    } : undefined
+                                };
+
+                                setCustomPatients([...customPatients, newPatient]);
+                                setSelectedPatientId(newPatient.id);
+                                setShowCreateModal(false);
+                            }}
+                            className="space-y-6 p-6"
+                        >
+                            {/* Demographics */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Demographics</h3>
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Age *</label>
+                                        <input type="number" name="age" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Gender *</label>
+                                        <select name="gender" required className="w-full rounded-lg border border-slate-200 px-3 py-2">
+                                            <option value="M">Male</option>
+                                            <option value="F">Female</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">BMI *</label>
+                                        <input type="number" step="0.1" name="bmi" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Conditions */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Conditions</h3>
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Conditions (comma-separated) *</label>
+                                    <input type="text" name="conditions" required placeholder="e.g., Breast Cancer, Hypertension" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                </div>
+                            </div>
+
+                            {/* Vitals */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Vitals</h3>
+                                <div className="grid gap-4 md:grid-cols-4">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Systolic BP *</label>
+                                        <input type="number" name="systolic" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Diastolic BP *</label>
+                                        <input type="number" name="diastolic" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Heart Rate *</label>
+                                        <input type="number" name="heartRate" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Temp (°F)</label>
+                                        <input type="number" step="0.1" name="temperature" placeholder="98.6" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Labs */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Laboratory Values</h3>
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">WBC (K/µL) *</label>
+                                        <input type="number" step="0.1" name="wbc" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Hemoglobin (g/dL) *</label>
+                                        <input type="number" step="0.1" name="hemoglobin" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Platelets (K/µL) *</label>
+                                        <input type="number" name="platelets" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Creatinine (mg/dL) *</label>
+                                        <input type="number" step="0.1" name="creatinine" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">ALT (U/L) *</label>
+                                        <input type="number" name="alt" required className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Ferritin (ng/mL)</label>
+                                        <input type="number" name="ferritin" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">INR</label>
+                                        <input type="number" step="0.1" name="inr" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cancer Diagnosis (Optional) */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Cancer Diagnosis (Optional)</h3>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Cancer Type</label>
+                                        <input type="text" name="cancerType" placeholder="e.g., Breast Cancer" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Stage</label>
+                                        <input type="text" name="cancerStage" placeholder="e.g., IIB" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">HER2 Status</label>
+                                        <select name="her2Status" className="w-full rounded-lg border border-slate-200 px-3 py-2">
+                                            <option value="">Not Tested</option>
+                                            <option value="Positive">Positive</option>
+                                            <option value="Negative">Negative</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">PD-L1 Expression (%)</label>
+                                        <input type="number" name="pdl1" placeholder="0-100" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Medications & Allergies */}
+                            <div className="rounded-lg border border-slate-200 p-4">
+                                <h3 className="mb-4 font-semibold text-slate-900">Medications & Allergies</h3>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Current Medications (comma-separated)</label>
+                                        <input type="text" name="medications" placeholder="e.g., Methotrexate, Prednisone" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-slate-700">Allergies (comma-separated)</label>
+                                        <input type="text" name="allergies" placeholder="e.g., Penicillin, Sulfa" className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="flex gap-3 border-t border-slate-200 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="flex-1 rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-white hover:bg-primary-700"
+                                >
+                                    Create Patient
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
