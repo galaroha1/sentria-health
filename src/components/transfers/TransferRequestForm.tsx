@@ -3,6 +3,7 @@ import { Package, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { PolicyCheck } from '../../types/transfer';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function TransferRequestForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
     const { sites } = useApp();
     const [sourceSiteId, setSourceSiteId] = useState('');

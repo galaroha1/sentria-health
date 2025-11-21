@@ -56,7 +56,7 @@ export function Transfers() {
         updateRequestStatus(id, 'in_transit', 'Current User');
     };
 
-    const handleDeny = (id: string, _reason: string) => {
+    const handleDeny = (id: string) => {
         updateRequestStatus(id, 'denied');
     };
 
@@ -64,6 +64,7 @@ export function Transfers() {
         setShowRequestForm(true);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleRequestSubmit = (data: any) => {
         // Map form data to NetworkRequest
         // Note: TransferRequestForm uses 'departments' but we need 'sites'.

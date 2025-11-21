@@ -29,6 +29,11 @@ export function PredictiveAnalytics() {
         optimal: (t.actual * 0.9) * 100 // Optimal is 10% less
     }));
 
+    const nextOrderDate = useMemo(() => {
+        // eslint-disable-next-line react-hooks/purity
+        return new Date(Date.now() + 86400000 * 3).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }, []);
+
     return (
         <div className="space-y-6">
             {/* Cost Forecast */}
@@ -146,7 +151,7 @@ export function PredictiveAnalytics() {
                             <span className="font-medium text-slate-900">Next Recommended Order</span>
                         </div>
                         <p className="mt-2 text-2xl font-bold text-slate-900">
-                            {new Date(Date.now() + 86400000 * 3).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            {nextOrderDate}
                         </p>
                         <p className="mt-1 text-sm text-slate-600">Based on consumption patterns and lead times</p>
                     </div>

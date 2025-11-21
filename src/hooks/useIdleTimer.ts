@@ -8,7 +8,7 @@ interface UseIdleTimerOptions {
 
 export function useIdleTimer({ timeout, onIdle, disabled = false }: UseIdleTimerOptions) {
     const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const lastActivityRef = useRef<number>(Date.now());
+    const lastActivityRef = useRef<number>(0);
 
     const resetTimer = useCallback(() => {
         if (disabled) return;

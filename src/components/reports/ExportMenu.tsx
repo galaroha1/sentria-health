@@ -1,7 +1,8 @@
 import { Download, FileText } from 'lucide-react';
 
 interface ExportMenuProps {
-    data: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: Record<string, any>[];
     filename: string;
 }
 

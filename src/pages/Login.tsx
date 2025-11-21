@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
@@ -8,27 +8,36 @@ const REMEMBER_ME_KEY = 'sentria_remember_me';
 export function Login() {
     const navigate = useNavigate();
     const { login, isAuthenticated } = useAuth();
-    const [email, setEmail] = useState('');
+    // Initialize state from localStorage
+    const [email, setEmail] = useState(() => {
+        try {
+            const savedCreds = localStorage.getItem(REMEMBER_ME_KEY);
+            if (savedCreds) {
+                const { email: savedEmail, rememberMe: wasRemembered } = JSON.parse(savedCreds);
+                if (wasRemembered) return savedEmail;
+            }
+        } catch (error) {
+            console.error('Failed to load saved credentials:', error);
+        }
+        return '';
+    });
+
+    const [rememberMe, setRememberMe] = useState(() => {
+        try {
+            const savedCreds = localStorage.getItem(REMEMBER_ME_KEY);
+            if (savedCreds) {
+                const { rememberMe: wasRemembered } = JSON.parse(savedCreds);
+                return !!wasRemembered;
+            }
+        } catch (error) {
+            console.error('Failed to load saved credentials:', error);
+        }
+        return false;
+    });
+
     const [password, setPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
-    // Load saved credentials on mount
-    useEffect(() => {
-        const savedCreds = localStorage.getItem(REMEMBER_ME_KEY);
-        if (savedCreds) {
-            try {
-                const { email: savedEmail, rememberMe: wasRemembered } = JSON.parse(savedCreds);
-                if (wasRemembered) {
-                    setEmail(savedEmail);
-                    setRememberMe(true);
-                }
-            } catch (error) {
-                console.error('Failed to load saved credentials:', error);
-            }
-        }
-    }, []);
 
     // Redirect if already authenticated
     if (isAuthenticated) {

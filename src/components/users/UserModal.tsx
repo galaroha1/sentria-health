@@ -20,22 +20,25 @@ export function UserModal({ isOpen, onClose, onSave, initialData, isEditing = fa
     });
 
     useEffect(() => {
-        if (initialData && isEditing) {
-            setFormData({
-                name: initialData.name,
-                email: initialData.email,
-                role: initialData.role as UserRole,
-                department: initialData.department,
-                status: initialData.status as UserStatus,
-            });
-        } else {
-            setFormData({
-                name: '',
-                email: '',
-                role: 'Pharmacy Manager' as UserRole,
-                department: '',
-                status: 'active' as UserStatus,
-            });
+        if (isOpen) {
+            if (initialData && isEditing) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setFormData({
+                    name: initialData.name,
+                    email: initialData.email,
+                    role: initialData.role as UserRole,
+                    department: initialData.department,
+                    status: initialData.status as UserStatus,
+                });
+            } else {
+                setFormData({
+                    name: '',
+                    email: '',
+                    role: 'Pharmacy Manager' as UserRole,
+                    department: '',
+                    status: 'active' as UserStatus,
+                });
+            }
         }
     }, [initialData, isEditing, isOpen]);
 
@@ -49,6 +52,7 @@ export function UserModal({ isOpen, onClose, onSave, initialData, isEditing = fa
             // The parent handler will merge these with existing ID if editing
             avatar: initialData?.avatar,
             phone: initialData?.phone,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
         onClose();
     };

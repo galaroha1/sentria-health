@@ -11,7 +11,7 @@ interface InteractiveMapProps {
     onSiteClick?: (site: Site, departmentId?: string) => void;
 }
 
-function SitePopup({ site, summary, onAction }: { site: Site, summary: any, onAction: (site: Site, deptId?: string) => void }) {
+function SitePopup({ site, summary, onAction }: { site: Site, summary: { criticalCount: number; lowCount: number; totalDrugs: number; } | null, onAction: (site: Site, deptId?: string) => void }) {
     const [selectedDept, setSelectedDept] = useState(site.departments?.[0]?.id || '');
 
     return (

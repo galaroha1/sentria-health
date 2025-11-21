@@ -37,7 +37,7 @@ export function InventoryTable({ items }: InventoryTableProps) {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-slate-600">{item.ndc}</td>
-                                <td className="px-6 py-4 text-slate-600">B-{Math.floor(Math.random() * 10000)}</td>
+                                <td className="px-6 py-4 text-slate-600">B-{item.ndc.slice(-4)}</td>
                                 <td className="px-6 py-4 text-slate-600">2025-12-31</td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
@@ -48,9 +48,9 @@ export function InventoryTable({ items }: InventoryTableProps) {
                                 <td className="px-6 py-4 font-medium text-slate-900">${(item.quantity * 150).toLocaleString()}</td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${item.status === 'well_stocked' ? 'bg-emerald-100 text-emerald-700' :
-                                            item.status === 'low' ? 'bg-amber-100 text-amber-700' :
-                                                item.status === 'critical' ? 'bg-red-100 text-red-700' :
-                                                    'bg-orange-100 text-orange-700'
+                                        item.status === 'low' ? 'bg-amber-100 text-amber-700' :
+                                            item.status === 'critical' ? 'bg-red-100 text-red-700' :
+                                                'bg-orange-100 text-orange-700'
                                         }`}>
                                         {item.status === 'well_stocked' && <CheckCircle2 className="h-3 w-3" />}
                                         {item.status === 'low' && <AlertCircle className="h-3 w-3" />}

@@ -31,7 +31,7 @@ export class LogisticRegression {
         const m = features.length;
 
         // Gradients
-        let dw = new Array(this.weights.length).fill(0);
+        const dw = new Array(this.weights.length).fill(0);
         let db = 0;
 
         for (let i = 0; i < m; i++) {

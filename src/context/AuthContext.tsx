@@ -19,36 +19,32 @@ const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before timeout
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [authState, setAuthState] = useState<AuthState>({
-        user: null,
-        isAuthenticated: false,
-        isLoading: true,
-    });
-    const [sessionWarning, setSessionWarning] = useState(false);
-    const [lastActivity, setLastActivity] = useState(Date.now());
-    const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // Load user from localStorage on mount
-    useEffect(() => {
+    const [authState, setAuthState] = useState<AuthState>(() => {
         const storedUser = localStorage.getItem(STORAGE_KEY);
         if (storedUser) {
             try {
                 const user = JSON.parse(storedUser) as User;
-                setAuthState({
+                return {
                     user,
                     isAuthenticated: true,
                     isLoading: false,
-                });
+                };
             } catch (error) {
                 console.error('Failed to parse stored user:', error);
                 localStorage.removeItem(STORAGE_KEY);
-                setAuthState(prev => ({ ...prev, isLoading: false }));
             }
-        } else {
-            setAuthState(prev => ({ ...prev, isLoading: false }));
         }
-    }, []);
+        return {
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+        };
+    });
+
+    const [sessionWarning, setSessionWarning] = useState(false);
+    const [lastActivity, setLastActivity] = useState(() => Date.now());
+    const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
         const { email, password } = credentials;
@@ -194,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext);
     if (context === undefined) {

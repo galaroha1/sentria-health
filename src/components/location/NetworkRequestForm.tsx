@@ -34,6 +34,7 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
         if (!targetSite) return;
 
         const newRequest: NetworkRequest = {
+            // eslint-disable-next-line react-hooks/purity
             id: `NR-${Date.now()}`,
             requestedBy: 'Current User',
             requestedBySite: sourceSite,

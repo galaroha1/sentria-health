@@ -90,43 +90,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, []);
 
     // Check inventory levels and generate alerts
+    // Check inventory levels and generate alerts
     useEffect(() => {
-        const newNotifications: Notification[] = [];
-
         inventories.forEach(siteInv => {
             const site = sites.find(s => s.id === siteInv.siteId);
             if (!site) return;
 
             siteInv.drugs.forEach(drug => {
                 if (drug.status === 'low' || drug.status === 'critical') {
-                    // Check if we already have an active notification for this item today
-                    const today = new Date().toISOString().split('T')[0];
-                    const hasNotification = notifications.some(n =>
-                        n.title.includes(drug.drugName) &&
-                        n.message.includes(site.name) &&
-                        n.timestamp.startsWith(today)
-                    );
+                    setNotifications(prevNotifications => {
+                        // Check if we already have an active notification for this item today
+                        const today = new Date().toISOString().split('T')[0];
+                        const hasNotification = prevNotifications.some(n =>
+                            n.title.includes(drug.drugName) &&
+                            n.message.includes(site.name) &&
+                            n.timestamp.startsWith(today)
+                        );
 
-                    if (!hasNotification) {
-                        newNotifications.push({
-                            id: `alert-${site.id}-${drug.ndc}-${Date.now()}`,
-                            type: drug.status === 'critical' ? 'critical' : 'warning',
-                            category: 'alert',
-                            title: `${drug.status === 'critical' ? 'Critical' : 'Low'} Stock: ${drug.drugName}`,
-                            message: `${site.name} is running low on ${drug.drugName}. Current quantity: ${drug.quantity} (Min: ${drug.minLevel})`,
-                            timestamp: new Date().toISOString(),
-                            read: false,
-                            link: '/inventory',
-                            actionUrl: `/transfers?source=${site.id}&drug=${drug.ndc}` // Suggest transfer
-                        });
-                    }
+                        if (!hasNotification) {
+                            return [{
+                                id: `alert-${site.id}-${drug.ndc}-${Date.now()}`,
+                                type: drug.status === 'critical' ? 'critical' : 'warning',
+                                category: 'alert',
+                                title: `${drug.status === 'critical' ? 'Critical' : 'Low'} Stock: ${drug.drugName}`,
+                                message: `${site.name} is running low on ${drug.drugName}. Current quantity: ${drug.quantity} (Min: ${drug.minLevel})`,
+                                timestamp: new Date().toISOString(),
+                                read: false,
+                                link: '/inventory',
+                                actionUrl: `/transfers?source=${site.id}&drug=${drug.ndc}` // Suggest transfer
+                            }, ...prevNotifications];
+                        }
+                        return prevNotifications;
+                    });
                 }
             });
         });
-
-        if (newNotifications.length > 0) {
-            setNotifications(prev => [...newNotifications, ...prev]);
-        }
     }, [inventories]); // Run when inventories change
 
     // Inventory Management
@@ -188,6 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Add corresponding notification
         const newNotification: Notification = {
+            // eslint-disable-next-line react-hooks/purity
             id: `notif-${Date.now()}`,
             type: 'info',
             category: 'alert',
@@ -226,6 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 status === 'denied' ? 'Request Denied' : 'Status Updated';
 
             const newNotification: Notification = {
+                // eslint-disable-next-line react-hooks/purity
                 id: `notif-${Date.now()}`,
                 type: status === 'denied' ? 'warning' : 'success',
                 category: 'approval',
@@ -286,6 +286,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
     const context = useContext(AppContext);
     if (context === undefined) {

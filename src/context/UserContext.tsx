@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { type User, type UserStatus } from '../types';
 import { MOCK_USERS_DB } from '../data/users/mockData';
 
@@ -13,13 +13,9 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [users, setUsers] = useState<User[]>([]);
-
-    useEffect(() => {
-        // Initialize with mock data
-        const initialUsers = Object.values(MOCK_USERS_DB).map(record => record.user);
-        setUsers(initialUsers);
-    }, []);
+    const [users, setUsers] = useState<User[]>(() =>
+        Object.values(MOCK_USERS_DB).map(record => record.user)
+    );
 
     const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => {
         const newUser: User = {
@@ -59,6 +55,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useUsers() {
     const context = useContext(UserContext);
     if (context === undefined) {

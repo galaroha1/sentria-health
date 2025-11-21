@@ -1,0 +1,142 @@
+
+> sentria-health@0.0.0 lint
+> eslint .
+
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/dashboard/PredictiveAnalytics.tsx
+  149:39  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/dashboard/PredictiveAnalytics.tsx:149:39
+  147 |                         </div>
+  148 |                         <p className="mt-2 text-2xl font-bold text-slate-900">
+> 149 |                             {new Date(Date.now() + 86400000 * 3).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      |                                       ^^^^^^^^^^ Cannot call impure function
+  150 |                         </p>
+  151 |                         <p className="mt-1 text-sm text-slate-600">Based on consumption patterns and lead times</p>
+  152 |                     </div>  react-hooks/purity
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/inventory/InventoryTable.tsx
+  40:88  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/inventory/InventoryTable.tsx:40:88
+  38 |                                 </td>
+  39 |                                 <td className="px-6 py-4 text-slate-600">{item.ndc}</td>
+> 40 |                                 <td className="px-6 py-4 text-slate-600">B-{Math.floor(Math.random() * 10000)}</td>
+     |                                                                                        ^^^^^^^^^^^^^ Cannot call impure function
+  41 |                                 <td className="px-6 py-4 text-slate-600">2025-12-31</td>
+  42 |                                 <td className="px-6 py-4">
+  43 |                                     <div className="flex items-center gap-2">  react-hooks/purity
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/location/InteractiveMap.tsx
+  14:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/location/NetworkRequestForm.tsx
+  37:23  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/location/NetworkRequestForm.tsx:37:23
+  35 |
+  36 |         const newRequest: NetworkRequest = {
+> 37 |             id: `NR-${Date.now()}`,
+     |                       ^^^^^^^^^^ Cannot call impure function
+  38 |             requestedBy: 'Current User',
+  39 |             requestedBySite: sourceSite,
+  40 |             sourceDepartmentId: sourceDeptId,  react-hooks/purity
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/reports/ExportMenu.tsx
+  4:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/transfers/TransferRequestForm.tsx
+  6:100  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/users/UserModal.tsx
+  24:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/components/users/UserModal.tsx:24:13
+  22 |     useEffect(() => {
+  23 |         if (initialData && isEditing) {
+> 24 |             setFormData({
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |                 name: initialData.name,
+  26 |                 email: initialData.email,
+  27 |                 role: initialData.role as UserRole,  react-hooks/set-state-in-effect
+  52:14  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/AppContext.tsx
+  130:8   warning  React Hook useEffect has a missing dependency: 'notifications'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  191:26  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/AppContext.tsx:191:26
+  189 |         // Add corresponding notification
+  190 |         const newNotification: Notification = {
+> 191 |             id: `notif-${Date.now()}`,
+      |                          ^^^^^^^^^^ Cannot call impure function
+  192 |             type: 'info',
+  193 |             category: 'alert',
+  194 |             title: 'New Transfer Request',  react-hooks/purity
+  229:30  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/AppContext.tsx:229:30
+  227 |
+  228 |             const newNotification: Notification = {
+> 229 |                 id: `notif-${Date.now()}`,
+      |                              ^^^^^^^^^^ Cannot call impure function
+  230 |                 type: status === 'denied' ? 'warning' : 'success',
+  231 |                 category: 'approval',
+  232 |                 title,    react-hooks/purity
+  289:17  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-refresh/only-export-components
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/AuthContext.tsx
+   28:54  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/AuthContext.tsx:28:54
+  26 |     });
+  27 |     const [sessionWarning, setSessionWarning] = useState(false);
+> 28 |     const [lastActivity, setLastActivity] = useState(Date.now());
+     |                                                      ^^^^^^^^^^ Cannot call impure function
+  29 |     const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  30 |     const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  31 |  react-hooks/purity
+  197:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-refresh/only-export-components
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/CartContext.tsx
+  80:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/UserContext.tsx
+  21:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rohangala/Downloads/Sentria Health Code Base/src/context/UserContext.tsx:21:9
+  19 |         // Initialize with mock data
+  20 |         const initialUsers = Object.values(MOCK_USERS_DB).map(record => record.user);
+> 21 |         setUsers(initialUsers);
+     |         ^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |     }, []);
+  23 |
+  24 |     const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => {  react-hooks/set-state-in-effect
+  62:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-refresh/only-export-components
+
+✖ 17 problems (16 errors, 1 warning)
+
