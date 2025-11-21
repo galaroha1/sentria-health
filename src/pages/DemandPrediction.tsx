@@ -1,250 +1,337 @@
-import { useState, useRef } from 'react';
-import { generatePatientData } from '../ml/dataGenerator';
-import { LogisticRegression } from '../ml/LogisticRegression';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Brain, Activity, Play, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { generatePatientData, getPatientDisplayName } from '../ml/dataGenerator';
+import { drugPredictor } from '../ml/DrugPredictor';
+import type { VisitType, DrugRecommendation } from '../ml/clinicalRules';
+import { Brain, Activity, User, Stethoscope, AlertTriangle, CheckCircle, TrendingUp, Pill } from 'lucide-react';
 
 export const DemandPrediction = () => {
-    const [isTraining, setIsTraining] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [lossHistory, setLossHistory] = useState<{ epoch: number; loss: number }[]>([]);
-    const [model, setModel] = useState<LogisticRegression | null>(null);
-    const [accuracy, setAccuracy] = useState<number | null>(null);
+    const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+    const [visitType, setVisitType] = useState<VisitType>('Primary Care');
+    const [recommendations, setRecommendations] = useState<DrugRecommendation[]>([]);
+    const [showResults, setShowResults] = useState(false);
 
-    // Prediction State
-    const [age, setAge] = useState(30);
-    const [hasCondition, setHasCondition] = useState(false);
-    const [geneticMarker, setGeneticMarker] = useState(false);
-    const [lifestyle, setLifestyle] = useState(50); // 0-100
-    const [prediction, setPrediction] = useState<number | null>(null);
+    const patients = generatePatientData();
+    const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
-    const trainingRef = useRef<boolean>(false);
-
-    const startTraining = async () => {
-        setIsTraining(true);
-        setProgress(0);
-        setLossHistory([]);
-        setAccuracy(null);
-        trainingRef.current = true;
-
-        // 1. Generate Data
-        const dataCount = 1000;
-        const rawData = generatePatientData(dataCount);
-
-        // Split into features and labels
-        const features = rawData.map(d => [d.age, d.hasCondition, d.geneticMarker, d.lifestyleFactor]);
-        const labels = rawData.map(d => d.demand);
-
-        // Split train/test (80/20)
-        const splitIdx = Math.floor(dataCount * 0.8);
-        const trainX = features.slice(0, splitIdx);
-        const trainY = labels.slice(0, splitIdx);
-        const testX = features.slice(splitIdx);
-        const testY = labels.slice(splitIdx);
-
-        // 2. Initialize Model
-        const lr = new LogisticRegression(4, 0.1);
-        const epochs = 50;
-
-        // 3. Train Loop (with small delays to allow UI updates)
-        for (let i = 0; i < epochs; i++) {
-            if (!trainingRef.current) break;
-
-            const loss = lr.train(trainX, trainY);
-
-            setLossHistory(prev => [...prev, { epoch: i + 1, loss }]);
-            setProgress(((i + 1) / epochs) * 100);
-
-            // Yield to main thread
-            await new Promise(resolve => setTimeout(resolve, 50));
-        }
-
-        // 4. Evaluate
-        let correct = 0;
-        for (let i = 0; i < testX.length; i++) {
-            const p = lr.predict(testX[i]);
-            const predLabel = p > 0.5 ? 1 : 0;
-            if (predLabel === testY[i]) correct++;
-        }
-        setAccuracy((correct / testX.length) * 100);
-
-        setModel(lr);
-        setIsTraining(false);
-        trainingRef.current = false;
-    };
+    const visitTypes: VisitType[] = [
+        'Primary Care',
+        'Cardiology',
+        'Endocrinology',
+        'Pulmonology',
+        'Emergency',
+        'Nephrology'
+    ];
 
     const handlePredict = () => {
-        if (!model) return;
+        if (!selectedPatient) return;
 
-        // Normalize inputs to match training data format
-        const normAge = age / 100; // Assuming max age 100
-        const normCondition = hasCondition ? 1 : 0;
-        const normGenetics = geneticMarker ? 1 : 0;
-        const normLifestyle = lifestyle / 100;
+        const input = {
+            patient: selectedPatient,
+            visitType
+        };
 
-        const prob = model.predict([normAge, normCondition, normGenetics, normLifestyle]);
-        setPrediction(prob);
+        const errors = drugPredictor.validateInput(input);
+        if (errors.length > 0) {
+            alert('Validation errors:\n' + errors.join('\n'));
+            return;
+        }
+
+        const predictions = drugPredictor.predict(input, 5);
+        setRecommendations(predictions);
+        setShowResults(true);
+    };
+
+    const getConfidenceBadge = (confidence: number) => {
+        const percentage = Math.round(confidence * 100);
+        if (percentage >= 90) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        if (percentage >= 75) return 'bg-blue-100 text-blue-700 border-blue-200';
+        if (percentage >= 60) return 'bg-amber-100 text-amber-700 border-amber-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    };
+
+    const getPriorityIcon = (priority: 'high' | 'medium' | 'low') => {
+        if (priority === 'high') return <TrendingUp className="h-4 w-4 text-red-600" />;
+        if (priority === 'medium') return <Activity className="h-4 w-4 text-amber-600" />;
+        return <Activity className="h-4 w-4 text-slate-400" />;
     };
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Drug Demand Prediction (ML)</h1>
-                    <p className="text-gray-500">Train a Logistic Regression model on synthetic patient data to predict prescription demand.</p>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
+                        <Brain className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900">Drug Recommendations</h1>
+                        <p className="text-sm text-slate-600">AI-powered medication suggestions based on patient EHR</p>
+                    </div>
                 </div>
-                {!isTraining ? (
-                    <button
-                        onClick={startTraining}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                        <Play className="w-4 h-4" />
-                        Train Model
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => { trainingRef.current = false; setIsTraining(false); }}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                    >
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        Stop Training
-                    </button>
-                )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Training Visualization */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-indigo-600" />
-                            Training Progress
-                        </h2>
-                        {accuracy !== null && (
-                            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                                Accuracy: {accuracy.toFixed(1)}%
-                            </span>
-                        )}
+            {/* Main Content */}
+            <div className="grid gap-6 lg:grid-cols-3">
+                {/* Left Panel: Patient Selection & Input */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Patient Selector */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <div className="mb-4 flex items-center gap-2">
+                            <User className="h-5 w-5 text-slate-600" />
+                            <h2 className="text-lg font-bold text-slate-900">Select Patient</h2>
+                        </div>
+                        <select
+                            value={selectedPatientId}
+                            onChange={(e) => {
+                                setSelectedPatientId(e.target.value);
+                                setShowResults(false);
+                            }}
+                            className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                        >
+                            <option value="">Choose a patient...</option>
+                            {patients.map(patient => (
+                                <option key={patient.id} value={patient.id}>
+                                    {getPatientDisplayName(patient)} - {patient.conditions[0]}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div className="h-64 w-full">
-                        {lossHistory.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={lossHistory}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="epoch" label={{ value: 'Epoch', position: 'insideBottom', offset: -5 }} />
-                                    <YAxis label={{ value: 'Loss', angle: -90, position: 'insideLeft' }} />
-                                    <Tooltip />
-                                    <Line type="monotone" dataKey="loss" stroke="#4f46e5" strokeWidth={2} dot={false} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex items-center justify-center text-gray-400 border-2 border-dashed rounded-lg">
-                                Click "Train Model" to start
+                    {/* Visit Type Selector */}
+                    {selectedPatient && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div className="mb-4 flex items-center gap-2">
+                                <Stethoscope className="h-5 w-5 text-slate-600" />
+                                <h2 className="text-lg font-bold text-slate-900">Visit Type</h2>
                             </div>
-                        )}
-                    </div>
+                            <div className="space-y-2">
+                                {visitTypes.map(type => (
+                                    <label key={type} className="flex items-center gap-3 cursor-pointer rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                                        <input
+                                            type="radio"
+                                            name="visitType"
+                                            value={type}
+                                            checked={visitType === type}
+                                            onChange={(e) => {
+                                                setVisitType(e.target.value as VisitType);
+                                                setShowResults(false);
+                                            }}
+                                            className="h-4 w-4 text-primary-600"
+                                        />
+                                        <span className="text-sm font-medium text-slate-700">{type}</span>
+                                    </label>
+                                ))}
+                            </div>
 
-                    {isTraining && (
-                        <div className="mt-4">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div
-                                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
-                                    style={{ width: `${progress}%` }}
-                                ></div>
+                            <button
+                                onClick={handlePredict}
+                                disabled={!selectedPatient}
+                                className="mt-6 w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <Brain className="h-4 w-4" />
+                                Get Recommendations
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Patient Summary */}
+                    {selectedPatient && (
+                        <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm">
+                            <h3 className="mb-3 text-sm font-bold text-slate-900">Patient Summary</h3>
+                            <div className="space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                    <span className="text-slate-600">Age:</span>
+                                    <span className="font-medium text-slate-900">{selectedPatient.demographics.age} years</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-600">Gender:</span>
+                                    <span className="font-medium text-slate-900">{selectedPatient.demographics.gender === 'M' ? 'Male' : 'Female'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-600">BMI:</span>
+                                    <span className="font-medium text-slate-900">{selectedPatient.demographics.bmi.toFixed(1)}</span>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-indigo-200">
+                                    <p className="text-slate-600 mb-2">Active Conditions:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {selectedPatient.conditions.map((condition, idx) => (
+                                            <span key={idx} className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                                                {condition}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-indigo-200">
+                                    <p className="text-slate-600 mb-2">Vitals:</p>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">BP:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.vitals.systolic}/{selectedPatient.vitals.diastolic} mmHg</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">HR:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.vitals.heartRate} bpm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-indigo-200">
+                                    <p className="text-slate-600 mb-2">Key Labs:</p>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">A1C:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.a1c}%</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">LDL:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.ldl} mg/dL</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">Glucose:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.glucose} mg/dL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {selectedPatient.allergies.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-red-200">
+                                        <p className="text-red-600 mb-2 font-semibold">⚠️ Allergies:</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {selectedPatient.allergies.map((allergy, idx) => (
+                                                <span key={idx} className="rounded-full bg-red-200 px-2 py-0.5 text-xs font-bold text-red-900">
+                                                    {allergy}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1 text-right">{Math.round(progress)}%</p>
                         </div>
                     )}
                 </div>
 
-                {/* Prediction Interface */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 mb-6">
-                        <Brain className="w-5 h-5 text-purple-600" />
-                        Patient Profile Prediction
-                    </h2>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Age: {age}</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={age}
-                                onChange={(e) => setAge(parseInt(e.target.value))}
-                                className="w-full"
-                            />
+                {/* Right Panel: Results */}
+                <div className="lg:col-span-2">
+                    {!showResults ? (
+                        <div className="flex h-full items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-12">
+                            <div className="text-center">
+                                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-purple-100">
+                                    <Pill className="h-10 w-10 text-purple-600" />
+                                </div>
+                                <h3 className="mb-2 text-lg font-bold text-slate-900">Select a Patient & Visit Type</h3>
+                                <p className="text-sm text-slate-600">
+                                    Choose a patient profile and visit type to get AI-powered drug recommendations
+                                </p>
+                            </div>
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Lifestyle Score (0-100): {lifestyle}</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={lifestyle}
-                                onChange={(e) => setLifestyle(parseInt(e.target.value))}
-                                className="w-full"
-                            />
-                            <p className="text-xs text-gray-500">Higher is healthier</p>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={hasCondition}
-                                    onChange={(e) => setHasCondition(e.target.checked)}
-                                    className="rounded text-indigo-600 focus:ring-indigo-500"
-                                />
-                                <span className="text-sm text-gray-700">Has Condition</span>
-                            </label>
-
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={geneticMarker}
-                                    onChange={(e) => setGeneticMarker(e.target.checked)}
-                                    className="rounded text-indigo-600 focus:ring-indigo-500"
-                                />
-                                <span className="text-sm text-gray-700">Genetic Marker</span>
-                            </label>
-                        </div>
-
-                        <button
-                            onClick={handlePredict}
-                            disabled={!model}
-                            className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${model
-                                ? 'bg-purple-600 text-white hover:bg-purple-700'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                }`}
-                        >
-                            {model ? 'Predict Demand' : 'Train Model First'}
-                        </button>
-
-                        {prediction !== null && (
-                            <div className={`mt-4 p-4 rounded-lg border ${prediction > 0.5 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
-                                }`}>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Header */}
+                            <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white shadow-lg">
                                 <div className="flex items-center gap-3">
-                                    {prediction > 0.5 ? (
-                                        <AlertCircle className="w-8 h-8 text-red-600" />
-                                    ) : (
-                                        <CheckCircle className="w-8 h-8 text-green-600" />
-                                    )}
+                                    <CheckCircle className="h-6 w-6" />
                                     <div>
-                                        <h3 className={`font-bold ${prediction > 0.5 ? 'text-red-800' : 'text-green-800'}`}>
-                                            {prediction > 0.5 ? 'High Demand Likely' : 'Low Demand Likely'}
-                                        </h3>
-                                        <p className="text-sm text-gray-600">
-                                            Probability: {(prediction * 100).toFixed(1)}%
+                                        <h2 className="text-xl font-bold">Drug Recommendations</h2>
+                                        <p className="text-sm text-purple-100">
+                                            {recommendations.length} recommendation{recommendations.length !== 1 ? 's' : ''} for {visitType}
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
+
+                            {/* Recommendations */}
+                            {recommendations.length === 0 ? (
+                                <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                                    <AlertTriangle className="mx-auto mb-3 h-12 w-12 text-amber-500" />
+                                    <h3 className="mb-2 text-lg font-bold text-slate-900">No Recommendations</h3>
+                                    <p className="text-sm text-slate-600">
+                                        No specific drug recommendations based on current patient profile and visit type.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {recommendations.map((rec, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                                        >
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                                                        {getPriorityIcon(rec.priority)}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-lg font-bold text-slate-900">{rec.drug.name}</h3>
+                                                        <p className="text-xs text-slate-500">NDC: {rec.drug.ndc} • {rec.drug.category}</p>
+                                                    </div>
+                                                </div>
+                                                <div className={`rounded-full border px-3 py-1 text-xs font-bold ${getConfidenceBadge(rec.confidence)}`}>
+                                                    {Math.round(rec.confidence * 100)}% Confidence
+                                                </div>
+                                            </div>
+
+                                            {/* Reasons */}
+                                            <div className="mb-3 rounded-lg bg-blue-50 p-3">
+                                                <p className="text-xs font-semibold text-blue-900 mb-1">Clinical Rationale:</p>
+                                                {rec.reasons.map((reason, rIdx) => (
+                                                    <div key={rIdx} className="flex items-start gap-2 text-xs text-blue-800">
+                                                        <CheckCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                                        <span>{reason}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Warnings */}
+                                            {rec.warnings.length > 0 && (
+                                                <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 p-3">
+                                                    <p className="text-xs font-semibold text-amber-900 mb-1">⚠️ Warnings:</p>
+                                                    {rec.warnings.map((warning, wIdx) => (
+                                                        <div key={wIdx} className="flex items-start gap-2 text-xs text-amber-800">
+                                                            <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                                            <span>{warning}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Dosage */}
+                                            <div className="flex items-center gap-2 text-xs text-slate-600">
+                                                <Pill className="h-3 w-3" />
+                                                <span>Typical Dosage: {rec.drug.typicalDosage}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Clinical Context */}
+                            {selectedPatient && recommendations.length > 0 && (
+                                <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-blue-50 p-6 shadow-sm">
+                                    <h3 className="mb-3 text-sm font-bold text-slate-900 flex items-center gap-2">
+                                        <Activity className="h-4 w-4" />
+                                        Clinical Context
+                                    </h3>
+                                    <div className="space-y-2 text-xs text-slate-700">
+                                        <p><strong>Primary Conditions:</strong> {selectedPatient.conditions.join(', ')}</p>
+                                        <p><strong>Visit Type:</strong> {visitType}</p>
+                                        <p><strong>Key Findings:</strong></p>
+                                        <ul className="ml-4 list-disc space-y-1">
+                                            {selectedPatient.vitals.systolic >= 140 && (
+                                                <li>Elevated blood pressure ({selectedPatient.vitals.systolic}/{selectedPatient.vitals.diastolic} mmHg)</li>
+                                            )}
+                                            {selectedPatient.labs.a1c >= 6.5 && (
+                                                <li>Diabetes indicator (A1C: {selectedPatient.labs.a1c}%)</li>
+                                            )}
+                                            {selectedPatient.labs.ldl >= 130 && (
+                                                <li>Elevated LDL cholesterol ({selectedPatient.labs.ldl} mg/dL)</li>
+                                            )}
+                                            {selectedPatient.demographics.bmi >= 30 && (
+                                                <li>Obesity (BMI: {selectedPatient.demographics.bmi.toFixed(1)})</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
