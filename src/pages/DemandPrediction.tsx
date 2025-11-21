@@ -6,7 +6,7 @@ import { Brain, Activity, User, Stethoscope, AlertTriangle, CheckCircle, Trendin
 
 export const DemandPrediction = () => {
     const [selectedPatientId, setSelectedPatientId] = useState<string>('');
-    const [visitType, setVisitType] = useState<VisitType>('Primary Care');
+    const [visitType, setVisitType] = useState<VisitType>('Oncology');
     const [recommendations, setRecommendations] = useState<DrugRecommendation[]>([]);
     const [showResults, setShowResults] = useState(false);
 
@@ -14,12 +14,14 @@ export const DemandPrediction = () => {
     const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
     const visitTypes: VisitType[] = [
-        'Primary Care',
+        'Oncology',
+        'Rheumatology',
+        'Gastroenterology',
+        'Neurology',
+        'Hematology',
+        'Infectious Disease',
         'Cardiology',
-        'Endocrinology',
-        'Pulmonology',
-        'Emergency',
-        'Nephrology'
+        'Pain Management'
     ];
 
     const handlePredict = () => {
@@ -178,16 +180,20 @@ export const DemandPrediction = () => {
                                     <p className="text-slate-600 mb-2">Key Labs:</p>
                                     <div className="space-y-1">
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">A1C:</span>
-                                            <span className="font-medium text-slate-900">{selectedPatient.labs.a1c}%</span>
+                                            <span className="text-slate-600">WBC:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.wbc} K/µL</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">LDL:</span>
-                                            <span className="font-medium text-slate-900">{selectedPatient.labs.ldl} mg/dL</span>
+                                            <span className="text-slate-600">Hgb:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.hemoglobin} g/dL</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">Glucose:</span>
-                                            <span className="font-medium text-slate-900">{selectedPatient.labs.glucose} mg/dL</span>
+                                            <span className="text-slate-600">Platelets:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.platelets} K/µL</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">Creatinine:</span>
+                                            <span className="font-medium text-slate-900">{selectedPatient.labs.creatinine} mg/dL</span>
                                         </div>
                                     </div>
                                 </div>
@@ -314,17 +320,23 @@ export const DemandPrediction = () => {
                                         <p><strong>Visit Type:</strong> {visitType}</p>
                                         <p><strong>Key Findings:</strong></p>
                                         <ul className="ml-4 list-disc space-y-1">
-                                            {selectedPatient.vitals.systolic >= 140 && (
-                                                <li>Elevated blood pressure ({selectedPatient.vitals.systolic}/{selectedPatient.vitals.diastolic} mmHg)</li>
+                                            {selectedPatient.cancerDiagnosis && (
+                                                <li>{selectedPatient.cancerDiagnosis.type} - Stage {selectedPatient.cancerDiagnosis.stage}</li>
                                             )}
-                                            {selectedPatient.labs.a1c >= 6.5 && (
-                                                <li>Diabetes indicator (A1C: {selectedPatient.labs.a1c}%)</li>
+                                            {selectedPatient.labs.wbc > 11 && (
+                                                <li>Leukocytosis (WBC: {selectedPatient.labs.wbc} K/µL)</li>
                                             )}
-                                            {selectedPatient.labs.ldl >= 130 && (
-                                                <li>Elevated LDL cholesterol ({selectedPatient.labs.ldl} mg/dL)</li>
+                                            {selectedPatient.labs.wbc < 4 && (
+                                                <li>Leukopenia (WBC: {selectedPatient.labs.wbc} K/µL)</li>
                                             )}
-                                            {selectedPatient.demographics.bmi >= 30 && (
-                                                <li>Obesity (BMI: {selectedPatient.demographics.bmi.toFixed(1)})</li>
+                                            {selectedPatient.labs.hemoglobin < 12 && (
+                                                <li>Anemia (Hgb: {selectedPatient.labs.hemoglobin} g/dL)</li>
+                                            )}
+                                            {selectedPatient.labs.creatinine > 1.5 && (
+                                                <li>Renal impairment (Cr: {selectedPatient.labs.creatinine} mg/dL)</li>
+                                            )}
+                                            {selectedPatient.currentMedications.length > 0 && (
+                                                <li>On {selectedPatient.currentMedications.length} current medication(s)</li>
                                             )}
                                         </ul>
                                     </div>

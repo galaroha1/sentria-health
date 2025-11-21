@@ -1,221 +1,245 @@
 import type { PatientEHR } from './clinicalRules';
 
-// Generate realistic synthetic patient EHR data for testing
+// Generate realistic synthetic patient EHR data for specialty infusion clinic
 export function generatePatientData(): PatientEHR[] {
     return [
+        // ===== ONCOLOGY PATIENTS =====
         {
             id: 'P001',
             demographics: {
-                age: 55,
-                gender: 'M',
-                bmi: 32.5
+                age: 58,
+                gender: 'F',
+                bmi: 26.2
             },
-            conditions: ['Type 2 Diabetes', 'Hypertension', 'Hyperlipidemia'],
+            conditions: ['Breast Cancer', 'Hypertension'],
             vitals: {
-                systolic: 145,
-                diastolic: 92,
-                heartRate: 78
+                systolic: 128,
+                diastolic: 82,
+                heartRate: 74,
+                temperature: 98.6
             },
             labs: {
-                glucose: 180,
-                a1c: 8.2,
-                ldl: 145,
-                hdl: 38,
-                triglycerides: 210,
-                creatinine: 1.1
+                wbc: 5.2,
+                hemoglobin: 12.1,
+                platelets: 185,
+                creatinine: 0.9,
+                alt: 32
             },
             currentMedications: [],
-            allergies: []
+            allergies: [],
+            cancerDiagnosis: {
+                type: 'Breast Cancer',
+                stage: 'IIB',
+                her2Status: 'Positive'
+            }
         },
         {
             id: 'P002',
             demographics: {
-                age: 68,
-                gender: 'F',
-                bmi: 28.3
+                age: 67,
+                gender: 'M',
+                bmi: 28.9
             },
-            conditions: ['Post-MI', 'Hypertension', 'Hyperlipidemia'],
+            conditions: ['Non-Small Cell Lung Cancer'],
             vitals: {
-                systolic: 138,
-                diastolic: 86,
-                heartRate: 72
+                systolic: 135,
+                diastolic: 88,
+                heartRate: 82,
+                temperature: 98.4
             },
             labs: {
-                glucose: 105,
-                a1c: 5.8,
-                ldl: 152,
-                hdl: 45,
-                triglycerides: 185,
-                creatinine: 0.9
+                wbc: 4.8,
+                hemoglobin: 11.5,
+                platelets: 210,
+                creatinine: 1.1,
+                alt: 45
             },
-            currentMedications: ['Aspirin'],
-            allergies: []
+            currentMedications: [],
+            allergies: [],
+            cancerDiagnosis: {
+                type: 'Non-Small Cell Lung Cancer',
+                stage: 'IIIA',
+                pdl1Expression: 65
+            }
         },
         {
             id: 'P003',
             demographics: {
-                age: 42,
+                age: 72,
                 gender: 'F',
-                bmi: 24.1
+                bmi: 24.5
             },
-            conditions: ['Hypothyroidism', 'GERD'],
+            conditions: ['Ovarian Cancer'],
             vitals: {
                 systolic: 118,
                 diastolic: 76,
-                heartRate: 68
+                heartRate: 68,
+                temperature: 98.2
             },
             labs: {
-                glucose: 92,
-                a1c: 5.3,
-                ldl: 110,
-                hdl: 58,
-                triglycerides: 120,
-                creatinine: 0.8,
-                tsh: 6.5
+                wbc: 3.5,
+                hemoglobin: 10.2,
+                platelets: 155,
+                creatinine: 1.0,
+                alt: 28
             },
             currentMedications: [],
-            allergies: []
+            allergies: ['Taxane Allergy'],
+            cancerDiagnosis: {
+                type: 'Ovarian Cancer',
+                stage: 'IIIC'
+            }
         },
         {
             id: 'P004',
             demographics: {
-                age: 72,
+                age: 61,
                 gender: 'M',
-                bmi: 26.8
+                bmi: 32.1
             },
-            conditions: ['Atrial Fibrillation', 'Heart Failure', 'Hypertension'],
+            conditions: ['Non-Hodgkin Lymphoma'],
             vitals: {
-                systolic: 132,
-                diastolic: 82,
-                heartRate: 88
+                systolic: 142,
+                diastolic: 90,
+                heartRate: 78,
+                temperature: 98.8
             },
             labs: {
-                glucose: 98,
-                a1c: 5.6,
-                ldl: 125,
-                hdl: 42,
-                triglycerides: 165,
-                creatinine: 1.3
+                wbc: 6.8,
+                hemoglobin: 12.8,
+                platelets: 195,
+                creatinine: 0.8,
+                alt: 38
             },
             currentMedications: [],
-            allergies: []
+            allergies: [],
+            cancerDiagnosis: {
+                type: 'Non-Hodgkin Lymphoma',
+                stage: 'II'
+            }
         },
+
+        // ===== RHEUMATOLOGY PATIENTS =====
         {
             id: 'P005',
             demographics: {
-                age: 28,
+                age: 52,
                 gender: 'F',
-                bmi: 22.5
+                bmi: 27.8
             },
-            conditions: ['Asthma'],
+            conditions: ['Rheumatoid Arthritis', 'Hypertension'],
             vitals: {
-                systolic: 115,
-                diastolic: 72,
-                heartRate: 75
+                systolic: 138,
+                diastolic: 86,
+                heartRate: 72,
+                temperature: 98.6
             },
             labs: {
-                glucose: 88,
-                a1c: 5.1,
-                ldl: 95,
-                hdl: 62,
-                triglycerides: 95,
-                creatinine: 0.7
+                wbc: 7.2,
+                hemoglobin: 13.5,
+                platelets: 245,
+                creatinine: 0.9,
+                alt: 25
             },
-            currentMedications: [],
+            currentMedications: ['Methotrexate'],
             allergies: []
         },
         {
             id: 'P006',
             demographics: {
-                age: 61,
-                gender: 'M',
-                bmi: 35.2
+                age: 68,
+                gender: 'F',
+                bmi: 25.3
             },
-            conditions: ['Type 2 Diabetes', 'Hypertension', 'Cardiovascular Disease', 'Hyperlipidemia'],
+            conditions: ['Giant Cell Arteritis', 'Hypertension'],
             vitals: {
-                systolic: 155,
-                diastolic: 98,
-                heartRate: 82
+                systolic: 145,
+                diastolic: 92,
+                heartRate: 76,
+                temperature: 98.4
             },
             labs: {
-                glucose: 220,
-                a1c: 9.8,
-                ldl: 168,
-                hdl: 32,
-                triglycerides: 285,
-                creatinine: 1.4
+                wbc: 8.5,
+                hemoglobin: 12.2,
+                platelets: 285,
+                creatinine: 1.0,
+                alt: 30
             },
-            currentMedications: [],
+            currentMedications: ['Prednisone'],
             allergies: []
         },
+
+        // ===== GASTROENTEROLOGY (IBD) PATIENTS =====
         {
             id: 'P007',
             demographics: {
-                age: 45,
-                gender: 'F',
-                bmi: 29.6
+                age: 34,
+                gender: 'M',
+                bmi: 22.1
             },
-            conditions: ['Type 2 Diabetes', 'GERD'],
+            conditions: ['Crohn\'s Disease'],
             vitals: {
-                systolic: 128,
-                diastolic: 82,
-                heartRate: 76
+                systolic: 118,
+                diastolic: 74,
+                heartRate: 70,
+                temperature: 98.5
             },
             labs: {
-                glucose: 165,
-                a1c: 7.2,
-                ldl: 135,
-                hdl: 48,
-                triglycerides: 175,
-                creatinine: 0.9
+                wbc: 9.2,
+                hemoglobin: 11.8,
+                platelets: 315,
+                creatinine: 0.8,
+                alt: 22
             },
-            currentMedications: [],
+            currentMedications: ['Mesalamine'],
             allergies: []
         },
         {
             id: 'P008',
             demographics: {
-                age: 58,
-                gender: 'M',
-                bmi: 27.4
+                age: 41,
+                gender: 'F',
+                bmi: 23.7
             },
-            conditions: ['Hypertension', 'Hyperlipidemia'],
-            vitals: {
-                systolic: 148,
-                diastolic: 94,
-                heartRate: 70
-            },
-            labs: {
-                glucose: 102,
-                a1c: 5.7,
-                ldl: 158,
-                hdl: 44,
-                triglycerides: 195,
-                creatinine: 1.0
-            },
-            currentMedications: [],
-            allergies: ['Penicillin Allergy']
-        },
-        {
-            id: 'P009',
-            demographics: {
-                age: 35,
-                gender: 'M',
-                bmi: 23.8
-            },
-            conditions: ['Respiratory Infection'],
+            conditions: ['Ulcerative Colitis'],
             vitals: {
                 systolic: 122,
                 diastolic: 78,
-                heartRate: 88
+                heartRate: 74,
+                temperature: 98.6
             },
             labs: {
-                glucose: 90,
-                a1c: 5.2,
-                ldl: 105,
-                hdl: 55,
-                triglycerides: 110,
-                creatinine: 0.8
+                wbc: 8.8,
+                hemoglobin: 12.5,
+                platelets: 298,
+                creatinine: 0.7,
+                alt: 24
+            },
+            currentMedications: [],
+            allergies: []
+        },
+
+        // ===== NEUROLOGY PATIENTS =====
+        {
+            id: 'P009',
+            demographics: {
+                age: 38,
+                gender: 'F',
+                bmi: 24.9
+            },
+            conditions: ['Multiple Sclerosis'],
+            vitals: {
+                systolic: 115,
+                diastolic: 72,
+                heartRate: 68,
+                temperature: 98.4
+            },
+            labs: {
+                wbc: 6.5,
+                hemoglobin: 13.8,
+                platelets: 225,
+                creatinine: 0.8,
+                alt: 20
             },
             currentMedications: [],
             allergies: []
@@ -223,25 +247,153 @@ export function generatePatientData(): PatientEHR[] {
         {
             id: 'P010',
             demographics: {
-                age: 78,
-                gender: 'F',
-                bmi: 25.1
+                age: 62,
+                gender: 'M',
+                bmi: 26.4
             },
-            conditions: ['Hypertension', 'Heart Failure', 'Hyperlipidemia'],
+            conditions: ['CIDP', 'Hypertension'],
+            vitals: {
+                systolic: 132,
+                diastolic: 84,
+                heartRate: 72,
+                temperature: 98.6
+            },
+            labs: {
+                wbc: 7.1,
+                hemoglobin: 14.2,
+                platelets: 240,
+                creatinine: 1.0,
+                alt: 28
+            },
+            currentMedications: [],
+            allergies: ['IgA Allergy']
+        },
+
+        // ===== HEMATOLOGY PATIENTS =====
+        {
+            id: 'P011',
+            demographics: {
+                age: 55,
+                gender: 'F',
+                bmi: 28.5
+            },
+            conditions: ['Iron Deficiency Anemia', 'CKD Stage 3'],
+            vitals: {
+                systolic: 128,
+                diastolic: 80,
+                heartRate: 78,
+                temperature: 98.5
+            },
+            labs: {
+                wbc: 6.2,
+                hemoglobin: 8.5,
+                platelets: 205,
+                creatinine: 1.8,
+                alt: 25,
+                ferritin: 45
+            },
+            currentMedications: [],
+            allergies: []
+        },
+        {
+            id: 'P012',
+            demographics: {
+                age: 64,
+                gender: 'M',
+                bmi: 31.2
+            },
+            conditions: ['CKD Anemia', 'Diabetes'],
             vitals: {
                 systolic: 142,
                 diastolic: 88,
-                heartRate: 76
+                heartRate: 76,
+                temperature: 98.6
             },
             labs: {
-                glucose: 96,
-                a1c: 5.5,
-                ldl: 140,
-                hdl: 48,
-                triglycerides: 170,
-                creatinine: 1.2
+                wbc: 5.8,
+                hemoglobin: 9.2,
+                platelets: 190,
+                creatinine: 2.5,
+                alt: 32
             },
-            currentMedications: ['Lisinopril', 'Atorvastatin'],
+            currentMedications: [],
+            allergies: []
+        },
+
+        // ===== INFECTIOUS DISEASE PATIENTS =====
+        {
+            id: 'P013',
+            demographics: {
+                age: 48,
+                gender: 'M',
+                bmi: 27.1
+            },
+            conditions: ['MRSA Infection', 'Endocarditis'],
+            vitals: {
+                systolic: 118,
+                diastolic: 76,
+                heartRate: 92,
+                temperature: 101.2
+            },
+            labs: {
+                wbc: 14.5,
+                hemoglobin: 11.2,
+                platelets: 165,
+                creatinine: 1.3,
+                alt: 45
+            },
+            currentMedications: [],
+            allergies: []
+        },
+        {
+            id: 'P014',
+            demographics: {
+                age: 71,
+                gender: 'F',
+                bmi: 24.8
+            },
+            conditions: ['Pneumonia', 'COPD'],
+            vitals: {
+                systolic: 125,
+                diastolic: 78,
+                heartRate: 88,
+                temperature: 100.8
+            },
+            labs: {
+                wbc: 16.2,
+                hemoglobin: 12.8,
+                platelets: 198,
+                creatinine: 0.9,
+                alt: 28
+            },
+            currentMedications: [],
+            allergies: ['Penicillin Allergy']
+        },
+
+        // ===== CARDIOLOGY PATIENTS =====
+        {
+            id: 'P015',
+            demographics: {
+                age: 66,
+                gender: 'M',
+                bmi: 30.5
+            },
+            conditions: ['Deep Vein Thrombosis', 'Atrial Fibrillation'],
+            vitals: {
+                systolic: 138,
+                diastolic: 86,
+                heartRate: 94,
+                temperature: 98.6
+            },
+            labs: {
+                wbc: 7.5,
+                hemoglobin: 13.5,
+                platelets: 210,
+                creatinine: 1.1,
+                alt: 35,
+                inr: 1.2
+            },
+            currentMedications: [],
             allergies: []
         }
     ];
@@ -255,7 +407,10 @@ export function getPatientById(id: string): PatientEHR | undefined {
 
 // Helper to get patient display name
 export function getPatientDisplayName(patient: PatientEHR): string {
-    return `Patient ${patient.id} - ${patient.demographics.age}yo ${patient.demographics.gender === 'M' ? 'Male' : 'Female'}`;
+    const primaryCondition = patient.cancerDiagnosis
+        ? patient.cancerDiagnosis.type
+        : patient.conditions[0];
+    return `${patient.id} - ${patient.demographics.age}yo ${patient.demographics.gender === 'M' ? 'M' : 'F'} - ${primaryCondition}`;
 }
 
 // Helper to get patient display name by ID
