@@ -3,8 +3,9 @@ import type { ReactNode } from 'react';
 import type { NetworkRequest, Site, SiteInventory } from '../types/location';
 import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
-import { networkRequests as initialRequests, sites, siteInventories as initialInventories } from '../data/location/mockData';
+import { sites, siteInventories as initialInventories } from '../data/location/mockData';
 import { mockNotifications as initialNotifications } from '../data/notifications/mockData';
+import { FirestoreService } from '../services/firebase.service';
 
 interface AppContextType {
     // Location & Requests
@@ -31,38 +32,62 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     // Initialize with localStorage or mock data
-    const [requests, setRequests] = useState<NetworkRequest[]>(() => {
-        const saved = localStorage.getItem('sentria_requests');
-        return saved ? JSON.parse(saved) : initialRequests;
-    });
+    const [requests, setRequests] = useState<NetworkRequest[]>([]);
 
     const [notifications, setNotifications] = useState<Notification[]>(() => {
         const saved = localStorage.getItem('sentria_notifications');
         return saved ? JSON.parse(saved) : initialNotifications;
     });
 
-    const [inventories, setInventories] = useState<SiteInventory[]>(() => {
-        const saved = localStorage.getItem('sentria_inventories');
-        return saved ? JSON.parse(saved) : initialInventories;
-    });
+    const [inventories, setInventories] = useState<SiteInventory[]>([]);
 
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => {
         const saved = localStorage.getItem('sentria_audit_logs');
         return saved ? JSON.parse(saved) : [];
     });
 
-    // Persist to localStorage whenever state changes
-    useEffect(() => {
-        localStorage.setItem('sentria_requests', JSON.stringify(requests));
-    }, [requests]);
-
+    // Persist to localStorage whenever state changes (only for notifications and audit logs)
     useEffect(() => {
         localStorage.setItem('sentria_notifications', JSON.stringify(notifications));
     }, [notifications]);
 
     useEffect(() => {
-        localStorage.setItem('sentria_inventories', JSON.stringify(inventories));
-    }, [inventories]);
+        localStorage.setItem('sentria_audit_logs', JSON.stringify(auditLogs));
+    }, [auditLogs]);
+
+    // Subscribe to Firestore collections
+    useEffect(() => {
+        const unsubscribeRequests = FirestoreService.subscribe<NetworkRequest>('transfers', (data) => {
+            setRequests(data);
+        });
+
+        const unsubscribeInventories = FirestoreService.subscribe<SiteInventory>('inventoryItems', (data) => {
+            if (data.length === 0 && initialInventories.length > 0) {
+                // Seed data if Firestore is empty
+                console.log('Seeding inventory data...');
+                initialInventories.forEach(inv => {
+                    FirestoreService.set('inventoryItems', inv.siteId, inv);
+                });
+            } else {
+                setInventories(data);
+            }
+        });
+
+        const unsubscribeNotifications = FirestoreService.subscribe<Notification>('notifications', (data) => {
+            setNotifications(data);
+        });
+
+        const unsubscribeAuditLogs = FirestoreService.subscribe<AuditLogEntry>('auditLogs', (data) => {
+            setAuditLogs(data);
+        });
+
+        return () => {
+            unsubscribeRequests();
+            unsubscribeInventories();
+            unsubscribeNotifications();
+            unsubscribeAuditLogs();
+        };
+    }, []);
 
     useEffect(() => {
         localStorage.setItem('sentria_audit_logs', JSON.stringify(auditLogs));
@@ -128,36 +153,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, [inventories]); // Run when inventories change
 
     // Inventory Management
-    const updateInventory = (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {
+    const updateInventory = async (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {
+        const inventory = inventories.find(inv => inv.siteId === siteId);
+        if (!inventory) return;
+
         let updatedDrugName = '';
         let newQuantity = 0;
 
-        setInventories(prev => prev.map(inv => {
-            if (inv.siteId !== siteId) return inv;
+        const updatedDrugs = inventory.drugs.map(drug => {
+            if (drug.ndc !== ndc) return drug;
+
+            updatedDrugName = drug.drugName;
+            newQuantity = Math.max(0, drug.quantity + quantityChange);
+
+            // Recalculate status
+            let status: 'well_stocked' | 'low' | 'critical' | 'overstocked' = 'well_stocked';
+            if (newQuantity <= drug.minLevel / 2) status = 'critical';
+            else if (newQuantity <= drug.minLevel) status = 'low';
+            else if (newQuantity >= drug.maxLevel * 1.2) status = 'overstocked';
 
             return {
-                ...inv,
-                lastUpdated: new Date().toISOString(),
-                drugs: inv.drugs.map(drug => {
-                    if (drug.ndc !== ndc) return drug;
-
-                    updatedDrugName = drug.drugName;
-                    newQuantity = Math.max(0, drug.quantity + quantityChange);
-
-                    // Recalculate status
-                    let status: 'well_stocked' | 'low' | 'critical' | 'overstocked' = 'well_stocked';
-                    if (newQuantity <= drug.minLevel / 2) status = 'critical';
-                    else if (newQuantity <= drug.minLevel) status = 'low';
-                    else if (newQuantity >= drug.maxLevel * 1.2) status = 'overstocked';
-
-                    return {
-                        ...drug,
-                        quantity: newQuantity,
-                        status
-                    };
-                })
+                ...drug,
+                quantity: newQuantity,
+                status
             };
-        }));
+        });
+
+        const updatedInventory = {
+            ...inventory,
+            lastUpdated: new Date().toISOString(),
+            drugs: updatedDrugs
+        };
+
+        // Save to Firestore
+        await FirestoreService.set('inventoryItems', siteId, updatedInventory);
 
         // Create Audit Log
         const site = sites.find(s => s.id === siteId);
@@ -176,95 +205,90 @@ export function AppProvider({ children }: { children: ReactNode }) {
             reason
         };
 
-        setAuditLogs(prev => [logEntry, ...prev]);
+        await FirestoreService.set('auditLogs', logEntry.id, logEntry);
     };
 
     // Request Handlers
-    const addRequest = (request: NetworkRequest) => {
-        const newRequests = [request, ...requests];
-        setRequests(newRequests);
+    const addRequest = async (request: NetworkRequest) => {
+        await FirestoreService.set('transfers', request.id, request);
 
         // Add corresponding notification
         const newNotification: Notification = {
-            // eslint-disable-next-line react-hooks/purity
             id: `notif-${Date.now()}`,
             type: 'info',
             category: 'alert',
             title: 'New Transfer Request',
-            message: `${request.requestedBy} requested ${request.drug.quantity} units of ${request.drug.name}`,
+            message: `${request.requestedBySite.name} requested ${request.drug.quantity} units of ${request.drug.name}`,
             timestamp: new Date().toISOString(),
             read: false,
-            link: '/locations'
+            link: '/transfers'
         };
-        addNotification(newNotification);
+
+        await FirestoreService.set('notifications', newNotification.id, newNotification);
     };
 
-    const updateRequestStatus = (id: string, status: NetworkRequest['status'], approvedBy?: string) => {
-        let updatedRequest: NetworkRequest | undefined;
+    const updateRequestStatus = async (id: string, status: NetworkRequest['status'], approvedBy?: string) => {
+        const updates: Partial<NetworkRequest> = { status };
+        if (approvedBy) {
+            updates.approvedBy = approvedBy;
+            updates.approvedAt = new Date().toISOString();
+        }
+        if (status === 'in_transit') updates.inTransitAt = new Date().toISOString();
+        if (status === 'completed') updates.completedAt = new Date().toISOString();
 
-        const newRequests = requests.map(req => {
-            if (req.id === id) {
-                updatedRequest = {
-                    ...req,
-                    status,
-                    ...(status === 'in_transit' || status === 'approved' ? {
-                        approvedAt: new Date().toISOString(),
-                        approvedBy: approvedBy || 'System'
-                    } : {})
-                };
-                return updatedRequest;
-            }
-            return req;
-        });
+        await FirestoreService.update('transfers', id, updates);
 
-        setRequests(newRequests);
+        const request = requests.find(r => r.id === id);
+        if (!request) return;
 
-        // Add notification for status change
-        if (updatedRequest) {
-            const title = status === 'in_transit' ? 'Transfer Approved' :
-                status === 'denied' ? 'Request Denied' : 'Status Updated';
+        const title = status === 'in_transit' ? 'Transfer Approved' :
+            status === 'denied' ? 'Request Denied' : 'Status Updated';
 
-            const newNotification: Notification = {
-                // eslint-disable-next-line react-hooks/purity
-                id: `notif-${Date.now()}`,
-                type: status === 'denied' ? 'warning' : 'success',
-                category: 'approval',
-                title,
-                message: `Request for ${updatedRequest.drug.name} has been ${status === 'in_transit' ? 'approved' : status}`,
-                timestamp: new Date().toISOString(),
-                read: false,
-                link: '/locations'
-            };
-            addNotification(newNotification);
+        const newNotification: Notification = {
+            id: `notif-${Date.now()}`,
+            type: status === 'denied' ? 'warning' : 'success',
+            category: 'approval',
+            title,
+            message: `Request for ${request.drug.name} has been ${status === 'in_transit' ? 'approved' : status}`,
+            timestamp: new Date().toISOString(),
+            read: false,
+            link: '/transfers'
+        };
+        await FirestoreService.set('notifications', newNotification.id, newNotification);
 
-            // If completed, update inventory
-            if (status === 'completed') {
-                // Deduct from source
-                updateInventory(
-                    updatedRequest.requestedBySite.id, // When 'completed', add to requester.
-                    updatedRequest.drug.ndc,
-                    updatedRequest.drug.quantity,
-                    `Transfer completed from ${updatedRequest.targetSite.name}`,
-                    'system',
-                    'System'
-                );
-            }
+        if (status === 'completed') {
+            await updateInventory(
+                request.requestedBySite.id,
+                request.drug.ndc,
+                -request.drug.quantity,
+                `Transfer to ${request.targetSite.name}`,
+                'System',
+                'System'
+            );
+
+            await updateInventory(
+                request.targetSite.id,
+                request.drug.ndc,
+                request.drug.quantity,
+                `Transfer received from ${request.requestedBySite.name}`,
+                'System',
+                'System'
+            );
         }
     };
 
     // Notification Handlers
-    const addNotification = (notification: Notification) => {
-        setNotifications(prev => [notification, ...prev]);
+    const addNotification = async (notification: Notification) => {
+        await FirestoreService.set('notifications', notification.id, notification);
     };
 
-    const markNotificationAsRead = (id: string) => {
-        setNotifications(prev => prev.map(n =>
-            n.id === id ? { ...n, read: true } : n
-        ));
+    const markNotificationAsRead = async (id: string) => {
+        await FirestoreService.update('notifications', id, { read: true });
     };
 
-    const markAllNotificationsAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const markAllNotificationsAsRead = async () => {
+        const batch = notifications.map(n => FirestoreService.update('notifications', n.id, { read: true }));
+        await Promise.all(batch);
     };
 
     return (

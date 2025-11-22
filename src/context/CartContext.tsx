@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { FirestoreService } from '../services/firebase.service';
 
 interface CartItem {
     id: number;
@@ -19,52 +20,36 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const CART_STORAGE_KEY = 'sentria_cart';
+
 
 export function CartProvider({ children }: { children: ReactNode }) {
-    // Initialize from localStorage
-    const [items, setItems] = useState<CartItem[]>(() => {
-        const stored = localStorage.getItem(CART_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
-    });
+    // Initialize with empty array, data will come from Firestore
+    const [items, setItems] = useState<CartItem[]>([]);
 
-    // Persist to localStorage whenever items change
+    // Subscribe to Firestore cart items
     useEffect(() => {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    }, [items]);
-
-    // Listen for cross-tab changes
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === CART_STORAGE_KEY && e.newValue) {
-                setItems(JSON.parse(e.newValue));
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        const unsubscribe = FirestoreService.subscribe<CartItem>('cartItems', (data) => {
+            setItems(data);
+        });
+        return () => unsubscribe();
     }, []);
 
-    const addToCart = (newItem: CartItem) => {
-        setItems((prev) => {
-            const existing = prev.find((item) => item.id === newItem.id);
-            if (existing) {
-                return prev.map((item) =>
-                    item.id === newItem.id
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                );
-            }
-            return [...prev, { ...newItem, quantity: 1 }];
-        });
+    const addToCart = async (newItem: CartItem) => {
+        const existing = items.find((item) => item.id === newItem.id);
+        if (existing) {
+            await FirestoreService.update('cartItems', newItem.id.toString(), { quantity: existing.quantity + 1 });
+        } else {
+            await FirestoreService.set('cartItems', newItem.id.toString(), { ...newItem, quantity: 1 });
+        }
     };
 
-    const removeFromCart = (id: number) => {
-        setItems((prev) => prev.filter((item) => item.id !== id));
+    const removeFromCart = async (id: number) => {
+        await FirestoreService.delete('cartItems', id.toString());
     };
 
-    const clearCart = () => {
-        setItems([]);
+    const clearCart = async () => {
+        const batch = items.map(item => FirestoreService.delete('cartItems', item.id.toString()));
+        await Promise.all(batch);
     };
 
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);

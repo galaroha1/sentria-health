@@ -1,10 +1,10 @@
 import { TrendingUp, ArrowRight, DollarSign } from 'lucide-react';
 import type { SuggestedTransfer } from '../../types/transfer';
-
-export function SuggestedTransfers({ suggestions, onInitiate }: {
-    suggestions: SuggestedTransfer[];
-    onInitiate: (suggestion: SuggestedTransfer) => void;
-}) {
+import { useFirestore } from '../../hooks/useFirestore';
+export function SuggestedTransfers({ onInitiate }: { onInitiate: (suggestion: SuggestedTransfer) => void }) {
+    const { data: suggestions, loading, error } = useFirestore<SuggestedTransfer>('suggestedTransfers');
+    if (loading) return <div>Loading suggestions...</div>;
+    if (error) return <div>Error loading suggestions.</div>;
     return (
         <div className="space-y-4">
             {suggestions.map((suggestion) => (
@@ -12,8 +12,8 @@ export function SuggestedTransfers({ suggestions, onInitiate }: {
                     <div className="mb-4 flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <span className={`rounded-full px-2 py-1 text-xs font-medium ${suggestion.priority === 'high' ? 'bg-red-100 text-red-700' :
-                                    suggestion.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
-                                        'bg-blue-100 text-blue-700'
+                                suggestion.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-blue-100 text-blue-700'
                                 }`}>
                                 {suggestion.priority.toUpperCase()} PRIORITY
                             </span>

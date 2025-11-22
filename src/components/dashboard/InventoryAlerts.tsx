@@ -1,33 +1,20 @@
 import { AlertTriangle, Clock, ArrowUpRight } from 'lucide-react';
+import { useFirestore } from '../../hooks/useFirestore';
 
-const alerts = [
-    {
-        id: 1,
-        drug: 'Rituximab',
-        lot: 'RX-2024-001',
-        expires: '14 days',
-        quantity: 5,
-        status: 'critical',
-    },
-    {
-        id: 2,
-        drug: 'Bevacizumab',
-        lot: 'BV-2024-089',
-        expires: '45 days',
-        quantity: 12,
-        status: 'warning',
-    },
-    {
-        id: 3,
-        drug: 'Trastuzumab',
-        lot: 'TR-2024-112',
-        expires: '60 days',
-        quantity: 8,
-        status: 'warning',
-    },
-];
+interface InventoryAlert {
+    id: string;
+    drug: string;
+    lot: string;
+    expires: string;
+    quantity: number;
+    status: 'critical' | 'warning';
+}
 
 export function InventoryAlerts() {
+    const { data: alerts, loading, error } = useFirestore<InventoryAlert>('inventoryAlerts');
+
+    if (loading) return <div className="p-4 text-center text-sm text-slate-500">Loading alerts...</div>;
+    if (error) return <div className="p-4 text-center text-sm text-red-500">Error loading alerts</div>;
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">

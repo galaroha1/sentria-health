@@ -3,6 +3,7 @@ import { generatePatientData, getPatientDisplayName } from '../ml/dataGenerator'
 import { DrugPredictor } from '../ml/DrugPredictor';
 import type { DrugRecommendation, VisitType, PatientEHR } from '../ml/clinicalRules';
 import { Brain, Activity, User, Stethoscope, AlertTriangle, CheckCircle, TrendingUp, Pill, Download, Upload, Edit, Trash2 } from 'lucide-react';
+import { FirestoreService } from '../services/firebase.service';
 
 export const DemandPrediction = () => {
     const [selectedPatientId, setSelectedPatientId] = useState<string>('');
@@ -12,18 +13,25 @@ export const DemandPrediction = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingPatient, setEditingPatient] = useState<PatientEHR | null>(null);
-    const [customPatients, setCustomPatients] = useState<PatientEHR[]>(() => {
-        // Load from localStorage on initial render
-        const saved = localStorage.getItem('customPatients');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [customPatients, setCustomPatients] = useState<PatientEHR[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const drugPredictor = new DrugPredictor();
 
-    // Save to localStorage whenever customPatients changes
+    // Load and subscribe to Firebase real-time updates
     useEffect(() => {
-        localStorage.setItem('customPatients', JSON.stringify(customPatients));
-    }, [customPatients]);
+        // Subscribe to real-time updates from Firestore
+        const unsubscribe = FirestoreService.subscribe<PatientEHR>(
+            'customPatients',
+            (patients) => {
+                setCustomPatients(patients);
+                setLoading(false);
+            }
+        );
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, []);
 
     const exportPatients = () => {
         const dataStr = JSON.stringify(customPatients, null, 2);
@@ -36,22 +44,18 @@ export const DemandPrediction = () => {
         URL.revokeObjectURL(url);
     };
 
-    const importPatients = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const importPatients = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const imported = JSON.parse(e.target?.result as string) as PatientEHR[];
-                // Merge with existing, avoiding duplicates by ID
-                const merged = [...customPatients];
-                imported.forEach(patient => {
-                    if (!merged.find(p => p.id === patient.id)) {
-                        merged.push(patient);
-                    }
-                });
-                setCustomPatients(merged);
+                // Save each patient to Firestore
+                for (const patient of imported) {
+                    await FirestoreService.set('customPatients', patient.id, patient);
+                }
                 alert(`Imported ${imported.length} patient(s)`);
             } catch {
                 alert('Error importing patients: Invalid JSON format');
@@ -60,9 +64,9 @@ export const DemandPrediction = () => {
         reader.readAsText(file);
     };
 
-    const deletePatient = (patientId: string) => {
+    const deletePatient = async (patientId: string) => {
         if (confirm('Delete this patient?')) {
-            setCustomPatients(customPatients.filter(p => p.id !== patientId));
+            await FirestoreService.delete('customPatients', patientId);
             if (selectedPatientId === patientId) {
                 setSelectedPatientId('');
                 setShowResults(false);
@@ -185,9 +189,10 @@ export const DemandPrediction = () => {
                                 setSelectedPatientId(e.target.value);
                                 setShowResults(false);
                             }}
-                            className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                            disabled={loading}
+                            className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 disabled:bg-slate-100 disabled:text-slate-400"
                         >
-                            <option value="">Choose a patient...</option>
+                            <option value="">{loading ? 'Loading patients...' : 'Choose a patient...'}</option>
                             {customPatients.length > 0 && (
                                 <optgroup label="Custom Patients">
                                     {customPatients.map(patient => (
@@ -501,7 +506,7 @@ export const DemandPrediction = () => {
                             </div>
                         </div>
                         <form
-                            onSubmit={(e) => {
+                            onSubmit={async (e) => {
                                 e.preventDefault();
                                 const formData = new FormData(e.currentTarget);
 
@@ -538,7 +543,8 @@ export const DemandPrediction = () => {
                                     } : undefined
                                 };
 
-                                setCustomPatients([...customPatients, newPatient]);
+                                // Save to Firebase
+                                await FirestoreService.set('customPatients', newPatient.id, newPatient);
                                 setSelectedPatientId(newPatient.id);
                                 setShowCreateModal(false);
                             }}
