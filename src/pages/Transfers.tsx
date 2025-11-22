@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Clock, CheckCircle2, TrendingUp, FileText, Truck } from 'lucide-react';
-import { auditLog, suggestedTransfers } from '../data/transfers/mockData';
+import { auditLog } from '../data/transfers/mockData';
 import { TransferRequestForm } from '../components/transfers/TransferRequestForm';
 import { useApp } from '../context/AppContext';
 import { TransferApprovalCard } from '../components/transfers/TransferApprovalCard';
@@ -104,7 +104,7 @@ export function Transfers() {
     const tabs = [
         { id: 'active' as TabType, label: 'Active Transfers', icon: Truck },
         { id: 'approvals' as TabType, label: 'Pending Approvals', icon: Clock, badge: pendingTransfers.length },
-        { id: 'suggested' as TabType, label: 'Suggested', icon: TrendingUp, badge: suggestedTransfers.length },
+        { id: 'suggested' as TabType, label: 'Suggested', icon: TrendingUp },
         { id: 'audit' as TabType, label: 'Audit Log', icon: FileText },
     ];
 
@@ -216,7 +216,6 @@ export function Transfers() {
 
                     {activeTab === 'suggested' && (
                         <SuggestedTransfers
-                            suggestions={suggestedTransfers}
                             onInitiate={handleInitiateSuggestion}
                         />
                     )}
