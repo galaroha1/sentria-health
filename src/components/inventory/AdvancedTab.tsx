@@ -14,9 +14,7 @@ import {
     addDays,
     addWeeks,
     subWeeks,
-    startOfDay,
-    isToday,
-    parseISO
+    isToday
 } from 'date-fns';
 
 interface SimulationResult {
@@ -186,7 +184,7 @@ export function AdvancedTab() {
                     ))}
                 </div>
                 <div className="grid grid-cols-7 auto-rows-[minmax(100px,auto)] divide-x divide-y divide-slate-200 bg-white">
-                    {days.map((day, idx) => {
+                    {days.map((day) => {
                         const dayEvents = simulationResults.filter(r => isSameDay(r.date, day));
                         return (
                             <div
