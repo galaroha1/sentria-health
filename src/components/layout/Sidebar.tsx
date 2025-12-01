@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingCart, Package, Users, BarChart3, Settings, X, ArrowRightLeft, MapPin, Brain } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Users, Settings, X, ArrowRightLeft, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { useAuth } from '../../context/AuthContext';
@@ -18,8 +18,7 @@ const navigation: NavigationItem[] = [
     { name: 'Locations', href: '/locations', icon: MapPin, requirePermission: 'locations' },
     { name: 'Users', href: '/users', icon: Users, requirePermission: 'dashboard' },
     { name: 'Vendors', href: '/vendors', icon: Users, requirePermission: 'vendors' },
-    { name: 'Reports', href: '/reports', icon: BarChart3, requirePermission: 'reports' },
-    { name: 'Drug Recommendations', href: '/demand-prediction', icon: Brain, requirePermission: 'reports' },
+
 ];
 
 interface SidebarProps {

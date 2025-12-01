@@ -4,7 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Marketplace } from './pages/Marketplace';
 import { Cart } from './pages/Cart';
 import { Inventory } from './pages/Inventory';
-import { Reports } from './pages/Reports';
+
 import { Vendors } from './pages/Vendors';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
@@ -12,8 +12,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { Transfers } from './pages/Transfers';
 import { LocationMap } from './pages/LocationMap';
 import { UserManagement } from './pages/UserManagement';
-import { AuditLog } from './pages/AuditLog';
-import { DemandPrediction } from './pages/DemandPrediction';
+
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -64,14 +63,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="reports"
-                    element={
-                      <ProtectedRoute requirePermission="reports">
-                        <Reports />
-                      </ProtectedRoute>
-                    }
-                  />
+
                   <Route path="profile" element={<Profile />} />
                   <Route path="transfers" element={<Transfers />} />
                   <Route path="locations" element={<LocationMap />} />
@@ -83,8 +75,6 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="audit-log" element={<AuditLog />} />
-                  <Route path="demand-prediction" element={<DemandPrediction />} />
                 </Route>
               </Routes>
             </BrowserRouter>

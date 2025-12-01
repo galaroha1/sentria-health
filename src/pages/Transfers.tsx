@@ -18,26 +18,34 @@ export function Transfers() {
     const [showRequestForm, setShowRequestForm] = useState(false);
 
     // Adapter to convert NetworkRequest to TransferRequest for UI components
-    const adaptRequest = (req: NetworkRequest): TransferRequest => ({
-        id: req.id,
-        requestedBy: req.requestedBy,
-        requestedAt: req.requestedAt,
-        sourceDepartment: { id: req.requestedBySite.id, name: req.requestedBySite.name, type: 'clinical' }, // Mapping Site to Dept
-        destinationDepartment: { id: req.targetSite.id, name: req.targetSite.name, type: 'clinical' },
-        drug: {
-            name: req.drug.name,
-            ndc: req.drug.ndc,
-            lotNumber: req.drug.lotNumber || 'N/A',
-        },
-        quantity: req.drug.quantity,
-        reason: req.reason,
-        status: req.status,
-        policyChecks: req.policyChecks || [],
-        approvedBy: req.approvedBy,
-        approvedAt: req.approvedAt,
-        inTransitAt: req.inTransitAt,
-        completedAt: req.completedAt,
-    });
+    const adaptRequest = (req: NetworkRequest): TransferRequest => {
+        // Safety check for missing site data
+        const sourceName = req.requestedBySite?.name || 'Unknown Source';
+        const sourceId = req.requestedBySite?.id || 'unknown-source';
+        const targetName = req.targetSite?.name || 'Unknown Destination';
+        const targetId = req.targetSite?.id || 'unknown-target';
+
+        return {
+            id: req.id,
+            requestedBy: req.requestedBy,
+            requestedAt: req.requestedAt,
+            sourceDepartment: { id: sourceId, name: sourceName, type: 'clinical' }, // Mapping Site to Dept
+            destinationDepartment: { id: targetId, name: targetName, type: 'clinical' },
+            drug: {
+                name: req.drug.name,
+                ndc: req.drug.ndc,
+                lotNumber: req.drug.lotNumber || 'N/A',
+            },
+            quantity: req.drug.quantity,
+            reason: req.reason,
+            status: req.status,
+            policyChecks: req.policyChecks || [],
+            approvedBy: req.approvedBy,
+            approvedAt: req.approvedAt,
+            inTransitAt: req.inTransitAt,
+            completedAt: req.completedAt,
+        };
+    };
 
     // Filter requests for different views
     const pendingTransfers = requests.filter(t => t.status === 'pending').map(adaptRequest);
@@ -70,6 +78,11 @@ export function Transfers() {
         // Note: TransferRequestForm uses 'departments' but we need 'sites'.
         // For now, we'll try to find a site that matches the ID or just use the first one as fallback/mock
         // In a real app, the form should use the same 'sites' data.
+
+        if (!sites || sites.length === 0) {
+            console.error('No sites available for transfer request');
+            return;
+        }
 
         const sourceSite = sites.find(s => s.id === data.sourceDept) || sites[0];
         const targetSite = sites.find(s => s.id === data.destDept) || sites[1];

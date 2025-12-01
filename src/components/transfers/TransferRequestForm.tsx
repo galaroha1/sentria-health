@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Package, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { PolicyCheck } from '../../types/transfer';
@@ -39,11 +39,28 @@ export function TransferRequestForm({ onClose, onSubmit }: { onClose: () => void
         });
     };
 
+    // Handle Escape key to close modal
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
     const allPassed = policyChecks.every(check => check.passed);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-3xl rounded-xl border border-slate-200 bg-white shadow-2xl">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={onClose}
+        >
+            <div
+                className="w-full max-w-3xl rounded-xl border border-slate-200 bg-white shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex items-center justify-between border-b border-slate-200 p-6">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-600">

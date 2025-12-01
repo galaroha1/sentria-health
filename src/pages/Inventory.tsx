@@ -1,35 +1,32 @@
-import { Search, Filter, AlertTriangle, ScanLine } from 'lucide-react';
-import { useApp } from '../context/AppContext';
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { Truck, Package, Syringe, RefreshCw, FileText, Zap, ArrowRightLeft } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
 import { BarcodeScanner } from '../components/common/BarcodeScanner';
 import type { Site } from '../types/location';
 
+// Tabs
+import { ProcurementTab } from '../components/inventory/ProcurementTab';
+import { StockTab } from '../components/inventory/StockTab';
+import { AdministrationTab } from '../components/inventory/AdministrationTab';
+import { ReorderingTab } from '../components/inventory/ReorderingTab';
+import { ComplianceTab } from '../components/inventory/ComplianceTab';
+import { AdvancedTab } from '../components/inventory/AdvancedTab';
+import { LogisticsTab } from '../components/inventory/LogisticsTab';
+
+type TabType = 'procurement' | 'stock' | 'admin' | 'reorder' | 'compliance' | 'advanced' | 'logistics';
+
+
+
 export function Inventory() {
     const { inventories, sites, addRequest } = useApp();
-    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<TabType>('logistics');
+
+    // Shared state for modals
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
     const [transferTarget, setTransferTarget] = useState<{ site: Site, drug: string } | null>(null);
     const [showScanner, setShowScanner] = useState(false);
-
-    // Flatten inventory for the table view (simplified for this demo)
-    // In a real app, we might group by site or have a site selector
-    const allItems = inventories.flatMap(inv =>
-        inv.drugs.map(drug => ({
-            ...drug,
-            siteId: inv.siteId,
-            siteName: sites.find(s => s.id === inv.siteId)?.name || 'Unknown Site'
-        }))
-    );
-
-    const filteredItems = allItems.filter(item =>
-        item.drugName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.ndc.includes(searchTerm)
-    );
-
-    const lowStockCount = allItems.filter(i => i.status === 'low' || i.status === 'critical').length;
 
     const handleLocateStock = (drugName: string, siteId: string) => {
         setLocatorDrug({ name: drugName, siteId });
@@ -40,105 +37,99 @@ export function Inventory() {
         const targetSite = sites.find(s => s.id === targetSiteId);
         if (targetSite) {
             setTransferTarget({ site: targetSite, drug: locatorDrug.name });
-            setLocatorDrug(null); // Close locator
+            setLocatorDrug(null);
         }
     };
 
     const handleScan = (decodedText: string) => {
-        setSearchTerm(decodedText);
+        console.log('Scanned:', decodedText);
         setShowScanner(false);
-        // Optional: Play a success sound or show a toast
+        // In a real app, this would route to the specific item or action based on the scan
     };
 
+    const tabs = [
+        { id: 'logistics' as TabType, label: 'Logistics', icon: ArrowRightLeft, desc: 'Check-in/out & Transfers' },
+        { id: 'advanced' as TabType, label: 'Advanced', icon: Zap, desc: 'AI & Analytics' },
+        { id: 'procurement' as TabType, label: 'Procurement', icon: Truck, desc: 'Receiving & Orders' },
+        { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
+        { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
+        { id: 'reorder' as TabType, label: 'Reordering', icon: RefreshCw, desc: 'Replenishment' },
+        { id: 'compliance' as TabType, label: 'Compliance', icon: FileText, desc: 'Audits & Reports' },
+    ];
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Inventory Management</h1>
-                    <p className="text-sm text-slate-500">Track stock levels across all {sites.length} locations.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowScanner(true)}
-                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm"
-                    >
-                        <ScanLine className="h-4 w-4" />
-                        Scan Item
-                    </button>
-                    <div className="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-2 shadow-sm">
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
-                        <span className="text-sm font-medium text-slate-700">{lowStockCount} Low Stock Alerts</span>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            {/* Sticky Sidebar Navigation */}
+            <div className="w-full shrink-0 lg:sticky lg:top-6 lg:w-64">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="mb-4 px-2">
+                        <h1 className="text-xl font-bold text-slate-900">Inventory</h1>
+                        <p className="text-xs text-slate-500">PAM-IMS Workflow</p>
                     </div>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 shadow-sm">
-                        Add Inventory
-                    </button>
-                </div>
-            </div>
-
-            {/* Search and Filter Bar */}
-            <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search by drug name, NDC, or lot number..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                    />
-                </div>
-                <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                </button>
-            </div>
-
-            {/* Inventory Table */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-slate-500">
-                        <tr>
-                            <th className="px-6 py-4 font-medium">Drug Name</th>
-                            <th className="px-6 py-4 font-medium">Location</th>
-                            <th className="px-6 py-4 font-medium">NDC</th>
-                            <th className="px-6 py-4 font-medium">Quantity</th>
-                            <th className="px-6 py-4 font-medium">Status</th>
-                            <th className="px-6 py-4 font-medium">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {filteredItems.map((item, index) => (
-                            <tr key={`${item.siteId}-${item.ndc}-${index}`} className="hover:bg-slate-50">
-                                <td className="px-6 py-4 font-medium text-slate-900">{item.drugName}</td>
-                                <td className="px-6 py-4 text-slate-600">{item.siteName}</td>
-                                <td className="px-6 py-4 text-slate-500">{item.ndc}</td>
-                                <td className="px-6 py-4 font-medium text-slate-900">{item.quantity}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.status === 'critical' ? 'bg-red-100 text-red-800' :
-                                        item.status === 'low' ? 'bg-amber-100 text-amber-800' :
-                                            item.status === 'overstocked' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-emerald-100 text-emerald-800'
+                    <nav className="space-y-1">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-all ${activeTab === tab.id
+                                        ? 'bg-slate-900 text-white shadow-md'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        }`}
+                                >
+                                    <div className={`rounded-md p-1.5 transition-colors ${activeTab === tab.id ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-700'
                                         }`}>
-                                        {item.status.replace('_', ' ').toUpperCase()}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    {(item.status === 'low' || item.status === 'critical') && (
-                                        <button
-                                            onClick={() => handleLocateStock(item.drugName, item.siteId)}
-                                            className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
-                                        >
-                                            <MapPin className="h-3 w-3" />
-                                            Locate Stock
-                                        </button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <span className="block text-sm font-bold">{tab.label}</span>
+                                        <span className={`block text-[10px] ${activeTab === tab.id ? 'text-slate-300' : 'text-slate-400'}`}>
+                                            {tab.desc}
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
             </div>
 
+            {/* Main Content Area */}
+            <div className="min-h-[600px] flex-1">
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="mb-6 border-b border-slate-100 pb-4">
+                        <h2 className="text-2xl font-bold text-slate-900">
+                            {tabs.find(t => t.id === activeTab)?.label}
+                        </h2>
+                        <p className="text-slate-500">
+                            {tabs.find(t => t.id === activeTab)?.desc}
+                        </p>
+                    </div>
+
+                    {activeTab === 'logistics' && <LogisticsTab />}
+
+                    {activeTab === 'procurement' && <ProcurementTab />}
+
+                    {activeTab === 'stock' && (
+                        <StockTab
+                            inventories={inventories}
+                            sites={sites}
+                            onLocate={handleLocateStock}
+                        />
+                    )}
+
+                    {activeTab === 'admin' && <AdministrationTab />}
+
+                    {activeTab === 'reorder' && <ReorderingTab />}
+
+                    {activeTab === 'compliance' && <ComplianceTab />}
+
+                    {activeTab === 'advanced' && <AdvancedTab />}
+                </div>
+            </div>
+
+            {/* Shared Modals */}
             {showScanner && (
                 <BarcodeScanner
                     onScan={handleScan}
@@ -160,7 +151,7 @@ export function Inventory() {
                     <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
                         <NetworkRequestForm
                             sourceSite={transferTarget.site}
-                            destinationSite={sites.find(s => s.id === locatorDrug?.siteId) || sites[0]} // Fallback logic, ideally we pass the requesting site
+                            destinationSite={sites.find(s => s.id === locatorDrug?.siteId) || sites[0]}
                             inventories={inventories}
                             onClose={() => setTransferTarget(null)}
                             onSubmit={(req) => {
