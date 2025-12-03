@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Truck, Package, Syringe, RefreshCw, FileText, Zap, ArrowRightLeft } from 'lucide-react';
+import { Truck, Package, Syringe, RefreshCw, FileText, Zap, ArrowRightLeft, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
 import { BarcodeScanner } from '../components/common/BarcodeScanner';
 import type { Site } from '../types/location';
+import { useSimulation } from '../context/SimulationContext';
 
 // Tabs
 import { ProcurementTab } from '../components/inventory/ProcurementTab';
@@ -14,13 +15,14 @@ import { ReorderingTab } from '../components/inventory/ReorderingTab';
 import { ComplianceTab } from '../components/inventory/ComplianceTab';
 import { AdvancedTab } from '../components/inventory/AdvancedTab';
 import { LogisticsTab } from '../components/inventory/LogisticsTab';
+import { PatientDataTab } from '../components/inventory/PatientDataTab';
+import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
 
-type TabType = 'procurement' | 'stock' | 'admin' | 'reorder' | 'compliance' | 'advanced' | 'logistics';
-
-
+type TabType = 'procurement' | 'stock' | 'admin' | 'reorder' | 'compliance' | 'advanced' | 'logistics' | 'patients';
 
 export function Inventory() {
     const { inventories, sites, addRequest } = useApp();
+    const { selectedPatient, setSelectedPatient } = useSimulation();
     const [activeTab, setActiveTab] = useState<TabType>('logistics');
 
     // Shared state for modals
@@ -50,6 +52,7 @@ export function Inventory() {
     const tabs = [
         { id: 'logistics' as TabType, label: 'Logistics', icon: ArrowRightLeft, desc: 'Check-in/out & Transfers' },
         { id: 'advanced' as TabType, label: 'Advanced', icon: Zap, desc: 'AI & Analytics' },
+        { id: 'patients' as TabType, label: 'Patient Data', icon: Users, desc: 'Comprehensive Records' },
         { id: 'procurement' as TabType, label: 'Procurement', icon: Truck, desc: 'Receiving & Orders' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
         { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
@@ -126,6 +129,8 @@ export function Inventory() {
                     {activeTab === 'compliance' && <ComplianceTab />}
 
                     {activeTab === 'advanced' && <AdvancedTab />}
+
+                    {activeTab === 'patients' && <PatientDataTab />}
                 </div>
             </div>
 
@@ -161,6 +166,13 @@ export function Inventory() {
                         />
                     </div>
                 </div>
+            )}
+
+            {selectedPatient && (
+                <PatientDetailsModal
+                    patient={selectedPatient}
+                    onClose={() => setSelectedPatient(null)}
+                />
             )}
         </div>
     );

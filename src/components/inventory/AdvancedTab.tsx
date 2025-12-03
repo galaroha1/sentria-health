@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Brain, Link as LinkIcon, Zap, Activity, Play, Calendar as CalendarIcon, MapPin, Truck, Package, CheckCircle2, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Brain, Link as LinkIcon, Zap, Activity, Play, Calendar as CalendarIcon, MapPin, Truck, Package, CheckCircle2, ChevronLeft, ChevronRight, Clock, ShoppingCart, Loader2, UserPlus } from 'lucide-react';
 import {
     format,
     startOfMonth,
@@ -16,110 +17,53 @@ import {
     subWeeks,
     isToday
 } from 'date-fns';
-
-interface SimulationResult {
-    id: string;
-    date: Date;
-    timeStr: string;
-    patientName: string;
-    condition: string;
-    visitType: string;
-    location: string;
-    drug: string;
-    acquisitionMethod: 'White Bag' | 'Brown Bag' | 'Clear Bag';
-    status: 'Scheduled' | 'Transport Needed' | 'In Stock';
-}
+import { useCart } from '../../context/CartContext';
+import { useApp } from '../../context/AppContext';
+import { useSimulation, type SimulationResult } from '../../context/SimulationContext';
+import { AddPatientModal } from './AddPatientModal';
 
 type CalendarView = 'month' | 'week' | 'day';
 
 export function AdvancedTab() {
-    const [isSimulating, setIsSimulating] = useState(false);
-    const [simulationResults, setSimulationResults] = useState<SimulationResult[]>([]);
+    const navigate = useNavigate();
+    const { addToCart } = useCart();
+    const { addNotification } = useApp();
+    const {
+        simulationResults,
+        isSimulating,
+        runSimulation,
+        scanningPatient,
+        viewPatientDetails
+    } = useSimulation();
+
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState<CalendarView>('month');
 
-    const runSimulation = () => {
-        setIsSimulating(true);
-        // Simulate processing time
-        setTimeout(() => {
-            const today = new Date();
-            const results: SimulationResult[] = [
-                {
-                    id: 'sim-1',
-                    date: addDays(today, 1),
-                    timeStr: '09:00 AM',
-                    patientName: 'Sarah Connor',
-                    condition: 'Oncology - Cycle 3',
-                    visitType: 'Infusion Therapy',
-                    location: 'Infusion Center A',
-                    drug: 'Keytruda (Pembrolizumab)',
-                    acquisitionMethod: 'White Bag',
-                    status: 'Transport Needed'
-                },
-                {
-                    id: 'sim-2',
-                    date: addDays(today, 1),
-                    timeStr: '10:30 AM',
-                    patientName: 'James Howlett',
-                    condition: 'Rheumatoid Arthritis',
-                    visitType: 'Follow-up Injection',
-                    location: 'Clinic North',
-                    drug: 'Remicade (Infliximab)',
-                    acquisitionMethod: 'Clear Bag',
-                    status: 'In Stock'
-                },
-                {
-                    id: 'sim-3',
-                    date: addDays(today, 2),
-                    timeStr: '02:00 PM',
-                    patientName: 'Wade Wilson',
-                    condition: 'Immunotherapy',
-                    visitType: 'New Patient Consult',
-                    location: 'Main Hospital - Oncology',
-                    drug: 'Opdivo (Nivolumab)',
-                    acquisitionMethod: 'Brown Bag',
-                    status: 'Scheduled'
-                },
-                {
-                    id: 'sim-4',
-                    date: addDays(today, 3),
-                    timeStr: '08:45 AM',
-                    patientName: 'Jean Grey',
-                    condition: 'Multiple Sclerosis',
-                    visitType: 'Routine Infusion',
-                    location: 'Neurology Wing',
-                    drug: 'Ocrevus (Ocrelizumab)',
-                    acquisitionMethod: 'White Bag',
-                    status: 'Transport Needed'
-                },
-                {
-                    id: 'sim-5',
-                    date: addDays(today, 5),
-                    timeStr: '11:00 AM',
-                    patientName: 'Tony Stark',
-                    condition: 'Cardiac Support',
-                    visitType: 'Check-up',
-                    location: 'Cardiology Dept',
-                    drug: 'Entresto',
-                    acquisitionMethod: 'Clear Bag',
-                    status: 'In Stock'
-                },
-                {
-                    id: 'sim-6',
-                    date: addDays(today, 12),
-                    timeStr: '01:30 PM',
-                    patientName: 'Bruce Banner',
-                    condition: 'Stress Management',
-                    visitType: 'Therapy Session',
-                    location: 'Psychiatry Wing',
-                    drug: 'Lexapro',
-                    acquisitionMethod: 'Brown Bag',
-                    status: 'Scheduled'
-                }
-            ];
-            setSimulationResults(results);
-            setIsSimulating(false);
-        }, 1500);
+    const [showAddPatient, setShowAddPatient] = useState(false);
+
+    const handleDayClick = (day: Date) => {
+        setCurrentDate(day);
+        setView('day');
+    };
+
+    const handleOrderDrug = (event: SimulationResult) => {
+        addToCart({
+            id: Math.floor(Math.random() * 10000), // Mock ID
+            name: event.drug,
+            price: event.price,
+            quantity: 1,
+            seller: 'Sentria Logistics'
+        });
+        addNotification({
+            id: Date.now().toString(),
+            type: 'success',
+            message: `Added ${event.drug} to cart`,
+            timestamp: new Date().toISOString(),
+            read: false,
+            category: 'system',
+            title: 'Order Added'
+        });
+        navigate('/cart');
     };
 
     const nextPeriod = () => {
@@ -189,7 +133,8 @@ export function AdvancedTab() {
                         return (
                             <div
                                 key={day.toString()}
-                                className={`min-h-[100px] p-2 transition-colors hover:bg-slate-50 ${!isSameMonth(day, monthStart) ? 'bg-slate-50/50 text-slate-400' : ''
+                                onClick={() => handleDayClick(day)}
+                                className={`min-h-[100px] p-2 transition-colors hover:bg-slate-50 cursor-pointer ${!isSameMonth(day, monthStart) ? 'bg-slate-50/50 text-slate-400' : ''
                                     } ${isToday(day) ? 'bg-blue-50/30' : ''}`}
                             >
                                 <div className={`mb-1 flex justify-between`}>
@@ -202,7 +147,14 @@ export function AdvancedTab() {
                                 </div>
                                 <div className="space-y-1">
                                     {dayEvents.map(event => (
-                                        <div key={event.id} className="cursor-pointer rounded border border-slate-100 bg-white p-1.5 shadow-sm hover:border-blue-200">
+                                        <div
+                                            key={event.id}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                viewPatientDetails(event);
+                                            }}
+                                            className="rounded border border-slate-100 bg-white p-1.5 shadow-sm hover:border-blue-200 hover:bg-blue-50 transition-colors"
+                                        >
                                             <div className="flex items-center gap-1 text-[10px] font-bold text-slate-700">
                                                 <Clock className="h-3 w-3" /> {event.timeStr}
                                             </div>
@@ -210,7 +162,7 @@ export function AdvancedTab() {
                                                 {event.drug}
                                             </div>
                                             <div className="truncate text-[10px] text-slate-500">
-                                                {event.location}
+                                                {event.patientName}
                                             </div>
                                         </div>
                                     ))}
@@ -233,7 +185,11 @@ export function AdvancedTab() {
                 {days.map(day => {
                     const dayEvents = simulationResults.filter(r => isSameDay(r.date, day));
                     return (
-                        <div key={day.toString()} className="flex flex-col rounded-lg border border-slate-200 bg-white">
+                        <div
+                            key={day.toString()}
+                            onClick={() => handleDayClick(day)}
+                            className="flex flex-col rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-blue-300 transition-colors"
+                        >
                             <div className={`border-b border-slate-100 p-2 text-center ${isToday(day) ? 'bg-blue-50' : 'bg-slate-50'}`}>
                                 <div className="text-xs font-medium text-slate-500 uppercase">{format(day, 'EEE')}</div>
                                 <div className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${isToday(day) ? 'bg-blue-600 text-white' : 'text-slate-900'}`}>
@@ -242,7 +198,14 @@ export function AdvancedTab() {
                             </div>
                             <div className="flex-1 space-y-2 p-2">
                                 {dayEvents.map(event => (
-                                    <div key={event.id} className="rounded-lg border border-slate-100 bg-white p-2 shadow-sm hover:border-blue-200">
+                                    <div
+                                        key={event.id}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            viewPatientDetails(event);
+                                        }}
+                                        className="rounded-lg border border-slate-100 bg-white p-2 shadow-sm hover:border-blue-200 hover:bg-blue-50 transition-colors"
+                                    >
                                         <div className="mb-1 flex items-center justify-between">
                                             <span className="text-xs font-bold text-slate-700">{event.timeStr}</span>
                                             <span className={`h-2 w-2 rounded-full ${event.status === 'Transport Needed' ? 'bg-amber-500' : 'bg-emerald-500'
@@ -294,7 +257,26 @@ export function AdvancedTab() {
                                         <span className="flex items-center gap-1"><Package className="h-3 w-3" /> {event.acquisitionMethod}</span>
                                     </div>
                                     <div className="rounded-md bg-slate-50 p-2 text-sm text-slate-600">
-                                        <span className="font-medium">Patient:</span> {event.patientName} • <span className="font-medium">Visit:</span> {event.visitType}
+                                        <span className="font-medium">Patient:</span>
+                                        <button
+                                            onClick={() => viewPatientDetails(event)}
+                                            className="ml-1 font-semibold text-blue-600 hover:underline"
+                                        >
+                                            {event.patientName}
+                                        </button>
+                                        • <span className="font-medium">Visit:</span> {event.visitType}
+                                    </div>
+                                    <div className="mt-3">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOrderDrug(event);
+                                            }}
+                                            className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                                        >
+                                            <ShoppingCart className="h-3 w-3" />
+                                            Order Drug Now
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -313,7 +295,27 @@ export function AdvancedTab() {
         <div className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
                 {/* AI Simulation Control */}
-                <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm relative overflow-hidden">
+                    {/* Scanning Overlay */}
+                    {isSimulating && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
+                            <div className="relative mb-6">
+                                <div className="absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-75"></div>
+                                <div className="relative rounded-full bg-purple-100 p-4">
+                                    <Brain className="h-12 w-12 text-purple-600 animate-pulse" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Analyzing Patient Data</h3>
+                            <div className="flex items-center gap-2 text-slate-500">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="font-mono text-sm">Scanning: {scanningPatient}</span>
+                            </div>
+                            <div className="mt-8 w-64 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-purple-600 animate-[progress_3s_ease-in-out_infinite]" style={{ width: '100%' }}></div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="rounded-lg bg-purple-100 p-2 text-purple-600">
@@ -324,23 +326,32 @@ export function AdvancedTab() {
                                 <p className="text-sm text-slate-500">Patient-centric forecasting & logistics planning</p>
                             </div>
                         </div>
-                        <button
-                            onClick={runSimulation}
-                            disabled={isSimulating}
-                            className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
-                        >
-                            {isSimulating ? (
-                                <>
-                                    <Activity className="h-4 w-4 animate-spin" />
-                                    Running Simulation...
-                                </>
-                            ) : (
-                                <>
-                                    <Play className="h-4 w-4" />
-                                    Run Simulation
-                                </>
-                            )}
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowAddPatient(true)}
+                                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                Add Patient
+                            </button>
+                            <button
+                                onClick={runSimulation}
+                                disabled={isSimulating}
+                                className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+                            >
+                                {isSimulating ? (
+                                    <>
+                                        <Activity className="h-4 w-4 animate-spin" />
+                                        Running...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play className="h-4 w-4" />
+                                        Run Simulation
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Calendar Component */}
@@ -416,6 +427,10 @@ export function AdvancedTab() {
                     </div>
                 </div>
             </div>
+
+            {showAddPatient && (
+                <AddPatientModal onClose={() => setShowAddPatient(false)} />
+            )}
         </div>
     );
 }
