@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { addDays, addMonths, subMonths, addWeeks, subWeeks } from 'date-fns';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { addDays } from 'date-fns';
 
 export interface SimulationResult {
     id: string;
@@ -20,7 +20,7 @@ interface SimulationContextType {
     isSimulating: boolean;
     runSimulation: () => void;
     addSimulationResult: (result: SimulationResult) => void;
-    predictDrug: (condition: string, visitType: string) => { drug: string; price: number; acquisitionMethod: 'White Bag' | 'Brown Bag' | 'Clear Bag' };
+    predictDrug: (condition: string, visitType?: string) => { drug: string; price: number; acquisitionMethod: 'White Bag' | 'Brown Bag' | 'Clear Bag' };
     scanningPatient: string | null;
     selectedPatient: SimulationResult | null;
     setSelectedPatient: (patient: SimulationResult | null) => void;
@@ -153,7 +153,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         setSimulationResults(prev => [...prev, result]);
     };
 
-    const predictDrug = (condition: string, visitType: string) => {
+    const predictDrug = (condition: string, _visitType?: string) => {
         // Simple mock logic for prediction
         const lowerCondition = condition.toLowerCase();
 
