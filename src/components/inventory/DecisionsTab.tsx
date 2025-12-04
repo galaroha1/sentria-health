@@ -51,6 +51,18 @@ export function DecisionsTab() {
 
     return (
         <div className="space-y-6">
+            {/* Global Actions */}
+            <div className="flex justify-end">
+                <button
+                    onClick={runOptimization}
+                    disabled={isOptimizing}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:opacity-70"
+                >
+                    <Zap className={`h-4 w-4 ${isOptimizing ? 'animate-spin' : ''}`} />
+                    {isOptimizing ? 'Running Analysis...' : 'Run Auto-Logistics'}
+                </button>
+            </div>
+
             {/* Dashboard Header / Stats */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <button
@@ -152,14 +164,6 @@ export function DecisionsTab() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-slate-900">AI Optimization Opportunities</h3>
-                            <button
-                                onClick={runOptimization}
-                                disabled={isOptimizing}
-                                className="flex items-center gap-2 text-sm font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50"
-                            >
-                                <Zap className={`h-4 w-4 ${isOptimizing ? 'animate-spin' : ''}`} />
-                                {isOptimizing ? 'Analyzing...' : 'Refresh Analysis'}
-                            </button>
                         </div>
                         <OptimizationApprovals
                             proposals={proposals}
