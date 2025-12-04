@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
 
 const REMEMBER_ME_KEY = 'sentria_remember_me';
 
 export function Login() {
-    const navigate = useNavigate();
     const { login, signup, isAuthenticated } = useAuth();
     // Initialize state from localStorage
     const [email, setEmail] = useState(() => {
@@ -59,13 +58,8 @@ export function Login() {
         }
 
         if (result.success) {
-            // Save email if remember me is checked
-            if (isLogin && rememberMe) {
-                localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email, rememberMe: true }));
-            } else if (isLogin) {
-                localStorage.removeItem(REMEMBER_ME_KEY);
-            }
-            navigate('/', { replace: true });
+            // Do nothing, wait for isAuthenticated to trigger redirect
+            // Keep isLoading true to show progress
         } else {
             setError(result.error || (isLogin ? 'Login failed' : 'Sign up failed'));
             setIsLoading(false);
@@ -87,7 +81,7 @@ export function Login() {
         let result = await login({ email: creds.email, password: creds.password });
 
         if (result.success) {
-            navigate('/', { replace: true });
+            // Do nothing, wait for isAuthenticated to trigger redirect
             return;
         }
 
@@ -108,7 +102,7 @@ export function Login() {
         const signupResult = await signup({ email: creds.email, password: creds.password }, creds.name);
 
         if (signupResult.success) {
-            navigate('/', { replace: true });
+            // Do nothing, wait for isAuthenticated to trigger redirect
         } else {
             console.error('Signup failed:', signupResult.error, signupResult.code);
 
