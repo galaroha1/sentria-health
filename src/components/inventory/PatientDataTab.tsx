@@ -1,19 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Download, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
-import { useSimulation, type SimulationResult } from '../../context/SimulationContext';
+import { useSimulation } from '../../context/SimulationContext';
 
 
 export function PatientDataTab() {
-    const { simulationResults, viewPatientDetails } = useSimulation();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [sortField, setSortField] = useState<keyof SimulationResult | 'confidence'>('date');
+    const { simulationResults, viewPatientDetails, fetchSimulations, loading } = useSimulation();
+    // const [searchTerm, setSearchTerm] = useState(''); // Note: Search is harder with Firestore without Algolia/Typesense
+    const [sortField, setSortField] = useState<string>('date');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    const [lastDoc, setLastDoc] = useState<any>(null);
+    const [hasMore, setHasMore] = useState(true);
 
-    // Pagination State
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(50);
+    // Initial Load
+    useEffect(() => {
+        loadData(true);
+    }, [sortField, sortDirection]);
 
-    const handleSort = (field: keyof SimulationResult | 'confidence') => {
+    const loadData = async (reset: boolean = false) => {
+        const startAfter = reset ? null : lastDoc;
+        const result = await fetchSimulations(20, startAfter, sortField, sortDirection);
+
+        if (result.data.length < 20) {
+            setHasMore(false);
+        } else {
+            setHasMore(true);
+        }
+
+        if (reset) {
+            setLastDoc(result.lastVisible);
+        } else {
+            setLastDoc(result.lastVisible);
+        }
+    };
+
+    const handleSort = (field: string) => {
         if (sortField === field) {
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
@@ -22,32 +42,7 @@ export function PatientDataTab() {
         }
     };
 
-    const filteredResults = simulationResults.filter(result =>
-        result.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        result.condition.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        result.drug.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => {
-        let aValue: any = a[sortField as keyof SimulationResult];
-        let bValue: any = b[sortField as keyof SimulationResult];
-
-        if (sortField === 'confidence') {
-            aValue = a.aiPrediction?.confidenceScore || 0;
-            bValue = b.aiPrediction?.confidenceScore || 0;
-        }
-
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    // Pagination Logic
-    const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
-    const paginatedResults = filteredResults.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
-    const SortIcon = ({ field }: { field: keyof SimulationResult | 'confidence' }) => {
+    const SortIcon = ({ field }: { field: string }) => {
         if (sortField !== field) return <div className="w-4" />;
         return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
     };
@@ -60,28 +55,19 @@ export function PatientDataTab() {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search patients, conditions, or drugs..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setCurrentPage(1); // Reset to first page on search
-                        }}
-                        className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                        placeholder="Search functionality coming soon..."
+                        disabled
+                        className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
                     />
                 </div>
                 <div className="flex gap-2">
-                    <select
-                        value={itemsPerPage}
-                        onChange={(e) => {
-                            setItemsPerPage(Number(e.target.value));
-                            setCurrentPage(1);
-                        }}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none"
+                    <button
+                        onClick={() => loadData(true)}
+                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
-                        <option value={20}>20 per page</option>
-                        <option value={50}>50 per page</option>
-                        <option value={100}>100 per page</option>
-                    </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg>
+                        Refresh
+                    </button>
                     <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         <Filter className="h-4 w-4" />
                         Filter
@@ -110,8 +96,8 @@ export function PatientDataTab() {
                                 <th className="px-4 py-3 cursor-pointer hover:bg-slate-100" onClick={() => handleSort('drug')}>
                                     <div className="flex items-center gap-1">Rx Protocol <SortIcon field="drug" /></div>
                                 </th>
-                                <th className="px-4 py-3 cursor-pointer hover:bg-slate-100" onClick={() => handleSort('confidence')}>
-                                    <div className="flex items-center gap-1">AI Conf. <SortIcon field="confidence" /></div>
+                                <th className="px-4 py-3 cursor-pointer hover:bg-slate-100" onClick={() => handleSort('aiPrediction.confidenceScore')}>
+                                    <div className="flex items-center gap-1">AI Conf. <SortIcon field="aiPrediction.confidenceScore" /></div>
                                 </th>
                                 <th className="px-4 py-3 cursor-pointer hover:bg-slate-100" onClick={() => handleSort('status')}>
                                     <div className="flex items-center gap-1">Status <SortIcon field="status" /></div>
@@ -120,7 +106,7 @@ export function PatientDataTab() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {paginatedResults.map((result) => (
+                            {simulationResults.map((result) => (
                                 <tr key={result.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-4 py-2 font-medium text-slate-900">{result.patientName}</td>
                                     <td className="px-4 py-2 text-slate-600">
@@ -169,10 +155,17 @@ export function PatientDataTab() {
                                     </td>
                                 </tr>
                             ))}
-                            {filteredResults.length === 0 && (
+                            {simulationResults.length === 0 && !loading && (
                                 <tr>
                                     <td colSpan={8} className="px-4 py-8 text-center text-slate-500 italic">
-                                        No patient records found matching your search.
+                                        No patient records found.
+                                    </td>
+                                </tr>
+                            )}
+                            {loading && (
+                                <tr>
+                                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                                        Loading data...
                                     </td>
                                 </tr>
                             )}
@@ -180,57 +173,15 @@ export function PatientDataTab() {
                     </table>
                 </div>
 
-                {/* Pagination Controls */}
-                {filteredResults.length > 0 && (
-                    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
-                        <div className="flex flex-1 justify-between sm:hidden">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                                className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                                className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                            >
-                                Next
-                            </button>
-                        </div>
-                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-sm text-slate-700">
-                                    Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredResults.length)}</span> of{' '}
-                                    <span className="font-medium">{filteredResults.length}</span> results
-                                </p>
-                            </div>
-                            <div>
-                                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                                    <button
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                                    >
-                                        <span className="sr-only">Previous</span>
-                                        <ChevronDown className="h-5 w-5 rotate-90" aria-hidden="true" />
-                                    </button>
-                                    {/* Simple Page Indicator */}
-                                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:outline-offset-0">
-                                        Page {currentPage} of {totalPages}
-                                    </span>
-                                    <button
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages}
-                                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                                    >
-                                        <span className="sr-only">Next</span>
-                                        <ChevronDown className="h-5 w-5 -rotate-90" aria-hidden="true" />
-                                    </button>
-                                </nav>
-                            </div>
-                        </div>
+                {/* Load More Button (Simpler than full pagination for now) */}
+                {hasMore && !loading && simulationResults.length > 0 && (
+                    <div className="border-t border-slate-200 bg-slate-50 px-4 py-3 text-center">
+                        <button
+                            onClick={() => loadData(false)}
+                            className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:underline"
+                        >
+                            Load More Patients
+                        </button>
                     </div>
                 )}
             </div>

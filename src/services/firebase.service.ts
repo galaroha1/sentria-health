@@ -22,6 +22,37 @@ import { db } from '../config/firebase';
 
 export class FirestoreService {
     /**
+     * Get paginated documents from a collection
+     */
+    static async getPaginated<T>(
+        collectionName: string,
+        pageSize: number,
+        lastDoc: any = null,
+        ...constraints: QueryConstraint[]
+    ): Promise<{ data: T[]; lastVisible: any }> {
+        try {
+            const { limit, startAfter } = await import('firebase/firestore');
+
+            const qConstraints = [...constraints, limit(pageSize)];
+            if (lastDoc) {
+                qConstraints.push(startAfter(lastDoc));
+            }
+
+            console.log(`getPaginated: Querying ${collectionName} with pageSize ${pageSize}`);
+            const q = query(collection(db, collectionName), ...qConstraints);
+            const snapshot = await getDocs(q);
+
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+            const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+
+            return { data, lastVisible };
+        } catch (error) {
+            console.error(`Error fetching paginated ${collectionName}:`, error);
+            return { data: [], lastVisible: null };
+        }
+    }
+
+    /**
      * Get all documents from a collection
      */
     static async getAll<T>(collectionName: string, ...constraints: QueryConstraint[]): Promise<T[]> {
@@ -186,7 +217,44 @@ export class FirestoreService {
             return false;
         }
     }
+
+    /**
+     * Recursively delete all documents in a collection
+     * More robust for large collections than fetching all IDs first
+     */
+    static async deleteAllDocuments(collectionName: string): Promise<boolean> {
+        try {
+            const { writeBatch, limit } = await import('firebase/firestore');
+
+            while (true) {
+                // Get a batch of documents (limit 500)
+                const q = query(collection(db, collectionName), limit(500));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.size === 0) {
+                    break; // No more documents
+                }
+
+                const batch = writeBatch(db);
+                snapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+
+                // If we fetched fewer than 500, we are done
+                if (snapshot.size < 500) {
+                    break;
+                }
+            }
+            return true;
+        } catch (error) {
+            console.error(`Error deleting all documents from ${collectionName}:`, error);
+            return false;
+        }
+    }
 }
+
 
 // Export common query helpers
 export { where, orderBy, query };

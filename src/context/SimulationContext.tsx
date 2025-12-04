@@ -41,6 +41,8 @@ interface SimulationContextType {
     selectedPatient: SimulationResult | null;
     setSelectedPatient: (patient: SimulationResult | null) => void;
     viewPatientDetails: (patient: SimulationResult) => void;
+    fetchSimulations: (pageSize?: number, startAfterDoc?: any, sortField?: string, sortDirection?: 'asc' | 'desc') => Promise<{ data: SimulationResult[], lastVisible: any }>;
+    loading: boolean;
 }
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
@@ -61,27 +63,63 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         accuracy: 87.5
     });
 
-    // Subscribe to Firestore simulation results
+    // Pagination State
+    // const [lastDoc, setLastDoc] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+
+    // Initial Load - just get stats or empty state
     useEffect(() => {
         if (!user) {
             setSimulationResults([]);
             return;
         }
-
-        const unsubscribe = FirestoreService.subscribe<any>(`users/${user.id}/simulations`, (data) => {
-            // Convert Firestore timestamps/strings back to Date objects
-            const parsedResults = data.map(item => ({
-                ...item,
-                date: item.date?.toDate ? item.date.toDate() : new Date(item.date)
-            })) as SimulationResult[];
-
-            // Sort by date desc
-            parsedResults.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-            setSimulationResults(parsedResults);
-        });
-        return () => unsubscribe();
+        // We no longer subscribe to ALL data. 
+        // Components must request data via fetchSimulations.
     }, [user]);
+
+    const fetchSimulations = async (pageSize: number = 20, startAfterDoc: any = null, sortField: string = 'date', sortDirection: 'asc' | 'desc' = 'desc') => {
+        if (!user) {
+            console.log("fetchSimulations: No user");
+            return { data: [], lastVisible: null };
+        }
+        setLoading(true);
+        console.log(`fetchSimulations: Fetching ${pageSize} items, sort=${sortField}:${sortDirection}, startAfter=${!!startAfterDoc}`);
+
+        try {
+            const { orderBy } = await import('firebase/firestore');
+            const constraints = [orderBy(sortField, sortDirection)];
+
+            const result = await FirestoreService.getPaginated<SimulationResult>(
+                `users/${user.id}/simulations`,
+                pageSize,
+                startAfterDoc,
+                ...constraints
+            );
+
+            console.log(`fetchSimulations: Got ${result.data.length} items`);
+
+            // Convert dates
+            const parsedData = result.data.map(item => ({
+                ...item,
+                date: item.date instanceof Date ? item.date : new Date(item.date as any)
+            }));
+
+            // If it's a new page (startAfterDoc exists), append. If it's a reset (startAfterDoc is null), replace.
+            if (startAfterDoc) {
+                setSimulationResults(prev => [...prev, ...parsedData]);
+            } else {
+                setSimulationResults(parsedData);
+            }
+
+            // setLastDoc(result.lastVisible); // Managed by component
+            return { data: parsedData, lastVisible: result.lastVisible };
+        } catch (error) {
+            console.error("Error fetching simulations:", error);
+            return { data: [], lastVisible: null };
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const addLog = (message: string) => {
         setLogs(prev => [...prev.slice(-19), `[${new Date().toLocaleTimeString()}] ${message}`]);
@@ -111,12 +149,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         try {
             // 1. Fetch Data First (Async & Chunked)
             const data = await SyntheaGenerator.generateBatch(patientCount, (p) => {
-                setProgress(p * 0.4);
-
-                const elapsed = Date.now() - startTime;
-                const rate = (p / 100) / elapsed;
-                const remaining = (1 - (p / 100)) / rate;
-                setEta(formatTime(remaining));
+                // Throttle progress updates
+                if (p % 10 === 0) setProgress(p * 0.4);
             });
 
             addLog(`Successfully fetched ${data.length} unique patient profiles.`);
@@ -125,7 +159,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             // 2. Simulate Training on the Data (Non-blocking loop)
             let processed = 0;
             let conditions = 0;
-            const batchSize = Math.max(1, Math.ceil(patientCount / 100));
+            const batchSize = Math.max(10, Math.ceil(patientCount / 20)); // Larger batches for UI responsiveness
             const trainingStartTime = Date.now();
 
             const processBatch = async () => {
@@ -134,34 +168,40 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
 
                 const trainingProgress = processed / patientCount;
-                const totalProgress = 40 + (trainingProgress * 40);
-                setProgress(totalProgress);
 
-                const elapsed = Date.now() - trainingStartTime;
-                const rate = trainingProgress / elapsed;
-                const remaining = (1 - trainingProgress) / rate;
-                setEta(formatTime(remaining));
+                // Throttle UI updates - only update every 5% or on completion
+                if (processed >= data.length || processed % (Math.ceil(patientCount / 20)) === 0) {
+                    const totalProgress = 40 + (trainingProgress * 40);
+                    setProgress(totalProgress);
 
-                if (batch.length > 0 && Math.random() < 0.1) {
-                    const sample = batch[0];
-                    addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family} | Dx: ${sample.conditions[0]?.code.coding[0].display}`);
+                    const elapsed = Date.now() - trainingStartTime;
+                    const rate = trainingProgress / elapsed;
+                    const remaining = (1 - trainingProgress) / rate;
+                    setEta(formatTime(remaining));
+
+                    setStats(prev => ({
+                        totalPatients: processed,
+                        conditionsIdentified: conditions,
+                        accuracy: Math.min(99.2, prev.accuracy + 0.1)
+                    }));
                 }
 
-                setStats(prev => ({
-                    totalPatients: processed,
-                    conditionsIdentified: conditions,
-                    accuracy: Math.min(99.2, prev.accuracy + 0.1)
-                }));
+                if (batch.length > 0 && Math.random() < 0.05) { // Log less frequently
+                    const sample = batch[0];
+                    addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family}`);
+                }
 
-                if (processed < data.length && isTraining) { // Check isTraining to allow cancellation if we implemented it
+                if (processed < data.length && isTraining) {
                     setTimeout(processBatch, 0);
                 } else {
                     addLog('Training Complete. Model weights updated.');
-                    addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
 
                     // 3. Save to Firestore (Batched)
                     await saveToDatabase(data);
                     setIsTraining(false);
+
+                    // Refresh the view
+                    fetchSimulations();
                 }
             };
 
@@ -180,76 +220,79 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         addLog('Syncing generated patients to database...');
 
         const conditionEntries = Object.entries(MEDICAL_DATABASE);
-        const SAVE_BATCH_SIZE = 50;
+        const SAVE_BATCH_SIZE = 500; // Maximize batch size for fewer writes
         const saveStartTime = Date.now();
 
-        for (let i = 0; i < data.length; i += SAVE_BATCH_SIZE) {
-            const chunk = data.slice(i, i + SAVE_BATCH_SIZE);
+        // Prepare all data first to avoid computation during write loop
+        const allResults: SimulationResult[] = data.map(bundle => {
+            const patient = bundle.patient;
+            const conditionName = bundle.conditions[0]?.code.coding[0].display;
+            const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
+            const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc';
+            const birthDate = new Date(patient.birthDate);
+            const age = new Date().getFullYear() - birthDate.getFullYear();
 
-            const savePromises = chunk.map(async (bundle) => {
-                const patient = bundle.patient;
-                const conditionName = bundle.conditions[0]?.code.coding[0].display;
+            const profile: PatientProfile = {
+                name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
+                age: age,
+                gender: patient.gender === 'male' ? 'Male' : 'Female',
+                conditionId: conditionId,
+                medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
+                vitals: {
+                    bpSystolic: 120 + Math.floor(Math.random() * 20),
+                    bpDiastolic: 80 + Math.floor(Math.random() * 10),
+                    heartRate: 60 + Math.floor(Math.random() * 40),
+                    temperature: 98.6,
+                    weight: 70
+                },
+                allergies: []
+            };
 
-                const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
-                const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc';
+            const prediction = predictTreatment(profile);
 
-                const birthDate = new Date(patient.birthDate);
-                const age = new Date().getFullYear() - birthDate.getFullYear();
+            return {
+                id: patient.id,
+                date: new Date(),
+                timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                patientName: profile.name,
+                condition: conditionName || 'Unknown',
+                visitType: 'Initial Consultation',
+                location: 'Main Clinic',
+                drug: prediction.recommendedDrug,
+                acquisitionMethod: prediction.acquisitionMethod,
+                status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
+                price: prediction.price,
+                profile: profile,
+                aiPrediction: prediction,
+                rawBundle: bundle
+            };
+        });
 
-                const profile: PatientProfile = {
-                    name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
-                    age: age,
-                    gender: patient.gender === 'male' ? 'Male' : 'Female',
-                    conditionId: conditionId,
-                    medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
-                    vitals: {
-                        bpSystolic: 120 + Math.floor(Math.random() * 20),
-                        bpDiastolic: 80 + Math.floor(Math.random() * 10),
-                        heartRate: 60 + Math.floor(Math.random() * 40),
-                        temperature: 98.6,
-                        weight: 70
-                    },
-                    allergies: []
-                };
+        const { writeBatch, doc } = await import('firebase/firestore');
+        const { db } = await import('../config/firebase');
 
-                const prediction = predictTreatment(profile);
+        console.log(`saveToDatabase: Saving ${allResults.length} items for user ${user.id}`);
 
-                const result: SimulationResult = {
-                    id: patient.id,
-                    date: new Date(),
-                    timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    patientName: profile.name,
-                    condition: conditionName || 'Unknown',
-                    visitType: 'Initial Consultation',
-                    location: 'Main Clinic',
-                    drug: prediction.recommendedDrug,
-                    acquisitionMethod: prediction.acquisitionMethod,
-                    status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
-                    price: prediction.price,
-                    profile: profile,
-                    aiPrediction: prediction,
-                    rawBundle: bundle
-                };
+        for (let i = 0; i < allResults.length; i += SAVE_BATCH_SIZE) {
+            const chunk = allResults.slice(i, i + SAVE_BATCH_SIZE);
+            const batch = writeBatch(db);
+            console.log(`saveToDatabase: Processing chunk ${i} to ${i + chunk.length}`);
 
-                return FirestoreService.set(`users/${user.id}/simulations`, result.id, {
+            chunk.forEach(result => {
+                const docRef = doc(db, `users/${user.id}/simulations`, result.id);
+                batch.set(docRef, {
                     ...result,
                     date: result.date.toISOString()
                 });
             });
 
-            await Promise.all(savePromises);
+            await batch.commit();
+            console.log(`saveToDatabase: Chunk ${i} committed`);
 
             const processed = i + chunk.length;
             const saveProgress = processed / data.length;
             const totalProgress = 80 + (saveProgress * 20);
             setProgress(totalProgress);
-
-            const elapsed = Date.now() - saveStartTime;
-            const rate = saveProgress / elapsed;
-            const remaining = (1 - saveProgress) / rate;
-            setEta(formatTime(remaining));
-
-            await new Promise(resolve => setTimeout(resolve, 10));
         }
 
         addLog('✓ Data successfully synced to Patient Records.');
@@ -259,21 +302,12 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     const clearData = async () => {
         if (!user) return;
         try {
-            // Fetch all IDs directly from Firestore to ensure we delete everything,
-            // regardless of what's currently loaded in the local state.
-            const allSimulations = await FirestoreService.getAll<SimulationResult>(`users/${user.id}/simulations`);
-            const ids = allSimulations.map(r => r.id);
+            // Use the recursive delete method to efficiently wipe the entire collection
+            await FirestoreService.deleteAllDocuments(`users/${user.id}/simulations`);
 
-            if (ids.length === 0) {
-                toast.success('No data to clear.');
-                return;
-            }
-
-            await FirestoreService.deleteDocuments(`users/${user.id}/simulations`, ids);
-
-            // Local state will be updated by the subscription, but we can reset stats immediately
             setStats({ totalPatients: 0, conditionsIdentified: 0, accuracy: 87.5 });
             setLogs([]);
+            setSimulationResults([]); // Clear local view
             toast.success('Simulation data cleared.');
         } catch (error) {
             console.error("Failed to clear data", error);
@@ -287,6 +321,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             ...result,
             date: result.date.toISOString()
         });
+        // Optimistically add to list if it fits sort order? 
+        // For now, just re-fetch or prepend
+        setSimulationResults(prev => [result, ...prev]);
     };
 
     const viewPatientDetails = (patient: SimulationResult) => {
@@ -307,7 +344,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             predictTreatment,
             selectedPatient,
             setSelectedPatient,
-            viewPatientDetails
+            viewPatientDetails,
+            fetchSimulations, // Exported for manual fetching
+            loading
         }}>
             {children}
         </SimulationContext.Provider>
