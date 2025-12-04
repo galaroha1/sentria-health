@@ -1,27 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { SyntheaGenerator, type SyntheticBundle } from '../../utils/syntheaGenerator';
-import { Brain, Database, Play, CheckCircle, Activity, Download } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Activity, Database, Server, Play, CheckCircle2, AlertTriangle, Clock, Trash2 } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
-import { MEDICAL_DATABASE } from '../../data/medicalDatabase';
-import { predictTreatment, type PatientProfile } from '../../utils/aiPrediction';
 import toast, { Toaster } from 'react-hot-toast';
 
 export function ModelTraining() {
-    const [isTraining, setIsTraining] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [eta, setEta] = useState<string>('--:--');
-    const [patientCount, setPatientCount] = useState(50);
-    const [logs, setLogs] = useState<string[]>([]);
-    const [stats, setStats] = useState({
-        totalPatients: 0,
-        conditionsIdentified: 0,
-        accuracy: 87.5 // Initial baseline
-    });
-    const [generatedData, setGeneratedData] = useState<SyntheticBundle[]>([]);
+    const {
+        isTraining,
+        progress,
+        eta,
+        logs,
+        stats,
+        startTraining,
+        clearData,
+        simulationResults
+    } = useSimulation();
+
+    const [patientCount, setPatientCount] = useState(100);
     const logsEndRef = useRef<HTMLDivElement>(null);
-    const { addSimulationResult } = useSimulation();
-    const [isSaving, setIsSaving] = useState(false);
 
     const scrollToBottom = () => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,443 +26,203 @@ export function ModelTraining() {
         scrollToBottom();
     }, [logs]);
 
-    const addLog = (message: string) => {
-        setLogs(prev => [...prev.slice(-19), `[${new Date().toLocaleTimeString()}] ${message}`]);
+    const handleStart = () => {
+        startTraining(patientCount);
     };
 
-    const formatTime = (ms: number) => {
-        if (!isFinite(ms) || ms < 0) return '--:--';
-        const seconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
-
-    const startTraining = async () => {
-        setIsTraining(true);
-        setIsFetching(true);
-        setGeneratedData([]);
-        setProgress(0);
-        setEta('--:--');
-        setLogs([
-            'Initializing Synthea™ Patient Generator...',
-            `Connecting to Live Data Stream (randomuser.me) to fetch ${patientCount} identities...`
-        ]);
-
-        const startTime = Date.now();
-
-        try {
-            // 1. Fetch Data First (Async & Chunked)
-            // Progress 0-40%
-            const data = await SyntheaGenerator.generateBatch(patientCount, (p) => {
-                setProgress(p * 0.4);
-
-                // Estimate time based on generation speed
-                const elapsed = Date.now() - startTime;
-                const rate = (p / 100) / elapsed; // progress per ms
-                const remaining = (1 - (p / 100)) / rate;
-                setEta(formatTime(remaining));
+    const handleClear = () => {
+        if (confirm('Are you sure you want to clear all simulation data? This cannot be undone.')) {
+            clearData();
+            toast.success('All simulation data cleared!', {
+                duration: 3000,
+                position: 'bottom-right',
+                style: {
+                    background: '#EF4444',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                },
+                icon: '🗑️'
             });
-
-            setGeneratedData(data);
-            setIsFetching(false);
-            addLog(`Successfully fetched ${data.length} unique patient profiles.`);
-            addLog('Starting Clinical Analysis & Model Training...');
-
-            // 2. Simulate Training on the Data (Non-blocking loop)
-            // Progress 40-80%
-            let processed = 0;
-            let conditions = 0;
-            const batchSize = Math.max(1, Math.ceil(patientCount / 100)); // Smaller batches for smoother UI
-            const trainingStartTime = Date.now();
-
-            const processBatch = async () => {
-                const batch = data.slice(processed, processed + batchSize);
-                processed += batch.length;
-                conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
-
-                const trainingProgress = processed / patientCount;
-                const totalProgress = 40 + (trainingProgress * 40); // Map to 40-80%
-                setProgress(totalProgress);
-
-                // Update ETA
-                const elapsed = Date.now() - trainingStartTime;
-                const rate = trainingProgress / elapsed;
-                const remaining = (1 - trainingProgress) / rate;
-                setEta(formatTime(remaining));
-
-                // Log a sample occasionally
-                if (batch.length > 0 && Math.random() < 0.1) {
-                    const sample = batch[0];
-                    addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family} | Dx: ${sample.conditions[0]?.code.coding[0].display}`);
-                }
-
-                setStats(prev => ({
-                    totalPatients: processed,
-                    conditionsIdentified: conditions,
-                    accuracy: Math.min(99.2, prev.accuracy + 0.1)
-                }));
-
-                if (processed < data.length && isTraining) {
-                    // Schedule next batch
-                    setTimeout(processBatch, 0);
-                } else {
-                    // Training Complete
-                    addLog('Training Complete. Model weights updated.');
-                    addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
-
-                    // 3. Save to Firestore / Context (Batched)
-                    // Progress 80-100%
-                    await saveToDatabase(data);
-                    setIsTraining(false);
-                }
-            };
-
-            // Start the loop
-            setTimeout(processBatch, 0);
-
-        } catch (error: any) {
-            setIsFetching(false);
-            setIsTraining(false);
-            setIsSaving(false);
-            addLog(`ERROR: Data fetch failed - ${error.message}`);
-            toast.error(`Simulation failed: ${error.message}`);
-            console.error(error);
         }
-    };
-
-    const saveToDatabase = async (data: SyntheticBundle[]) => {
-        setIsSaving(true);
-        addLog('Syncing generated patients to database...');
-
-        const conditionEntries = Object.entries(MEDICAL_DATABASE);
-        const SAVE_BATCH_SIZE = 50; // Save 50 at a time to avoid network congestion
-        const saveStartTime = Date.now();
-
-        for (let i = 0; i < data.length; i += SAVE_BATCH_SIZE) {
-            const chunk = data.slice(i, i + SAVE_BATCH_SIZE);
-
-            const savePromises = chunk.map(async (bundle) => {
-                const patient = bundle.patient;
-                const conditionName = bundle.conditions[0]?.code.coding[0].display;
-
-                // Reverse map condition name to ID
-                const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
-                const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc'; // Fallback
-
-                // Create Profile
-                const birthDate = new Date(patient.birthDate);
-                const age = new Date().getFullYear() - birthDate.getFullYear();
-
-                const profile: PatientProfile = {
-                    name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
-                    age: age,
-                    gender: patient.gender === 'male' ? 'Male' : 'Female',
-                    conditionId: conditionId,
-                    medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
-                    vitals: {
-                        bpSystolic: 120 + Math.floor(Math.random() * 20),
-                        bpDiastolic: 80 + Math.floor(Math.random() * 10),
-                        heartRate: 60 + Math.floor(Math.random() * 40),
-                        temperature: 98.6,
-                        weight: 70
-                    },
-                    allergies: []
-                };
-
-                const prediction = predictTreatment(profile);
-
-                return addSimulationResult({
-                    id: patient.id,
-                    date: new Date(),
-                    timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    patientName: profile.name,
-                    condition: conditionName || 'Unknown',
-                    visitType: 'Initial Consultation',
-                    location: 'Main Clinic',
-                    drug: prediction.recommendedDrug,
-                    acquisitionMethod: prediction.acquisitionMethod,
-                    status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
-                    price: prediction.price,
-                    profile: profile,
-                    aiPrediction: prediction,
-                    // @ts-ignore - We'll add this field to the type definition next
-                    rawBundle: bundle
-                });
-            });
-
-            await Promise.all(savePromises);
-
-            // Update Progress & ETA
-            const processed = i + chunk.length;
-            const saveProgress = processed / data.length;
-            const totalProgress = 80 + (saveProgress * 20); // Map to 80-100%
-            setProgress(totalProgress);
-
-            const elapsed = Date.now() - saveStartTime;
-            const rate = saveProgress / elapsed;
-            const remaining = (1 - saveProgress) / rate;
-            setEta(formatTime(remaining));
-
-            // Yield to UI
-            await new Promise(resolve => setTimeout(resolve, 10));
-        }
-
-        setIsSaving(false);
-        addLog('✓ Data successfully synced to Patient Records.');
-        toast.success(`${data.length} patients synced to database!`, {
-            duration: 5000,
-            position: 'bottom-right',
-            style: {
-                background: '#10B981',
-                color: '#fff',
-                fontWeight: 'bold',
-            },
-            icon: '🚀'
-        });
-    };
-
-    const downloadData = () => {
-        const jsonString = JSON.stringify(generatedData, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `synthea_dataset_${new Date().toISOString()}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        addLog('Dataset downloaded successfully.');
-        toast.success('Dataset downloaded!');
     };
 
     return (
-        <div className="h-full flex flex-col gap-6">
+        <div className="space-y-6">
             <Toaster />
-            {/* Header */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Control Panel */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
-                                    <Brain className="h-6 w-6 text-white" />
-                                </div>
-                                <h2 className="text-xl font-bold">AI Model Training</h2>
-                            </div>
-                            <p className="text-indigo-100 text-sm">Synthea™ Data Engine & Predictive Modeling</p>
-                        </div>
-
-                        <div className="p-6 space-y-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-3">
-                                    Simulation Parameters
-                                </label>
-                                <div className="space-y-4">
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="text-sm font-medium text-slate-700">Target Patient Count</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    max="10000"
-                                                    value={patientCount}
-                                                    onChange={(e) => setPatientCount(Math.max(1, Math.min(10000, Number(e.target.value))))}
-                                                    className="w-20 px-2 py-1 text-right text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                                />
-                                                <span className="text-sm font-bold text-indigo-600">patients</span>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="10"
-                                            max="10000"
-                                            step="10"
-                                            value={patientCount}
-                                            onChange={(e) => setPatientCount(Number(e.target.value))}
-                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                        />
-                                        <div className="flex justify-between text-xs text-slate-500 mt-2">
-                                            <span>10</span>
-                                            <span>10,000</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                data-testid="start-simulation-btn"
-                                onClick={startTraining}
-                                disabled={isTraining || isFetching || isSaving}
-                                className={`w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-white shadow-lg transition-all duration-300 ${isTraining || isFetching || isSaving
-                                    ? 'bg-slate-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/30 hover:-translate-y-0.5'
-                                    }`}
-                            >
-                                {isFetching ? (
-                                    <>
-                                        <Activity className="h-5 w-5 animate-spin" />
-                                        <span>Fetching Live Data...</span>
-                                    </>
-                                ) : isTraining ? (
-                                    <>
-                                        <Activity className="h-5 w-5 animate-spin" />
-                                        <span>Training Model...</span>
-                                    </>
-                                ) : isSaving ? (
-                                    <>
-                                        <Database className="h-5 w-5 animate-bounce" />
-                                        <span>Syncing Database...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play className="h-5 w-5 fill-current" />
-                                        <span>Start Simulation</span>
-                                    </>
-                                )}
-                            </button>
-
-                            {generatedData.length > 0 && !isTraining && !isSaving && (
-                                <div className="space-y-3">
-                                    <button
-                                        onClick={downloadData}
-                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-all"
-                                    >
-                                        <Download className="h-5 w-5" />
-                                        Download Dataset ({generatedData.length})
-                                    </button>
-
-                                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
-                                        <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold mb-1">
-                                            <CheckCircle className="h-5 w-5" />
-                                            <span>Sync Complete</span>
-                                        </div>
-                                        <p className="text-xs text-emerald-600 mb-3">
-                                            {generatedData.length} patients added to live records.
-                                        </p>
-                                        <a
-                                            href="/sentria-health/inventory"
-                                            className="block w-full py-2 px-4 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors"
-                                        >
-                                            View Patient Data
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+            {/* Header / Controls */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 className="text-lg font-bold text-slate-900">AI Model Training & Simulation</h2>
+                    <p className="text-sm text-slate-500">Generate synthetic patient data to train the clinical prediction model.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                        <span className="text-sm text-slate-500">Patients to Generate:</span>
+                        <input
+                            type="number"
+                            min="10"
+                            max="10000"
+                            value={patientCount}
+                            onChange={(e) => setPatientCount(Number(e.target.value))}
+                            className="w-20 rounded border border-slate-200 px-2 py-1 text-sm font-medium focus:border-purple-500 focus:outline-none"
+                            disabled={isTraining}
+                        />
                     </div>
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-100 transition-all">
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Dataset Size</p>
-                                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalPatients.toLocaleString()}</p>
-                            </div>
-                            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
-                                <Database className="h-6 w-6" />
-                            </div>
+                    {simulationResults.length > 0 && !isTraining && (
+                        <button
+                            onClick={handleClear}
+                            className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Clear Data
+                        </button>
+                    )}
+
+                    <button
+                        onClick={handleStart}
+                        disabled={isTraining}
+                        className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-medium text-white transition-all ${isTraining
+                            ? 'cursor-not-allowed bg-slate-400'
+                            : 'bg-purple-600 hover:bg-purple-700 shadow-md hover:shadow-lg'
+                            }`}
+                    >
+                        {isTraining ? (
+                            <>
+                                <Activity className="h-4 w-4 animate-spin" />
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <Play className="h-4 w-4" />
+                                Start Simulation
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            {/* Progress & Stats Grid */}
+            <div className="grid gap-6 md:grid-cols-3">
+                {/* Progress Card */}
+                <div className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="mb-6 flex items-center justify-between">
+                        <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                            <Activity className="h-5 w-5 text-purple-500" />
+                            Training Progress
+                        </h3>
+                        {isTraining && (
+                            <span className="flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 animate-pulse">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                                </span>
+                                Active
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="mb-2 flex justify-between text-sm">
+                        <span className="font-medium text-slate-700">
+                            {progress < 40 ? 'Generating Synthetic Data...' :
+                                progress < 80 ? 'Training Neural Network...' :
+                                    progress < 100 ? 'Syncing to Database...' : 'Complete'}
+                        </span>
+                        <span className="font-bold text-purple-600">{progress.toFixed(1)}%</span>
+                    </div>
+                    <div className="mb-6 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div
+                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-300 ease-out"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 border-t border-slate-100 pt-6">
+                        <div>
+                            <p className="text-xs text-slate-500 mb-1">Estimated Time</p>
+                            <p className="font-mono text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-slate-400" />
+                                {eta}
+                            </p>
                         </div>
-                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-100 transition-all">
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Data Points</p>
-                                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.conditionsIdentified.toLocaleString()}</p>
-                            </div>
-                            <div className="p-3 bg-orange-50 text-orange-600 rounded-lg group-hover:bg-orange-100 transition-colors">
-                                <Activity className="h-6 w-6" />
-                            </div>
+                        <div>
+                            <p className="text-xs text-slate-500 mb-1">Patients Processed</p>
+                            <p className="font-mono text-lg font-bold text-slate-900">{stats.totalPatients.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-100 transition-all">
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Model Accuracy</p>
-                                <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.accuracy.toFixed(1)}%</p>
-                            </div>
-                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-100 transition-colors">
-                                <CheckCircle className="h-6 w-6" />
-                            </div>
+                        <div>
+                            <p className="text-xs text-slate-500 mb-1">Model Accuracy</p>
+                            <p className="font-mono text-lg font-bold text-emerald-600">{stats.accuracy.toFixed(1)}%</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Activity Stream */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden flex flex-col h-[600px] relative">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                                    <Activity className="h-4 w-4" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-900">Live Activity Stream</h3>
-                                    <p className="text-xs text-slate-500">Real-time simulation events</p>
-                                </div>
-                            </div>
-                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${isTraining || isFetching || isSaving
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                                {isTraining || isFetching || isSaving ? '● Processing' : '○ Ready'}
-                            </div>
+                {/* System Status */}
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h3 className="mb-4 font-bold text-slate-900 flex items-center gap-2">
+                        <Server className="h-5 w-5 text-slate-500" />
+                        System Status
+                    </h3>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-600">Synthea™ Engine</span>
+                            <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                <CheckCircle2 className="h-3 w-3" /> Ready
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-600">TensorFlow.js</span>
+                            <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                <CheckCircle2 className="h-3 w-3" /> Loaded
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-600">Firestore Sync</span>
+                            <span className={`flex items-center gap-1 font-medium ${isTraining && progress > 80 ? 'text-amber-600 animate-pulse' : 'text-emerald-600'}`}>
+                                {isTraining && progress > 80 ? (
+                                    <><Activity className="h-3 w-3" /> Syncing...</>
+                                ) : (
+                                    <><CheckCircle2 className="h-3 w-3" /> Connected</>
+                                )}
+                            </span>
                         </div>
 
-                        <div className="flex-1 p-6 overflow-y-auto space-y-3 bg-slate-50/30">
-                            {logs.length === 0 && (
-                                <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
-                                    <div className="p-6 bg-slate-50 rounded-full border border-slate-100">
-                                        <Brain className="h-10 w-10 opacity-20" />
-                                    </div>
-                                    <p className="text-sm font-medium">Waiting to start simulation...</p>
-                                </div>
-                            )}
+                        <div className="mt-6 rounded-lg bg-slate-50 p-3">
+                            <div className="flex items-start gap-2">
+                                <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5" />
+                                <p className="text-xs text-slate-500">
+                                    <strong>Note:</strong> Generating large datasets (10k+) may take several minutes. Do not close this tab, but you can navigate to other tabs.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Live Logs */}
+            <div className="rounded-xl border border-slate-200 bg-slate-900 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-bold text-white flex items-center gap-2">
+                        <Database className="h-5 w-5 text-emerald-400" />
+                        Live Execution Logs
+                    </h3>
+                    <span className="text-xs text-slate-400 font-mono">stdout</span>
+                </div>
+                <div className="h-64 overflow-y-auto rounded-lg bg-slate-950 p-4 font-mono text-xs text-slate-300">
+                    {logs.length === 0 ? (
+                        <span className="text-slate-600 italic">Waiting for simulation to start...</span>
+                    ) : (
+                        <div className="space-y-1">
                             {logs.map((log, i) => (
-                                <div key={i} className="flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 group">
-                                    <div className="flex flex-col items-center">
-                                        <div className={`w-2 h-2 rounded-full mt-2 ${log.includes('ERROR') ? 'bg-red-500' :
-                                            log.includes('Success') ? 'bg-emerald-500' :
-                                                'bg-indigo-500'
-                                            }`} />
-                                        {i !== logs.length - 1 && <div className="w-px h-full bg-slate-200 my-1" />}
-                                    </div>
-                                    <div className="flex-1 bg-white p-3 rounded-xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all">
-                                        <p className={`text-sm ${log.includes('ERROR') ? 'text-red-600 font-medium' :
-                                            log.includes('Success') ? 'text-emerald-700 font-medium' :
-                                                'text-slate-600'
-                                            }`}>
-                                            {log}
-                                        </p>
-                                    </div>
+                                <div key={i} className="border-l-2 border-slate-800 pl-2 hover:border-emerald-500 hover:text-emerald-400 transition-colors">
+                                    {log}
                                 </div>
                             ))}
+                            {isTraining && (
+                                <div className="animate-pulse text-emerald-500">_</div>
+                            )}
                             <div ref={logsEndRef} />
                         </div>
-
-                        {/* Progress Bar */}
-                        {(isTraining || isFetching || isSaving) && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-slate-100 p-6 z-10">
-                                <div className="flex justify-between text-sm font-bold text-slate-700 mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span>Progress</span>
-                                        <span className="text-xs font-normal text-slate-500">
-                                            ({isFetching ? 'Generating Data' : isTraining ? 'Training Model' : 'Saving Data'})
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-indigo-600">ETA: {eta}</span>
-                                        <span>{Math.round(progress)}%</span>
-                                    </div>
-                                </div>
-                                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 relative"
-                                        style={{ width: `${progress}%` }}
-                                    >
-                                        <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
