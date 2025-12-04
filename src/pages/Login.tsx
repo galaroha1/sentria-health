@@ -72,16 +72,32 @@ export function Login() {
         }
     };
 
-    const quickFill = (role: 'admin' | 'pharmacy' | 'procurement') => {
-        const credentials = {
-            admin: { email: 'admin@sentria.health', password: 'admin123' },
-            pharmacy: { email: 'pharmacy@sentria.health', password: 'pharmacy123' },
-            procurement: { email: 'procurement@sentria.health', password: 'procurement123' },
-        };
-        setEmail(credentials[role].email);
-        setPassword(credentials[role].password);
+    const DEMO_CREDENTIALS = {
+        admin: { email: 'admin@sentria.health', password: 'admin123', name: 'Super Admin' },
+        pharmacy: { email: 'pharmacy@sentria.health', password: 'pharmacy123', name: 'Pharmacy Manager' },
+        procurement: { email: 'procurement@sentria.health', password: 'procurement123', name: 'Procurement Officer' },
+    };
+
+    const handleDemoLogin = async (role: keyof typeof DEMO_CREDENTIALS) => {
+        const creds = DEMO_CREDENTIALS[role];
+        setIsLoading(true);
         setError('');
-        setIsLogin(true);
+
+        // Try login first
+        let result = await login({ email: creds.email, password: creds.password });
+
+        // If login fails, try signup (auto-create account)
+        if (!result.success) {
+            console.log('Login failed, attempting to create demo account...', result.error);
+            result = await signup({ email: creds.email, password: creds.password }, creds.name);
+        }
+
+        if (result.success) {
+            navigate('/', { replace: true });
+        } else {
+            setError(result.error || 'Failed to access demo account');
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -196,12 +212,13 @@ export function Login() {
                     </form>
 
                     <div className="mt-6 border-t border-slate-200 pt-6">
-                        <p className="mb-3 text-xs font-semibold text-slate-700">Demo Access Levels:</p>
+                        <p className="mb-3 text-xs font-semibold text-slate-700">One-Click Demo Access:</p>
                         <div className="space-y-3">
                             <button
                                 type="button"
-                                onClick={() => quickFill('admin')}
-                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all"
+                                onClick={() => handleDemoLogin('admin')}
+                                disabled={isLoading}
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all disabled:opacity-50"
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
@@ -215,8 +232,9 @@ export function Login() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => quickFill('pharmacy')}
-                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all"
+                                onClick={() => handleDemoLogin('pharmacy')}
+                                disabled={isLoading}
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all disabled:opacity-50"
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
@@ -230,8 +248,9 @@ export function Login() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => quickFill('procurement')}
-                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all"
+                                onClick={() => handleDemoLogin('procurement')}
+                                disabled={isLoading}
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all disabled:opacity-50"
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
