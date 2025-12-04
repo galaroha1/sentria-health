@@ -14,8 +14,8 @@ import { ROLE_PERMISSIONS, UserRole, UserStatus } from '../types';
 import { SessionTimeoutModal } from '../components/auth/SessionTimeoutModal';
 
 interface AuthContextType extends AuthState {
-    login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
-    signup: (credentials: LoginCredentials, name: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
+    login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string; code?: string }>;
+    signup: (credentials: LoginCredentials, name: string, role?: UserRole) => Promise<{ success: boolean; error?: string; code?: string }>;
     logout: () => Promise<void>;
     hasPermission: (route: string) => boolean;
     updateUser: (updates: Partial<User>) => Promise<void>;
@@ -83,17 +83,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => unsubscribe();
     }, []);
 
-    const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
+    const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string; code?: string }> => {
         try {
             await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
             return { success: true };
         } catch (error: any) {
             console.error('Login error:', error);
-            return { success: false, error: error.message || 'Failed to login' };
+            return { success: false, error: error.message || 'Failed to login', code: error.code };
         }
     };
 
-    const signup = async (credentials: LoginCredentials, name: string, role: UserRole = UserRole.PHARMACY_MANAGER): Promise<{ success: boolean; error?: string }> => {
+    const signup = async (credentials: LoginCredentials, name: string, role: UserRole = UserRole.PHARMACY_MANAGER): Promise<{ success: boolean; error?: string; code?: string }> => {
         try {
             // 1. Check if there is a pending user invite for this email
             // We need to query the 'users' collection where email == credentials.email
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { success: true };
         } catch (error: any) {
             console.error('Signup error:', error);
-            return { success: false, error: error.message || 'Failed to sign up' };
+            return { success: false, error: error.message || 'Failed to sign up', code: error.code };
         }
     };
 

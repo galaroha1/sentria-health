@@ -86,16 +86,37 @@ export function Login() {
         // Try login first
         let result = await login({ email: creds.email, password: creds.password });
 
-        // If login fails, try signup (auto-create account)
-        if (!result.success) {
-            console.log('Login failed, attempting to create demo account...', result.error);
-            result = await signup({ email: creds.email, password: creds.password }, creds.name);
-        }
-
         if (result.success) {
             navigate('/', { replace: true });
+            return;
+        }
+
+        console.log('Login failed:', result.error, result.code);
+
+        // If login failed, it might be because the user doesn't exist (auth/user-not-found)
+        // or because the password is wrong (auth/wrong-password).
+        // If it's wrong password, we shouldn't try to signup (it will fail with email-already-in-use).
+
+        if (result.code === 'auth/wrong-password') {
+            setError('Incorrect password for this demo account. If you changed it, please sign in manually.');
+            setIsLoading(false);
+            return;
+        }
+
+        // For other errors (like user-not-found), try to create the account
+        console.log('Attempting to create demo account...');
+        const signupResult = await signup({ email: creds.email, password: creds.password }, creds.name);
+
+        if (signupResult.success) {
+            navigate('/', { replace: true });
         } else {
-            setError(result.error || 'Failed to access demo account');
+            console.error('Signup failed:', signupResult.error, signupResult.code);
+
+            if (signupResult.code === 'auth/email-already-in-use') {
+                setError('Account exists but password incorrect. Please sign in manually.');
+            } else {
+                setError(signupResult.error || 'Failed to access demo account');
+            }
             setIsLoading(false);
         }
     };
