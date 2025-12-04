@@ -144,7 +144,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             `Connecting to Live Data Stream (randomuser.me) to fetch ${patientCount} identities...`
         ]);
 
-        const startTime = Date.now();
+
 
         try {
             // 1. Fetch Data First (Async & Chunked)
@@ -221,7 +221,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
         const conditionEntries = Object.entries(MEDICAL_DATABASE);
         const SAVE_BATCH_SIZE = 500; // Maximize batch size for fewer writes
-        const saveStartTime = Date.now();
+
 
         // Prepare all data first to avoid computation during write loop
         const allResults: SimulationResult[] = data.map(bundle => {

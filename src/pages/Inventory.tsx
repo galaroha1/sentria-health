@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Truck, Package, Syringe, RefreshCw, FileText, Zap, ArrowRightLeft, Users } from 'lucide-react';
+import { Truck, Package, Syringe, FileText, Zap, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
@@ -7,23 +7,20 @@ import { BarcodeScanner } from '../components/common/BarcodeScanner';
 import type { Site } from '../types/location';
 import { useSimulation } from '../context/SimulationContext';
 
-// Tabs
-import { ProcurementTab } from '../components/inventory/ProcurementTab';
+import { OperationsTab } from '../components/inventory/OperationsTab';
 import { StockTab } from '../components/inventory/StockTab';
 import { AdministrationTab } from '../components/inventory/AdministrationTab';
-import { ReorderingTab } from '../components/inventory/ReorderingTab';
 import { ComplianceTab } from '../components/inventory/ComplianceTab';
 import { AdvancedTab } from '../components/inventory/AdvancedTab';
-import { LogisticsTab } from '../components/inventory/LogisticsTab';
 import { PatientDataTab } from '../components/inventory/PatientDataTab';
 import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
 
-type TabType = 'procurement' | 'stock' | 'admin' | 'reorder' | 'compliance' | 'advanced' | 'logistics' | 'patients';
+type TabType = 'operations' | 'stock' | 'admin' | 'compliance' | 'advanced' | 'patients';
 
 export function Inventory() {
     const { inventories, sites, addRequest } = useApp();
     const { selectedPatient, setSelectedPatient } = useSimulation();
-    const [activeTab, setActiveTab] = useState<TabType>('logistics');
+    const [activeTab, setActiveTab] = useState<TabType>('operations');
 
     // Shared state for modals
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
@@ -50,14 +47,12 @@ export function Inventory() {
     };
 
     const tabs = [
-        { id: 'logistics' as TabType, label: 'Logistics', icon: ArrowRightLeft, desc: 'Check-in/out & Transfers' },
-        { id: 'advanced' as TabType, label: 'Advanced', icon: Zap, desc: 'AI & Analytics' },
-        { id: 'patients' as TabType, label: 'Patient Data', icon: Users, desc: 'Comprehensive Records' },
-        { id: 'procurement' as TabType, label: 'Procurement', icon: Truck, desc: 'Receiving & Orders' },
+        { id: 'operations' as TabType, label: 'Operations', icon: Truck, desc: 'Procurement, Logistics & Reordering' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
-        { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
-        { id: 'reorder' as TabType, label: 'Reordering', icon: RefreshCw, desc: 'Replenishment' },
+        { id: 'patients' as TabType, label: 'Patient Data', icon: Users, desc: 'Comprehensive Records' },
+        { id: 'advanced' as TabType, label: 'Advanced', icon: Zap, desc: 'AI & Analytics' },
         { id: 'compliance' as TabType, label: 'Compliance', icon: FileText, desc: 'Audits & Reports' },
+        { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
     ];
 
     return (
@@ -78,8 +73,8 @@ export function Inventory() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`group relative flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-left transition-all duration-200 ease-out ${isActive
-                                            ? 'bg-slate-900 text-white shadow-lg scale-105 translate-x-2'
-                                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 hover:scale-105 hover:translate-x-1 hover:shadow-md'
+                                        ? 'bg-slate-900 text-white shadow-lg scale-105 translate-x-2'
+                                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 hover:scale-105 hover:translate-x-1 hover:shadow-md'
                                         }`}
                                 >
                                     {/* Active Indicator Line */}
@@ -88,8 +83,8 @@ export function Inventory() {
                                     )}
 
                                     <div className={`rounded-lg p-2 transition-all duration-300 ${isActive
-                                            ? 'bg-white/20 text-white rotate-0'
-                                            : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-600 group-hover:rotate-12 group-hover:shadow-sm'
+                                        ? 'bg-white/20 text-white rotate-0'
+                                        : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-600 group-hover:rotate-12 group-hover:shadow-sm'
                                         }`}>
                                         <Icon className="h-5 w-5" />
                                     </div>
@@ -127,9 +122,7 @@ export function Inventory() {
                         </p>
                     </div>
 
-                    {activeTab === 'logistics' && <LogisticsTab />}
-
-                    {activeTab === 'procurement' && <ProcurementTab />}
+                    {activeTab === 'operations' && <OperationsTab />}
 
                     {activeTab === 'stock' && (
                         <StockTab
@@ -140,8 +133,6 @@ export function Inventory() {
                     )}
 
                     {activeTab === 'admin' && <AdministrationTab />}
-
-                    {activeTab === 'reorder' && <ReorderingTab />}
 
                     {activeTab === 'compliance' && <ComplianceTab />}
 

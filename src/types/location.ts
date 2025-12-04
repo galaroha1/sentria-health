@@ -8,6 +8,12 @@ export interface Site {
     id: string;
     name: string;
     type: 'hospital' | 'clinic' | 'warehouse' | 'pharmacy';
+    regulatoryProfile: {
+        is340B: boolean;
+        deaLicense: ('II' | 'III' | 'IV' | 'V')[]; // Controlled substance schedules allowed
+        dscsaCompliant: boolean; // Drug Supply Chain Security Act
+        stateLicense: string;
+    };
     departments: Department[];
     coordinates: {
         lat: number;

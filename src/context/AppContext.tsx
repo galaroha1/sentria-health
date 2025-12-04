@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { NetworkRequest, Site, SiteInventory } from '../types/location';
 import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
-import { sites, siteInventories as initialInventories } from '../data/location/mockData';
+import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { mockNotifications as initialNotifications } from '../data/notifications/mockData';
 import { FirestoreService } from '../services/firebase.service';
 
@@ -11,6 +11,7 @@ interface AppContextType {
     // Location & Requests
     requests: NetworkRequest[];
     sites: Site[];
+    addSite: (site: Site) => void;
     inventories: SiteInventory[];
     addRequest: (request: NetworkRequest) => void;
     updateRequestStatus: (id: string, status: NetworkRequest['status'], approvedBy?: string) => void;
@@ -43,7 +44,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return saved ? JSON.parse(saved) : initialNotifications;
     });
 
+    const [sites, setSites] = useState<Site[]>(initialSites);
     const [inventories, setInventories] = useState<SiteInventory[]>([]);
+
+    const addSite = (site: Site) => {
+        setSites(prev => [...prev, site]);
+        // Also initialize empty inventory for the new site
+        const newInventory: SiteInventory = {
+            siteId: site.id,
+            lastUpdated: new Date().toISOString(),
+            drugs: []
+        };
+        setInventories(prev => [...prev, newInventory]);
+        FirestoreService.set('inventoryItems', site.id, newInventory);
+    };
 
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => {
         const saved = localStorage.getItem('sentria_audit_logs');
@@ -295,6 +309,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <AppContext.Provider value={{
             requests,
             sites,
+            addSite,
             inventories,
             addRequest,
             updateRequestStatus,

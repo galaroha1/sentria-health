@@ -7,6 +7,12 @@ export const sites: Site[] = [
         id: 'site-1',
         name: 'Hospital of the Univ. of Pennsylvania',
         type: 'hospital',
+        regulatoryProfile: {
+            is340B: true,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-HOSP-001'
+        },
         departments: [
             { id: 'dept-1-1', name: 'Main Pharmacy', type: 'pharmacy' },
             { id: 'dept-1-2', name: 'Emergency Dept', type: 'clinical' },
@@ -25,6 +31,12 @@ export const sites: Site[] = [
         id: 'site-2',
         name: 'Penn Presbyterian Medical Center',
         type: 'hospital',
+        regulatoryProfile: {
+            is340B: true,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-HOSP-002'
+        },
         departments: [
             { id: 'dept-2-1', name: 'Inpatient Pharmacy', type: 'pharmacy' },
             { id: 'dept-2-2', name: 'Trauma Center', type: 'clinical' },
@@ -42,6 +54,12 @@ export const sites: Site[] = [
         id: 'site-3',
         name: 'Pennsylvania Hospital',
         type: 'hospital',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-HOSP-003'
+        },
         departments: [
             { id: 'dept-3-1', name: 'Pharmacy', type: 'pharmacy' },
             { id: 'dept-3-2', name: 'Maternity', type: 'clinical' },
@@ -61,6 +79,12 @@ export const sites: Site[] = [
         id: 'site-4',
         name: 'Chester County Hospital',
         type: 'hospital',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-HOSP-004'
+        },
         departments: [
             { id: 'dept-4-1', name: 'Pharmacy', type: 'pharmacy' },
             { id: 'dept-4-2', name: 'Emergency', type: 'clinical' }
@@ -77,6 +101,12 @@ export const sites: Site[] = [
         id: 'site-5',
         name: 'Lancaster General Hospital',
         type: 'hospital',
+        regulatoryProfile: {
+            is340B: true,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-HOSP-005'
+        },
         departments: [
             { id: 'dept-5-1', name: 'Pharmacy', type: 'pharmacy' },
             { id: 'dept-5-2', name: 'Trauma', type: 'clinical' }
@@ -93,6 +123,12 @@ export const sites: Site[] = [
         id: 'site-6',
         name: 'Princeton Medical Center',
         type: 'hospital',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'NJ-HOSP-001'
+        },
         departments: [
             { id: 'dept-6-1', name: 'Pharmacy', type: 'pharmacy' },
             { id: 'dept-6-2', name: 'General Care', type: 'clinical' }
@@ -111,6 +147,12 @@ export const sites: Site[] = [
         id: 'site-7',
         name: 'Penn Medicine Radnor',
         type: 'clinic',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['III', 'IV', 'V'], // Limited license
+            dscsaCompliant: true,
+            stateLicense: 'PA-CLINIC-001'
+        },
         departments: [
             { id: 'dept-7-1', name: 'Dispensary', type: 'pharmacy' },
             { id: 'dept-7-2', name: 'Family Medicine', type: 'clinical' }
@@ -127,6 +169,12 @@ export const sites: Site[] = [
         id: 'site-8',
         name: 'Penn Medicine Valley Forge',
         type: 'clinic',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-CLINIC-002'
+        },
         departments: [
             { id: 'dept-8-1', name: 'Dispensary', type: 'pharmacy' },
             { id: 'dept-8-2', name: 'Urgent Care', type: 'clinical' }
@@ -143,6 +191,12 @@ export const sites: Site[] = [
         id: 'site-9',
         name: 'Penn Medicine University City',
         type: 'clinic',
+        regulatoryProfile: {
+            is340B: true,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-CLINIC-003'
+        },
         departments: [
             { id: 'dept-9-1', name: 'Dispensary', type: 'pharmacy' },
             { id: 'dept-9-2', name: 'Specialty Care', type: 'clinical' }
@@ -159,6 +213,12 @@ export const sites: Site[] = [
         id: 'site-10',
         name: 'Penn Medicine Cherry Hill',
         type: 'clinic',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'NJ-CLINIC-001'
+        },
         departments: [
             { id: 'dept-10-1', name: 'Dispensary', type: 'pharmacy' },
             { id: 'dept-10-2', name: 'Primary Care', type: 'clinical' }
@@ -175,6 +235,12 @@ export const sites: Site[] = [
         id: 'site-11',
         name: 'Penn Medicine Rittenhouse',
         type: 'clinic',
+        regulatoryProfile: {
+            is340B: true,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-CLINIC-004'
+        },
         departments: [
             { id: 'dept-11-1', name: 'Dispensary', type: 'pharmacy' },
             { id: 'dept-11-2', name: 'Rehabilitation', type: 'clinical' }
@@ -193,6 +259,12 @@ export const sites: Site[] = [
         id: 'site-12',
         name: 'Penn Medicine Distribution Center',
         type: 'warehouse',
+        regulatoryProfile: {
+            is340B: false,
+            deaLicense: ['II', 'III', 'IV', 'V'],
+            dscsaCompliant: true,
+            stateLicense: 'PA-DIST-001'
+        },
         departments: [
             { id: 'dept-12-1', name: 'Main Inventory', type: 'logistics' },
             { id: 'dept-12-2', name: 'Cold Chain', type: 'logistics' },
