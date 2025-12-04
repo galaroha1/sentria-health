@@ -120,32 +120,38 @@ export function ModelTraining() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Synthetic Patients to Generate
+                                    Number of Patients to Simulate
                                 </label>
-                                <div className="flex gap-4 items-center mb-2">
-                                    <input
-                                        type="number"
-                                        min="10"
-                                        max="10000"
-                                        value={patientCount}
-                                        onChange={(e) => setPatientCount(Number(e.target.value))}
-                                        disabled={isTraining || isFetching}
-                                        className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    />
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="10000"
-                                        step="10"
-                                        value={patientCount}
-                                        onChange={(e) => setPatientCount(Number(e.target.value))}
-                                        disabled={isTraining || isFetching}
-                                        className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                    />
-                                </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>10</span>
-                                    <span>10,000</span>
+                                <div className="space-y-3">
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            min="10"
+                                            max="10000"
+                                            value={patientCount}
+                                            onChange={(e) => setPatientCount(Number(e.target.value))}
+                                            disabled={isTraining || isFetching}
+                                            className="w-full px-4 py-3 border border-slate-300 rounded-lg text-lg font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                            placeholder="e.g. 50"
+                                        />
+                                        <div className="absolute right-3 top-3.5 text-slate-400 text-sm font-medium">
+                                            patients
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-xs text-slate-500 font-medium">Quick Adjust:</span>
+                                        <input
+                                            type="range"
+                                            min="10"
+                                            max="10000"
+                                            step="10"
+                                            value={patientCount}
+                                            onChange={(e) => setPatientCount(Number(e.target.value))}
+                                            disabled={isTraining || isFetching}
+                                            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -153,8 +159,8 @@ export function ModelTraining() {
                                 onClick={startTraining}
                                 disabled={isTraining || isFetching}
                                 className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-white transition-all ${isTraining || isFetching
-                                        ? 'bg-slate-400 cursor-not-allowed'
-                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
+                                    ? 'bg-slate-400 cursor-not-allowed'
+                                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
                                     }`}
                             >
                                 {isFetching ? (
