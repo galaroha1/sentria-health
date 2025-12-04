@@ -27,6 +27,17 @@ export function ModelTraining() {
     }, [logs]);
 
     const handleStart = () => {
+        if (patientCount > 100) {
+            toast.error('Maximum limit is 100 patients per simulation.', {
+                icon: '⚠️',
+                style: {
+                    borderRadius: '10px',
+                    background: '#333',
+                    color: '#fff',
+                },
+            });
+            return;
+        }
         startTraining(patientCount);
     };
 
@@ -60,8 +71,8 @@ export function ModelTraining() {
                         <span className="text-sm text-slate-500">Patients to Generate:</span>
                         <input
                             type="number"
-                            min="10"
-                            max="10000"
+                            min="1"
+                            max="100"
                             value={patientCount}
                             onChange={(e) => setPatientCount(Number(e.target.value))}
                             className="w-20 rounded border border-slate-200 px-2 py-1 text-sm font-medium focus:border-purple-500 focus:outline-none"

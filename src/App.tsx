@@ -12,6 +12,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { Transfers } from './pages/Transfers';
 import { LocationMap } from './pages/LocationMap';
 import { UserManagement } from './pages/UserManagement';
+import { Admin } from './pages/Admin';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -96,6 +97,14 @@ function App() {
                     <Route path="profile" element={<Profile />} />
                     <Route path="transfers" element={<Transfers />} />
                     <Route path="locations" element={<LocationMap />} />
+                    <Route
+                      path="admin"
+                      element={
+                        <ProtectedRoute requirePermission="manage_users">
+                          <Admin />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route
                       path="users"
                       element={

@@ -259,18 +259,19 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     const clearData = async () => {
         if (!user) return;
         try {
-            // Let's implement a loop to delete the current loaded results.
-            const batchSize = 500;
-            const chunks = [];
-            for (let i = 0; i < simulationResults.length; i += batchSize) {
-                chunks.push(simulationResults.slice(i, i + batchSize));
+            // Fetch all IDs directly from Firestore to ensure we delete everything,
+            // regardless of what's currently loaded in the local state.
+            const allSimulations = await FirestoreService.getAll<SimulationResult>(`users/${user.id}/simulations`);
+            const ids = allSimulations.map(r => r.id);
+
+            if (ids.length === 0) {
+                toast.success('No data to clear.');
+                return;
             }
 
-            for (const chunk of chunks) {
-                await Promise.all(chunk.map(r => FirestoreService.delete(`users/${user.id}/simulations`, r.id)));
-            }
+            await FirestoreService.deleteDocuments(`users/${user.id}/simulations`, ids);
 
-            setSimulationResults([]);
+            // Local state will be updated by the subscription, but we can reset stats immediately
             setStats({ totalPatients: 0, conditionsIdentified: 0, accuracy: 87.5 });
             setLogs([]);
             toast.success('Simulation data cleared.');

@@ -159,6 +159,33 @@ export class FirestoreService {
             console.error(`Error in document ${id} subscription:`, error);
         });
     }
+    /**
+     * Delete multiple documents in batches
+     */
+    static async deleteDocuments(collectionName: string, ids: string[]): Promise<boolean> {
+        try {
+            const batchSize = 500;
+            const chunks = [];
+            for (let i = 0; i < ids.length; i += batchSize) {
+                chunks.push(ids.slice(i, i + batchSize));
+            }
+
+            const { writeBatch } = await import('firebase/firestore');
+
+            for (const chunk of chunks) {
+                const batch = writeBatch(db);
+                chunk.forEach(id => {
+                    const docRef = doc(db, collectionName, id);
+                    batch.delete(docRef);
+                });
+                await batch.commit();
+            }
+            return true;
+        } catch (error) {
+            console.error(`Error deleting documents from ${collectionName}:`, error);
+            return false;
+        }
+    }
 }
 
 // Export common query helpers
