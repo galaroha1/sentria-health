@@ -1,6 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getAuth, type Auth } from 'firebase/auth';
 
 // Use environment variables for configuration
 const firebaseConfig = {
@@ -12,13 +12,33 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app: FirebaseApp;
+let db: Firestore;
+let auth: Auth;
 
-// Initialize Firestore
-export const db = getFirestore(app);
+try {
+    // Check if config is valid
+    if (!firebaseConfig.apiKey) {
+        throw new Error('Firebase API Key is missing. Please check your .env file.');
+    }
 
-// Initialize Auth
-export const auth = getAuth(app);
+    // Initialize Firebase only if not already initialized
+    if (!getApps().length) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApps()[0];
+    }
 
+    // Initialize services
+    db = getFirestore(app);
+    auth = getAuth(app);
+
+} catch (error) {
+    console.error('Firebase Initialization Error:', error);
+    // Re-throw to be caught by global error handlers or cause a visible crash
+    // We can't really recover if Firebase is essential
+    throw error;
+}
+
+export { app, db, auth };
 export default app;
