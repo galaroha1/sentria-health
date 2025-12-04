@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { SyntheaGenerator, type SyntheticBundle } from '../../utils/syntheaGenerator';
-import { Brain, Database, Play, CheckCircle, Activity, Download, Users } from 'lucide-react';
+import { Brain, Database, Play, CheckCircle, Activity, Download } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
 import { MEDICAL_DATABASE } from '../../data/medicalDatabase';
 import { predictTreatment, type PatientProfile } from '../../utils/aiPrediction';
