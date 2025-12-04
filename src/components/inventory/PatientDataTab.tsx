@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, Filter, Download, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { useSimulation, type SimulationResult } from '../../context/SimulationContext';
-import { format } from 'date-fns';
+
 
 export function PatientDataTab() {
     const { simulationResults, viewPatientDetails } = useSimulation();
