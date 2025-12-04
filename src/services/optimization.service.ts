@@ -86,29 +86,81 @@ export class OptimizationService {
     /**
      * Run the optimization algorithm
      */
+    /**
+     * Run the optimization algorithm
+     */
     static generateProposals(
         sites: Site[],
-        inventories: SiteInventory[]
+        inventories: SiteInventory[],
+        simulationResults: any[] = [] // Added simulation results
     ): OptimizationProposal[] {
         const proposals: OptimizationProposal[] = [];
+        const demandMap = new Map<string, { siteId: string, drugName: string, ndc: string, quantity: number, reason: string }>();
 
-        // 1. Identify Demand (Sites with 'low' or 'critical' stock)
-        const demandSites = inventories.flatMap(inv =>
-            inv.drugs
-                .filter(d => d.status === 'low' || d.status === 'critical')
-                .map(d => ({ siteId: inv.siteId, drug: d }))
-        );
+        // 1. Identify Demand from Inventory (Low/Critical Stock)
+        inventories.forEach(inv => {
+            inv.drugs.forEach(d => {
+                if (d.status === 'low' || d.status === 'critical') {
+                    const key = `${inv.siteId}-${d.ndc}`;
+                    demandMap.set(key, {
+                        siteId: inv.siteId,
+                        drugName: d.drugName,
+                        ndc: d.ndc,
+                        quantity: d.maxLevel - d.quantity,
+                        reason: `Low stock alert: ${d.quantity} remaining (Min: ${d.minLevel})`
+                    });
+                }
+            });
+        });
 
-        // 2. Evaluate Options for each demand
-        demandSites.forEach(({ siteId, drug }) => {
-            const targetSite = sites.find(s => s.id === siteId);
+        // 2. Identify Demand from Patients (Simulation)
+        // Aggregate demand by site and drug
+        simulationResults.forEach(patient => {
+            // Only consider active patients who need drugs
+            if (patient.status === 'Scheduled' || patient.status === 'Transport Needed') {
+                // Find the site (assuming patient.location matches site.name for simplicity, or map it)
+                // In a real app, patient.locationId would be better.
+                // For this demo, we'll try to match by name or default to the first site if not found (to ensure flow works)
+                const site = sites.find(s => s.name === patient.location) || sites[0];
+
+                if (site) {
+                    // Check if site already has enough stock?
+                    // For now, let's assume every patient creates a "demand signal" that we check against inventory
+                    const inventory = inventories.find(inv => inv.siteId === site.id);
+                    const drug = inventory?.drugs.find(d => d.drugName === patient.drug);
+
+                    // If drug exists and we have enough, we might not need a proposal.
+                    // But if we are "just in time", maybe we do.
+                    // DEMO: Trigger if stock is less than 100 (High threshold for demo visibility)
+                    if (drug && drug.quantity < 100) {
+                        const key = `${site.id}-${drug.ndc}`;
+                        const existing = demandMap.get(key);
+                        if (existing) {
+                            existing.quantity += 1;
+                            existing.reason = `${existing.reason} + Patient Demand (${patient.patientName})`;
+                        } else {
+                            demandMap.set(key, {
+                                siteId: site.id,
+                                drugName: drug.drugName,
+                                ndc: drug.ndc,
+                                quantity: 1, // One unit per patient
+                                reason: `Patient Demand: ${patient.patientName} needs ${patient.drug}`
+                            });
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Evaluate Options for each demand
+        demandMap.forEach((demand) => {
+            const targetSite = sites.find(s => s.id === demand.siteId);
             if (!targetSite) return;
 
-            const neededQty = drug.maxLevel - drug.quantity;
+            const neededQty = demand.quantity;
             const mockUnitPrice = 100; // Placeholder price
 
             // Option A: Procurement (Vendor)
-            // Assume vendor is "far" (e.g., 500km) but has infinite stock
             const vendorDistance = 500;
             const procurementCost = this.calculateTotalCost(vendorDistance, neededQty, mockUnitPrice, 'routine');
 
@@ -116,23 +168,16 @@ export class OptimizationService {
             let bestTransferOption: { source: Site, cost: number, distance: number } | null = null;
 
             for (const sourceInv of inventories) {
-                if (sourceInv.siteId === siteId) continue; // Skip self
+                if (sourceInv.siteId === demand.siteId) continue; // Skip self
 
-                const sourceItem = sourceInv.drugs.find(d => d.ndc === drug.ndc);
-                // Only transfer if source has surplus (well_stocked or overstocked) AND enough qty
+                const sourceItem = sourceInv.drugs.find(d => d.ndc === demand.ndc);
+                // Only transfer if source has surplus
                 if (sourceItem && (sourceItem.status === 'well_stocked' || sourceItem.status === 'overstocked') && sourceItem.quantity > neededQty) {
                     const sourceSite = sites.find(s => s.id === sourceInv.siteId);
                     if (sourceSite) {
-                        // REGULATORY CHECK: 340B Compliance & DSCSA
-                        // 1. DSCSA Compliance: Both sites must be compliant
-                        if (!targetSite.regulatoryProfile.dscsaCompliant || !sourceSite.regulatoryProfile.dscsaCompliant) {
-                            continue; // Block: Security risk
-                        }
-
-                        // 2. 340B Compliance: Strict separation
-                        if (targetSite.regulatoryProfile.is340B !== sourceSite.regulatoryProfile.is340B) {
-                            continue; // Block: Regulatory mismatch
-                        }
+                        // REGULATORY CHECK
+                        if (!targetSite.regulatoryProfile.dscsaCompliant || !sourceSite.regulatoryProfile.dscsaCompliant) continue;
+                        if (targetSite.regulatoryProfile.is340B !== sourceSite.regulatoryProfile.is340B) continue;
 
                         const distance = this.calculateDistance(sourceSite, targetSite);
                         const transferCost = this.calculateTotalCost(distance, neededQty, 0, 'routine');
@@ -144,9 +189,8 @@ export class OptimizationService {
                 }
             }
 
-            // 3. Decision Logic
+            // 4. Decision Logic
             if (bestTransferOption && bestTransferOption.cost < procurementCost) {
-                // Propose Transfer
                 proposals.push({
                     id: `prop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     type: 'transfer',
@@ -154,31 +198,28 @@ export class OptimizationService {
                     targetSiteName: targetSite.name,
                     sourceSiteId: bestTransferOption.source.id,
                     sourceSiteName: bestTransferOption.source.name,
-                    drugName: drug.drugName,
-                    ndc: drug.ndc,
+                    drugName: demand.drugName,
+                    ndc: demand.ndc,
                     quantity: neededQty,
                     costAnalysis: {
                         distanceKm: Math.round(bestTransferOption.distance),
-                        transportCost: Math.round(bestTransferOption.cost), // Since item cost is 0
+                        transportCost: Math.round(bestTransferOption.cost),
                         itemCost: 0,
                         totalCost: Math.round(bestTransferOption.cost),
                         savings: Math.round(procurementCost - bestTransferOption.cost)
                     },
-                    reason: `Transfer from ${bestTransferOption.source.name} is $${Math.round(procurementCost - bestTransferOption.cost)} cheaper than procurement. (Regulatory Check: PASSED)`,
+                    reason: `${demand.reason}. Transfer from ${bestTransferOption.source.name} is cheaper.`,
                     score: 95
                 });
             } else {
-                // Propose Procurement (if critical or no transfer option)
-                // Only propose if critical to avoid spamming routine orders? 
-                // For this demo, let's propose it.
                 proposals.push({
                     id: `prop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     type: 'procurement',
                     targetSiteId: targetSite.id,
                     targetSiteName: targetSite.name,
                     vendorName: 'McKesson (Primary)',
-                    drugName: drug.drugName,
-                    ndc: drug.ndc,
+                    drugName: demand.drugName,
+                    ndc: demand.ndc,
                     quantity: neededQty,
                     costAnalysis: {
                         distanceKm: vendorDistance,
@@ -187,7 +228,7 @@ export class OptimizationService {
                         totalCost: Math.round(procurementCost),
                         savings: 0
                     },
-                    reason: 'No internal surplus available or regulatory restrictions apply. Procurement required.',
+                    reason: `${demand.reason}. Procurement required.`,
                     score: 80
                 });
             }

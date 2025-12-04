@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, AlertTriangle, Zap, Clock } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useSimulation } from '../../context/SimulationContext';
 import { OptimizationService, type OptimizationProposal } from '../../services/optimization.service';
 import { OptimizationApprovals } from './OptimizationApprovals';
 import toast from 'react-hot-toast';
 
 export function DecisionsTab() {
     const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead } = useApp();
+    const { simulationResults, fetchSimulations } = useSimulation();
     const [activeSection, setActiveSection] = useState<'approvals' | 'optimization' | 'alerts'>('approvals');
 
     // Optimization State
@@ -17,19 +19,26 @@ export function DecisionsTab() {
     const pendingRequests = requests.filter(r => r.status === 'pending');
     const criticalAlerts = notifications.filter(n => !n.read && (n.type === 'critical' || n.type === 'warning'));
 
+    // Initial Data Fetch
+    useEffect(() => {
+        fetchSimulations(100); // Fetch last 100 patients for analysis
+    }, []);
+
     // Run optimization on mount or when requested
     const runOptimization = async () => {
         setIsOptimizing(true);
         // Simulate calculation delay
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const newProposals = OptimizationService.generateProposals(sites, inventories);
+        const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults);
         setProposals(newProposals);
         setIsOptimizing(false);
     };
 
     useEffect(() => {
-        runOptimization();
-    }, [sites, inventories]);
+        if (simulationResults.length > 0) {
+            runOptimization();
+        }
+    }, [sites, inventories, simulationResults]);
 
     const handleApproveRequest = (id: string) => {
         updateRequestStatus(id, 'approved', 'Current User');
