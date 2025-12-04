@@ -15,6 +15,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let db: Firestore;
 let auth: Auth;
+let initializationError: string | null = null;
 
 try {
     // Check if config is valid
@@ -33,12 +34,16 @@ try {
     db = getFirestore(app);
     auth = getAuth(app);
 
-} catch (error) {
+} catch (error: any) {
     console.error('Firebase Initialization Error:', error);
-    // Re-throw to be caught by global error handlers or cause a visible crash
-    // We can't really recover if Firebase is essential
-    throw error;
+    initializationError = error.message || 'Unknown Firebase Error';
+
+    // Create dummy objects to prevent immediate crashes on import
+    // These will throw or log if methods are called, but allow the app to load
+    app = {} as any;
+    db = {} as any;
+    auth = {} as any;
 }
 
-export { app, db, auth };
+export { app, db, auth, initializationError };
 export default app;

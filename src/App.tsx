@@ -21,7 +21,33 @@ import { UserProvider } from './context/UserContext';
 
 import { SimulationProvider } from './context/SimulationContext';
 
+import { initializationError } from './config/firebase';
+
 function App() {
+  if (initializationError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <span className="text-3xl">⚠️</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Configuration Error</h1>
+          <p className="text-slate-600 mb-6">
+            The application failed to connect to Firebase.
+          </p>
+          <div className="bg-slate-100 rounded-lg p-4 mb-6 text-left">
+            <p className="font-mono text-xs text-red-600 break-all">
+              {initializationError}
+            </p>
+          </div>
+          <p className="text-sm text-slate-500">
+            Please check your <code>.env</code> file and ensure all Firebase variables are set correctly.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AppProvider>
       <UserProvider>
