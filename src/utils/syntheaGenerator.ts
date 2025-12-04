@@ -1,5 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
 import { MEDICAL_DATABASE, COMORBIDITIES_LIST } from '../data/medicalDatabase';
+
+// Helper for ID generation
+const generateId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
 // FHIR-like Types
 export interface FHIRPatient {
@@ -78,7 +80,7 @@ export class SyntheaGenerator {
         const age = Math.floor(Math.random() * (90 - 18) + 18); // 18 to 90
         const birthYear = new Date().getFullYear() - age;
         const birthDate = `${birthYear}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`;
-        const patientId = uuidv4();
+        const patientId = generateId();
 
         const patient: FHIRPatient = {
             resourceType: 'Patient',
@@ -109,7 +111,7 @@ export class SyntheaGenerator {
 
         conditions.push({
             resourceType: 'Condition',
-            id: uuidv4(),
+            id: generateId(),
             clinicalStatus: 'active',
             verificationStatus: 'confirmed',
             code: {
@@ -129,7 +131,7 @@ export class SyntheaGenerator {
             const comorbidity = COMORBIDITIES_LIST[Math.floor(Math.random() * COMORBIDITIES_LIST.length)];
             conditions.push({
                 resourceType: 'Condition',
-                id: uuidv4(),
+                id: generateId(),
                 clinicalStatus: 'active',
                 verificationStatus: 'confirmed',
                 code: {
@@ -150,7 +152,7 @@ export class SyntheaGenerator {
             const drug = primaryCondition.suggestedDrugs[Math.floor(Math.random() * primaryCondition.suggestedDrugs.length)];
             medications.push({
                 resourceType: 'MedicationRequest',
-                id: uuidv4(),
+                id: generateId(),
                 status: 'active',
                 intent: 'order',
                 medicationCodeableConcept: {

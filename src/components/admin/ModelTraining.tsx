@@ -31,36 +31,45 @@ export function ModelTraining() {
         setProgress(0);
         setLogs(['Initializing Synthea™ Patient Generator...', 'Loading clinical protocols (ICD-10, SNOMED-CT)...']);
 
-        const batchSize = Math.ceil(patientCount / 100); // Update every 1%
+        const batchSize = Math.max(1, Math.ceil(patientCount / 100)); // Ensure at least 1
         let generated = 0;
         let conditions = 0;
 
         const interval = setInterval(() => {
-            generated += batchSize;
-            const currentProgress = Math.min(100, (generated / patientCount) * 100);
+            try {
+                generated += batchSize;
+                const currentProgress = Math.min(100, (generated / patientCount) * 100);
 
-            // Generate a small batch to simulate work
-            const batch = SyntheaGenerator.generateBatch(5); // Generate 5 real samples for stats
-            conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
+                // Generate a small batch to simulate work
+                const batch = SyntheaGenerator.generateBatch(Math.min(5, batchSize));
+                conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
 
-            // Update logs with realistic details
-            const sample = batch[0];
-            addLog(`Generated Patient: ${sample.patient.id.substring(0, 8)}... | Condition: ${sample.conditions[0]?.code.coding[0].display}`);
+                // Update logs with realistic details
+                if (batch.length > 0) {
+                    const sample = batch[0];
+                    addLog(`Generated Patient: ${sample.patient.id.substring(0, 8)}... | Condition: ${sample.conditions[0]?.code.coding[0].display}`);
+                }
 
-            setProgress(currentProgress);
-            setStats(prev => ({
-                totalPatients: Math.min(generated, patientCount),
-                conditionsIdentified: conditions,
-                accuracy: Math.min(99.2, prev.accuracy + 0.1) // Simulate learning
-            }));
+                setProgress(currentProgress);
+                setStats(prev => ({
+                    totalPatients: Math.min(generated, patientCount),
+                    conditionsIdentified: conditions,
+                    accuracy: Math.min(99.2, prev.accuracy + 0.1) // Simulate learning
+                }));
 
-            if (generated >= patientCount) {
+                if (generated >= patientCount) {
+                    clearInterval(interval);
+                    setIsTraining(false);
+                    addLog('Training Complete. Model weights updated.');
+                    addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
+                }
+            } catch (error: any) {
                 clearInterval(interval);
                 setIsTraining(false);
-                addLog('Training Complete. Model weights updated.');
-                addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
+                addLog(`ERROR: Simulation failed - ${error.message}`);
+                console.error(error);
             }
-        }, 100); // Fast simulation
+        }, 100);
     };
 
     return (
@@ -84,20 +93,30 @@ export function ModelTraining() {
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Synthetic Patients to Generate
                                 </label>
-                                <input
-                                    type="range"
-                                    min="100"
-                                    max="10000"
-                                    step="100"
-                                    value={patientCount}
-                                    onChange={(e) => setPatientCount(Number(e.target.value))}
-                                    disabled={isTraining}
-                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                                <div className="flex gap-4 items-center mb-2">
+                                    <input
+                                        type="number"
+                                        min="100"
+                                        max="100000"
+                                        value={patientCount}
+                                        onChange={(e) => setPatientCount(Number(e.target.value))}
+                                        disabled={isTraining}
+                                        className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                    <input
+                                        type="range"
+                                        min="100"
+                                        max="10000"
+                                        step="100"
+                                        value={patientCount}
+                                        onChange={(e) => setPatientCount(Number(e.target.value))}
+                                        disabled={isTraining}
+                                        className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
                                     <span>100</span>
-                                    <span className="font-bold text-indigo-600">{patientCount.toLocaleString()} Patients</span>
-                                    <span>10,000</span>
+                                    <span>10,000+</span>
                                 </div>
                             </div>
 
@@ -105,8 +124,8 @@ export function ModelTraining() {
                                 onClick={startTraining}
                                 disabled={isTraining}
                                 className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-white transition-all ${isTraining
-                                    ? 'bg-slate-400 cursor-not-allowed'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
+                                        ? 'bg-slate-400 cursor-not-allowed'
+                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
                                     }`}
                             >
                                 {isTraining ? (
