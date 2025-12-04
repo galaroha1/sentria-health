@@ -14,14 +14,13 @@ import { ComplianceTab } from '../components/inventory/ComplianceTab';
 import { AdvancedTab } from '../components/inventory/AdvancedTab';
 import { PatientDataTab } from '../components/inventory/PatientDataTab';
 import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
-import { DecisionsTab } from '../components/inventory/DecisionsTab';
 
-type TabType = 'decisions' | 'operations' | 'stock' | 'admin' | 'compliance' | 'advanced' | 'patients';
+type TabType = 'operations' | 'stock' | 'admin' | 'compliance' | 'advanced' | 'patients';
 
 export function Inventory() {
     const { inventories, sites, addRequest } = useApp();
     const { selectedPatient, setSelectedPatient } = useSimulation();
-    const [activeTab, setActiveTab] = useState<TabType>('decisions');
+    const [activeTab, setActiveTab] = useState<TabType>('operations');
 
     // Shared state for modals
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
@@ -48,7 +47,6 @@ export function Inventory() {
     };
 
     const tabs = [
-        { id: 'decisions' as TabType, label: 'Decisions', icon: Zap, desc: 'Control Tower & Approvals' },
         { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
         { id: 'patients' as TabType, label: 'Patient Data', icon: Users, desc: 'Comprehensive Records' },
@@ -123,8 +121,6 @@ export function Inventory() {
                             {tabs.find(t => t.id === activeTab)?.desc}
                         </p>
                     </div>
-
-                    {activeTab === 'decisions' && <DecisionsTab />}
 
                     {activeTab === 'operations' && <OperationsTab />}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ShoppingCart, Package, Users, Settings, X, ArrowRightLeft, MapPin } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Users, Settings, X, ArrowRightLeft, MapPin, Zap } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,7 @@ const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard, requirePermission: 'dashboard' },
     { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart, requirePermission: 'marketplace' },
     { name: 'Inventory', href: '/inventory', icon: Package, requirePermission: 'inventory' },
+    { name: 'Decisions', href: '/decisions', icon: Zap, requirePermission: 'inventory' },
     { name: 'Transfers', href: '/transfers', icon: ArrowRightLeft, requirePermission: 'transfers' },
     { name: 'Locations', href: '/locations', icon: MapPin, requirePermission: 'locations' },
     { name: 'Users', href: '/users', icon: Users, requirePermission: 'dashboard' },

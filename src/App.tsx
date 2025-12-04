@@ -13,6 +13,7 @@ import { Transfers } from './pages/Transfers';
 import { LocationMap } from './pages/LocationMap';
 import { UserManagement } from './pages/UserManagement';
 import { Admin } from './pages/Admin';
+import { Decisions } from './pages/Decisions';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -96,7 +97,9 @@ function App() {
 
                     <Route path="profile" element={<Profile />} />
                     <Route path="transfers" element={<Transfers />} />
+                    <Route path="transfers" element={<Transfers />} />
                     <Route path="locations" element={<LocationMap />} />
+                    <Route path="decisions" element={<Decisions />} />
                     <Route
                       path="admin"
                       element={
