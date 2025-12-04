@@ -1,4 +1,5 @@
 import { Search, User, ShoppingCart, LogOut, Settings as SettingsIcon, UserCircle, Menu } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -53,7 +54,14 @@ export function Header({ onMenuClick }: HeaderProps) {
 
             <div className="flex items-center gap-4">
                 <Link to="/cart" className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-                    <ShoppingCart className="h-5 w-5" />
+                    <motion.div
+                        key={itemCount}
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ShoppingCart className="h-5 w-5" />
+                    </motion.div>
                     {itemCount > 0 && (
                         <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
                             {itemCount}

@@ -7,7 +7,7 @@ const REMEMBER_ME_KEY = 'sentria_remember_me';
 
 export function Login() {
     const navigate = useNavigate();
-    const { login, isAuthenticated } = useAuth();
+    const { login, signup, isAuthenticated } = useAuth();
     // Initialize state from localStorage
     const [email, setEmail] = useState(() => {
         try {
@@ -36,6 +36,8 @@ export function Login() {
     });
 
     const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -49,18 +51,23 @@ export function Login() {
         setError('');
         setIsLoading(true);
 
-        const result = await login({ email, password });
+        let result;
+        if (isLogin) {
+            result = await login({ email, password });
+        } else {
+            result = await signup({ email, password }, name);
+        }
 
         if (result.success) {
             // Save email if remember me is checked
-            if (rememberMe) {
+            if (isLogin && rememberMe) {
                 localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email, rememberMe: true }));
-            } else {
+            } else if (isLogin) {
                 localStorage.removeItem(REMEMBER_ME_KEY);
             }
             navigate('/', { replace: true });
         } else {
-            setError(result.error || 'Login failed');
+            setError(result.error || (isLogin ? 'Login failed' : 'Sign up failed'));
             setIsLoading(false);
         }
     };
@@ -74,6 +81,7 @@ export function Login() {
         setEmail(credentials[role].email);
         setPassword(credentials[role].password);
         setError('');
+        setIsLogin(true);
     };
 
     return (
@@ -84,7 +92,9 @@ export function Login() {
                         <ShieldCheck className="h-10 w-10 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold text-slate-900">Sentria Health</h1>
-                    <p className="mt-2 text-sm text-slate-600">Sign in to your account</p>
+                    <p className="mt-2 text-sm text-slate-600">
+                        {isLogin ? 'Sign in to your account' : 'Create a new account'}
+                    </p>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
@@ -93,6 +103,23 @@ export function Login() {
                             <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-100">
                                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                                 <span>{error}</span>
+                            </div>
+                        )}
+
+                        {!isLogin && (
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-slate-700">
+                                    Full Name
+                                </label>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    required
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                    placeholder="John Doe"
+                                />
                             </div>
                         )}
 
@@ -127,15 +154,17 @@ export function Login() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                />
-                                <span className="text-sm text-slate-600">Remember me</span>
-                            </label>
+                            {isLogin && (
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                    />
+                                    <span className="text-sm text-slate-600">Remember me</span>
+                                </label>
+                            )}
                             <Link
                                 to="/forgot-password"
                                 className="text-sm font-medium text-primary-600 hover:text-primary-700"
@@ -149,8 +178,21 @@ export function Login() {
                             disabled={isLoading}
                             className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {isLoading ? 'Signing in...' : 'Sign In'}
+                            {isLoading ? (isLogin ? 'Signing in...' : 'Creating Account...') : (isLogin ? 'Sign In' : 'Create Account')}
                         </button>
+
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsLogin(!isLogin);
+                                    setError('');
+                                }}
+                                className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                            >
+                                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                            </button>
+                        </div>
                     </form>
 
                     <div className="mt-6 border-t border-slate-200 pt-6">

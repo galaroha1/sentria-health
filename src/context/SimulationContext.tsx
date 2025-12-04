@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { addDays } from 'date-fns';
+import { predictTreatment, type PatientProfile, type PredictionResult } from '../utils/aiPrediction';
+import { MEDICAL_DATABASE } from '../data/medicalDatabase';
+import { useAuth } from './AuthContext';
+import { FirestoreService } from '../services/firebase.service';
 
 export interface SimulationResult {
     id: string;
@@ -13,6 +17,8 @@ export interface SimulationResult {
     acquisitionMethod: 'White Bag' | 'Brown Bag' | 'Clear Bag';
     status: 'Scheduled' | 'Transport Needed' | 'In Stock';
     price: number;
+    profile?: PatientProfile; // Detailed profile
+    aiPrediction?: PredictionResult; // AI analysis
 }
 
 interface SimulationContextType {
@@ -20,7 +26,7 @@ interface SimulationContextType {
     isSimulating: boolean;
     runSimulation: () => void;
     addSimulationResult: (result: SimulationResult) => void;
-    predictDrug: (condition: string, visitType?: string) => { drug: string; price: number; acquisitionMethod: 'White Bag' | 'Brown Bag' | 'Clear Bag' };
+    predictTreatment: (profile: PatientProfile) => PredictionResult;
     scanningPatient: string | null;
     selectedPatient: SimulationResult | null;
     setSelectedPatient: (patient: SimulationResult | null) => void;
@@ -29,151 +35,124 @@ interface SimulationContextType {
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
-const MOCK_PATIENTS = [
-    "Sarah Connor - Oncology",
-    "James Howlett - Rheumatology",
-    "Wade Wilson - Immunology",
-    "Jean Grey - Neurology",
-    "Tony Stark - Cardiology",
-    "Bruce Banner - Psychiatry",
-    "Steve Rogers - Geriatrics",
-    "Natasha Romanoff - Orthopedics",
-    "Peter Parker - Pediatrics",
-    "Stephen Strange - Surgery"
+const MOCK_NAMES = [
+    "Sarah Connor", "James Howlett", "Wade Wilson", "Jean Grey", "Tony Stark",
+    "Bruce Banner", "Steve Rogers", "Natasha Romanoff", "Peter Parker", "Stephen Strange"
 ];
 
 export function SimulationProvider({ children }: { children: ReactNode }) {
+    const { user } = useAuth();
     const [simulationResults, setSimulationResults] = useState<SimulationResult[]>([]);
     const [isSimulating, setIsSimulating] = useState(false);
     const [scanningPatient, setScanningPatient] = useState<string | null>(null);
     const [selectedPatient, setSelectedPatient] = useState<SimulationResult | null>(null);
 
+    // Subscribe to Firestore simulation results
+    useEffect(() => {
+        if (!user) {
+            setSimulationResults([]);
+            return;
+        }
+
+        const unsubscribe = FirestoreService.subscribe<any>(`users/${user.id}/simulations`, (data) => {
+            // Convert Firestore timestamps/strings back to Date objects
+            const parsedResults = data.map(item => ({
+                ...item,
+                date: item.date?.toDate ? item.date.toDate() : new Date(item.date)
+            })) as SimulationResult[];
+
+            // Sort by date desc
+            parsedResults.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+            setSimulationResults(parsedResults);
+        });
+        return () => unsubscribe();
+    }, [user]);
+
+    const generateRandomProfile = (name: string): PatientProfile => {
+        const conditions = Object.keys(MEDICAL_DATABASE);
+        const randomConditionId = conditions[Math.floor(Math.random() * conditions.length)];
+
+        return {
+            name,
+            age: 20 + Math.floor(Math.random() * 60),
+            gender: Math.random() > 0.5 ? 'Male' : 'Female',
+            conditionId: randomConditionId,
+            medicalHistory: Math.random() > 0.7 ? ['Hypertension'] : [],
+            vitals: {
+                bpSystolic: 110 + Math.floor(Math.random() * 40),
+                bpDiastolic: 70 + Math.floor(Math.random() * 20),
+                heartRate: 60 + Math.floor(Math.random() * 40),
+                temperature: 97 + Math.random() * 2,
+                weight: 50 + Math.floor(Math.random() * 50)
+            },
+            allergies: Math.random() > 0.8 ? ['Penicillin'] : []
+        };
+    };
+
     const runSimulation = () => {
+        if (!user) return; // Require auth
+
         setIsSimulating(true);
-        setSimulationResults([]); // Clear previous results
+        // We don't clear results immediately anymore, we append or replace?
+        // The prompt says "saves all of the previous changes". So maybe we append?
+        // But the previous logic cleared it: `setSimulationResults([])`.
+        // I'll keep the logic of generating a batch, but I'll ADD them to Firestore.
+        // If the user wants to "reset", they can maybe delete? 
+        // For now, I'll just add new ones.
 
         let patientIndex = 0;
         const interval = setInterval(() => {
-            setScanningPatient(MOCK_PATIENTS[patientIndex]);
-            patientIndex = (patientIndex + 1) % MOCK_PATIENTS.length;
-        }, 300);
+            setScanningPatient(MOCK_NAMES[patientIndex]);
+            patientIndex = (patientIndex + 1) % MOCK_NAMES.length;
+        }, 200);
 
         // Simulate processing time
-        setTimeout(() => {
+        setTimeout(async () => {
             clearInterval(interval);
             setScanningPatient(null);
 
             const today = new Date();
-            const results: SimulationResult[] = [
-                {
-                    id: 'sim-1',
-                    date: addDays(today, 1),
-                    timeStr: '09:00 AM',
-                    patientName: 'Sarah Connor',
-                    condition: 'Oncology - Cycle 3',
-                    visitType: 'Infusion Therapy',
-                    location: 'Infusion Center A',
-                    drug: 'Keytruda (Pembrolizumab)',
-                    acquisitionMethod: 'White Bag',
-                    status: 'Transport Needed',
-                    price: 4500
-                },
-                {
-                    id: 'sim-2',
-                    date: addDays(today, 1),
-                    timeStr: '10:30 AM',
-                    patientName: 'James Howlett',
-                    condition: 'Rheumatoid Arthritis',
-                    visitType: 'Follow-up Injection',
-                    location: 'Clinic North',
-                    drug: 'Remicade (Infliximab)',
-                    acquisitionMethod: 'Clear Bag',
-                    status: 'In Stock',
-                    price: 1200
-                },
-                {
-                    id: 'sim-3',
-                    date: addDays(today, 2),
-                    timeStr: '02:00 PM',
-                    patientName: 'Wade Wilson',
-                    condition: 'Immunotherapy',
-                    visitType: 'New Patient Consult',
-                    location: 'Main Hospital - Oncology',
-                    drug: 'Opdivo (Nivolumab)',
-                    acquisitionMethod: 'Brown Bag',
-                    status: 'Scheduled',
-                    price: 3800
-                },
-                {
-                    id: 'sim-4',
-                    date: addDays(today, 3),
-                    timeStr: '08:45 AM',
-                    patientName: 'Jean Grey',
-                    condition: 'Multiple Sclerosis',
-                    visitType: 'Routine Infusion',
-                    location: 'Neurology Wing',
-                    drug: 'Ocrevus (Ocrelizumab)',
-                    acquisitionMethod: 'White Bag',
-                    status: 'Transport Needed',
-                    price: 15000
-                },
-                {
-                    id: 'sim-5',
-                    date: addDays(today, 5),
-                    timeStr: '11:00 AM',
-                    patientName: 'Tony Stark',
-                    condition: 'Cardiac Support',
-                    visitType: 'Check-up',
-                    location: 'Cardiology Dept',
-                    drug: 'Entresto',
-                    acquisitionMethod: 'Clear Bag',
-                    status: 'In Stock',
-                    price: 450
-                },
-                {
-                    id: 'sim-6',
-                    date: addDays(today, 12),
-                    timeStr: '01:30 PM',
-                    patientName: 'Bruce Banner',
-                    condition: 'Stress Management',
-                    visitType: 'Therapy Session',
-                    location: 'Psychiatry Wing',
-                    drug: 'Lexapro',
-                    acquisitionMethod: 'Brown Bag',
-                    status: 'Scheduled',
-                    price: 50
-                }
-            ];
-            setSimulationResults(results);
+            const newResults: SimulationResult[] = MOCK_NAMES.slice(0, 6).map((name, index) => {
+                const profile = generateRandomProfile(name);
+                const prediction = predictTreatment(profile);
+                const condition = MEDICAL_DATABASE[profile.conditionId];
+
+                return {
+                    id: `sim-${Date.now()}-${index}`, // Unique ID
+                    date: addDays(today, index + 1),
+                    timeStr: `${9 + index}:00 AM`,
+                    patientName: name,
+                    condition: condition.name,
+                    visitType: 'Consultation',
+                    location: 'Main Clinic',
+                    drug: prediction.recommendedDrug,
+                    acquisitionMethod: prediction.acquisitionMethod,
+                    status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
+                    price: prediction.price,
+                    profile: profile,
+                    aiPrediction: prediction
+                };
+            });
+
+            // Save to Firestore
+            for (const result of newResults) {
+                await FirestoreService.set(`users/${user.id}/simulations`, result.id, {
+                    ...result,
+                    date: result.date.toISOString() // Store as string for simplicity or let Firestore handle Date
+                });
+            }
+
             setIsSimulating(false);
         }, 3000);
     };
 
-    const addSimulationResult = (result: SimulationResult) => {
-        setSimulationResults(prev => [...prev, result]);
-    };
-
-    const predictDrug = (condition: string, _visitType?: string) => {
-        // Simple mock logic for prediction
-        const lowerCondition = condition.toLowerCase();
-
-        if (lowerCondition.includes('oncology') || lowerCondition.includes('cancer')) {
-            return { drug: 'Keytruda (Pembrolizumab)', price: 4500, acquisitionMethod: 'White Bag' as const };
-        } else if (lowerCondition.includes('arthritis') || lowerCondition.includes('rheumatology')) {
-            return { drug: 'Remicade (Infliximab)', price: 1200, acquisitionMethod: 'Clear Bag' as const };
-        } else if (lowerCondition.includes('sclerosis') || lowerCondition.includes('neurology')) {
-            return { drug: 'Ocrevus (Ocrelizumab)', price: 15000, acquisitionMethod: 'White Bag' as const };
-        } else if (lowerCondition.includes('cardio') || lowerCondition.includes('heart')) {
-            return { drug: 'Entresto', price: 450, acquisitionMethod: 'Clear Bag' as const };
-        } else {
-            // Default random fallback
-            const drugs = [
-                { drug: 'Opdivo (Nivolumab)', price: 3800, acquisitionMethod: 'Brown Bag' as const },
-                { drug: 'Humira (Adalimumab)', price: 2500, acquisitionMethod: 'Clear Bag' as const },
-                { drug: 'Stelara (Ustekinumab)', price: 11000, acquisitionMethod: 'White Bag' as const }
-            ];
-            return drugs[Math.floor(Math.random() * drugs.length)];
-        }
+    const addSimulationResult = async (result: SimulationResult) => {
+        if (!user) return;
+        await FirestoreService.set(`users/${user.id}/simulations`, result.id, {
+            ...result,
+            date: result.date.toISOString()
+        });
     };
 
     const viewPatientDetails = (patient: SimulationResult) => {
@@ -186,7 +165,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             isSimulating,
             runSimulation,
             addSimulationResult,
-            predictDrug,
+            predictTreatment,
             scanningPatient,
             selectedPatient,
             setSelectedPatient,

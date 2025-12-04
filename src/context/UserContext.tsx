@@ -1,51 +1,62 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { type User, type UserStatus } from '../types';
-import { MOCK_USERS_DB } from '../data/users/mockData';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { type User, UserStatus } from '../types';
+import { FirestoreService } from '../services/firebase.service';
 
 interface UserContextType {
     users: User[];
-    addUser: (user: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => void;
-    updateUser: (id: string, updates: Partial<User>) => void;
-    deleteUser: (id: string) => void;
-    toggleUserStatus: (id: string) => void;
+    addUser: (user: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => Promise<void>;
+    updateUser: (id: string, updates: Partial<User>) => Promise<void>;
+    deleteUser: (id: string) => Promise<void>;
+    toggleUserStatus: (id: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [users, setUsers] = useState<User[]>(() =>
-        Object.values(MOCK_USERS_DB).map(record => record.user)
-    );
+    const [users, setUsers] = useState<User[]>([]);
 
-    const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => {
+    useEffect(() => {
+        const unsubscribe = FirestoreService.subscribe<User>('users', (data) => {
+            setUsers(data);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const addUser = async (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => {
+        // Create a placeholder user document.
+        // We use the email as a temporary ID or just a queryable field. 
+        // To make lookup easy during signup, we can use the email as the document ID for the placeholder,
+        // and then delete it and create a new one with the Auth UID later.
+        // OR we can query by email. Querying by email is safer if we want to support changing emails later,
+        // but for this simple "invite" flow, using email as ID for the invite is convenient.
+        // Let's use a random ID but ensure we can query it.
+
         const newUser: User = {
             ...userData,
-            id: Math.random().toString(36).substr(2, 9),
+            id: `invite-${Date.now()}`,
             createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(), // Default to now for new users
-            createdBy: 'current-user', // In a real app, this would be the current user's ID
+            lastLogin: undefined,
+            createdBy: 'admin',
+            status: 'pending' as UserStatus // Set initial status to pending
         };
-        setUsers(prev => [...prev, newUser]);
+
+        await FirestoreService.set('users', newUser.id, newUser);
     };
 
-    const updateUser = (id: string, updates: Partial<User>) => {
-        setUsers(prev => prev.map(user =>
-            user.id === id ? { ...user, ...updates } : user
-        ));
+    const updateUser = async (id: string, updates: Partial<User>) => {
+        await FirestoreService.update('users', id, updates);
     };
 
-    const deleteUser = (id: string) => {
-        setUsers(prev => prev.filter(user => user.id !== id));
+    const deleteUser = async (id: string) => {
+        await FirestoreService.delete('users', id);
     };
 
-    const toggleUserStatus = (id: string) => {
-        setUsers(prev => prev.map(user => {
-            if (user.id === id) {
-                const newStatus = user.status === 'active' ? 'inactive' : 'active';
-                return { ...user, status: newStatus as UserStatus };
-            }
-            return user;
-        }));
+    const toggleUserStatus = async (id: string) => {
+        const user = users.find(u => u.id === id);
+        if (user) {
+            const newStatus = user.status === 'active' ? 'suspended' : 'active';
+            await FirestoreService.update('users', id, { status: newStatus as UserStatus });
+        }
     };
 
     return (

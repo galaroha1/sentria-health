@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { FirestoreService } from '../services/firebase.service';
+import { useAuth } from './AuthContext';
 
 interface CartItem {
     id: number;
@@ -23,32 +24,41 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 
 export function CartProvider({ children }: { children: ReactNode }) {
-    // Initialize with empty array, data will come from Firestore
+    const { user } = useAuth();
     const [items, setItems] = useState<CartItem[]>([]);
 
     // Subscribe to Firestore cart items
     useEffect(() => {
-        const unsubscribe = FirestoreService.subscribe<CartItem>('cartItems', (data) => {
+        if (!user) {
+            setItems([]);
+            return;
+        }
+
+        const unsubscribe = FirestoreService.subscribe<CartItem>(`users/${user.id}/cart`, (data) => {
             setItems(data);
         });
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     const addToCart = async (newItem: CartItem) => {
+        if (!user) return; // Or handle local cart for guests? For now, assume auth required.
+
         const existing = items.find((item) => item.id === newItem.id);
         if (existing) {
-            await FirestoreService.update('cartItems', newItem.id.toString(), { quantity: existing.quantity + 1 });
+            await FirestoreService.update(`users/${user.id}/cart`, newItem.id.toString(), { quantity: existing.quantity + 1 });
         } else {
-            await FirestoreService.set('cartItems', newItem.id.toString(), { ...newItem, quantity: 1 });
+            await FirestoreService.set(`users/${user.id}/cart`, newItem.id.toString(), { ...newItem, quantity: 1 });
         }
     };
 
     const removeFromCart = async (id: number) => {
-        await FirestoreService.delete('cartItems', id.toString());
+        if (!user) return;
+        await FirestoreService.delete(`users/${user.id}/cart`, id.toString());
     };
 
     const clearCart = async () => {
-        const batch = items.map(item => FirestoreService.delete('cartItems', item.id.toString()));
+        if (!user) return;
+        const batch = items.map(item => FirestoreService.delete(`users/${user.id}/cart`, item.id.toString()));
         await Promise.all(batch);
     };
 

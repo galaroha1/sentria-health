@@ -1,44 +1,38 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
+import {
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    updatePassword as firebaseUpdatePassword,
+    type User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { FirestoreService } from '../services/firebase.service';
 import type { User, LoginCredentials, AuthState } from '../types';
-import { MOCK_USERS, ROLE_PERMISSIONS } from '../types';
+import { ROLE_PERMISSIONS, UserRole, UserStatus } from '../types';
 import { SessionTimeoutModal } from '../components/auth/SessionTimeoutModal';
 
 interface AuthContextType extends AuthState {
     login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
-    logout: () => void;
+    signup: (credentials: LoginCredentials, name: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
+    logout: () => Promise<void>;
     hasPermission: (route: string) => boolean;
-    updateUser: (updates: Partial<User>) => void;
+    updateUser: (updates: Partial<User>) => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
     extendSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'sentria_auth_user';
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before timeout
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [authState, setAuthState] = useState<AuthState>(() => {
-        const storedUser = localStorage.getItem(STORAGE_KEY);
-        if (storedUser) {
-            try {
-                const user = JSON.parse(storedUser) as User;
-                return {
-                    user,
-                    isAuthenticated: true,
-                    isLoading: false,
-                };
-            } catch (error) {
-                console.error('Failed to parse stored user:', error);
-                localStorage.removeItem(STORAGE_KEY);
-            }
-        }
-        return {
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-        };
+    const [authState, setAuthState] = useState<AuthState>({
+        user: null,
+        isAuthenticated: false,
+        isLoading: true,
     });
 
     const [sessionWarning, setSessionWarning] = useState(false);
@@ -46,67 +40,138 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Listen for Firebase Auth state changes
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+            if (firebaseUser) {
+                try {
+                    // Fetch user details from Firestore
+                    const userDoc = await FirestoreService.getById<User>('users', firebaseUser.uid);
+
+                    if (userDoc) {
+                        setAuthState({
+                            user: userDoc,
+                            isAuthenticated: true,
+                            isLoading: false,
+                        });
+                    } else {
+                        // Handle case where user exists in Auth but not Firestore (shouldn't happen ideally)
+                        console.error('User document not found in Firestore');
+                        setAuthState({
+                            user: null,
+                            isAuthenticated: false,
+                            isLoading: false,
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching user details:', error);
+                    setAuthState({
+                        user: null,
+                        isAuthenticated: false,
+                        isLoading: false,
+                    });
+                }
+            } else {
+                setAuthState({
+                    user: null,
+                    isAuthenticated: false,
+                    isLoading: false,
+                });
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
-        const { email, password } = credentials;
-
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const userRecord = MOCK_USERS[email.toLowerCase()];
-
-        if (!userRecord) {
-            return { success: false, error: 'Invalid email or password' };
+        try {
+            await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+            return { success: true };
+        } catch (error: any) {
+            console.error('Login error:', error);
+            return { success: false, error: error.message || 'Failed to login' };
         }
-
-        if (userRecord.password !== password) {
-            return { success: false, error: 'Invalid email or password' };
-        }
-
-        const user = userRecord.user;
-
-        // Store in localStorage
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-
-        setAuthState({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-        });
-
-        return { success: true };
     };
 
-    const logout = () => {
-        localStorage.removeItem(STORAGE_KEY);
-        setAuthState({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-        });
+    const signup = async (credentials: LoginCredentials, name: string, role: UserRole = UserRole.PHARMACY_MANAGER): Promise<{ success: boolean; error?: string }> => {
+        try {
+            // 1. Check if there is a pending user invite for this email
+            // We need to query the 'users' collection where email == credentials.email
+            // Since we don't have a direct query method exposed in FirestoreService for this specific case easily without adding one,
+            // let's fetch all users and filter (not efficient for large DBs but fine for this scale)
+            // OR better, let's assume we can use FirestoreService.getAll and filter.
+
+            const allUsers = await FirestoreService.getAll<User>('users');
+            const pendingUser = allUsers.find(u => u.email.toLowerCase() === credentials.email.toLowerCase());
+
+            // Special bypass for demo accounts
+            const DEMO_ACCOUNTS: Record<string, { role: UserRole; name: string; department: string }> = {
+                'admin@sentria.health': { role: UserRole.SUPER_ADMIN, name: 'Super Admin', department: 'Administration' },
+                'pharmacy@sentria.health': { role: UserRole.PHARMACY_MANAGER, name: 'Pharmacy Manager', department: 'Pharmacy' },
+                'procurement@sentria.health': { role: UserRole.PROCUREMENT_OFFICER, name: 'Procurement Officer', department: 'Procurement' }
+            };
+
+            const demoAccount = DEMO_ACCOUNTS[credentials.email.toLowerCase()];
+
+            if (!pendingUser && !demoAccount) {
+                return { success: false, error: 'Account not authorized. Please contact a Super Admin to invite you.' };
+            }
+
+            // 2. Create Auth User
+            const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+
+            // 3. Create new User document with Auth UID, inheriting data from pending user or demo account
+            const newUser: User = {
+                ...(pendingUser || {}), // Inherit role, department, etc. if pending user exists
+                id: firebaseUser.uid,
+                email: credentials.email, // Ensure email is set
+                name: name || pendingUser?.name || demoAccount?.name || 'User',
+                role: (pendingUser?.role || demoAccount?.role || role),
+                department: pendingUser?.department || demoAccount?.department || 'General',
+                status: UserStatus.ACTIVE, // Activate the user
+                createdAt: new Date().toISOString(), // Reset created at? Or keep original? Let's reset for "joined" date.
+                lastLogin: new Date().toISOString(),
+            };
+
+            await FirestoreService.set('users', firebaseUser.uid, newUser);
+
+            // 4. Delete the old pending/invite document if it exists
+            if (pendingUser && pendingUser.id !== firebaseUser.uid) {
+                await FirestoreService.delete('users', pendingUser.id);
+            }
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Signup error:', error);
+            return { success: false, error: error.message || 'Failed to sign up' };
+        }
     };
 
-    const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
-        if (!authState.user) {
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setAuthState({
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
+    const changePassword = async (_currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+        if (!auth.currentUser) {
             return { success: false, error: 'Not authenticated' };
         }
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const userRecord = MOCK_USERS[authState.user.email.toLowerCase()];
-
-        if (!userRecord) {
-            return { success: false, error: 'User not found' };
+        try {
+            // Note: Re-authentication might be required here in a real app if the session is old
+            await firebaseUpdatePassword(auth.currentUser, newPassword);
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message || 'Failed to update password' };
         }
-
-        if (userRecord.password !== currentPassword) {
-            return { success: false, error: 'Current password is incorrect' };
-        }
-
-        // Update password in mock database
-        userRecord.password = newPassword;
-
-        return { success: true };
     };
 
     const hasPermission = (route: string): boolean => {
@@ -121,16 +186,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return permissions.includes(route);
     };
 
-    const updateUser = (updates: Partial<User>) => {
+    const updateUser = async (updates: Partial<User>) => {
         if (!authState.user) return;
 
-        const updatedUser = { ...authState.user, ...updates };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
+        try {
+            await FirestoreService.update('users', authState.user.id, updates);
 
-        setAuthState(prev => ({
-            ...prev,
-            user: updatedUser,
-        }));
+            // Local state update will happen via onSnapshot if we subscribed, 
+            // but for now we manually update local state for immediate feedback
+            setAuthState(prev => ({
+                ...prev,
+                user: prev.user ? { ...prev.user, ...updates } : null,
+            }));
+        } catch (error) {
+            console.error('Error updating user:', error);
+        }
     };
 
     const extendSession = () => {
@@ -146,12 +216,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
         if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
 
-        // Set warning timer (25 minutes)
+        // Set warning timer
         warningTimerRef.current = setTimeout(() => {
             setSessionWarning(true);
         }, SESSION_TIMEOUT - WARNING_TIME);
 
-        // Set logout timer (30 minutes)  
+        // Set logout timer
         sessionTimerRef.current = setTimeout(() => {
             logout();
         }, SESSION_TIMEOUT);
@@ -168,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 value={{
                     ...authState,
                     login,
+                    signup,
                     logout,
                     hasPermission,
                     updateUser,

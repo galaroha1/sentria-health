@@ -26,6 +26,9 @@ interface AppContextType {
 
     // Audit Logs
     auditLogs: AuditLogEntry[];
+
+    // Loading State
+    isLoading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -33,6 +36,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
     // Initialize with localStorage or mock data
     const [requests, setRequests] = useState<NetworkRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [notifications, setNotifications] = useState<Notification[]>(() => {
         const saved = localStorage.getItem('sentria_notifications');
@@ -71,6 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             } else {
                 setInventories(data);
             }
+            setIsLoading(false); // Data loaded
         });
 
         const unsubscribeNotifications = FirestoreService.subscribe<Notification>('notifications', (data) => {
@@ -88,10 +93,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             unsubscribeAuditLogs();
         };
     }, []);
-
-    useEffect(() => {
-        localStorage.setItem('sentria_audit_logs', JSON.stringify(auditLogs));
-    }, [auditLogs]);
 
     // Sync across tabs
     useEffect(() => {
@@ -114,7 +115,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    // Check inventory levels and generate alerts
     // Check inventory levels and generate alerts
     useEffect(() => {
         inventories.forEach(siteInv => {
@@ -303,7 +303,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             addNotification,
             markNotificationAsRead,
             markAllNotificationsAsRead,
-            auditLogs
+            auditLogs,
+            isLoading
         }}>
             {children}
         </AppContext.Provider>

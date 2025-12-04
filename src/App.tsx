@@ -73,7 +73,7 @@ function App() {
                     <Route
                       path="users"
                       element={
-                        <ProtectedRoute requirePermission="dashboard">
+                        <ProtectedRoute requirePermission="manage_users">
                           <UserManagement />
                         </ProtectedRoute>
                       }

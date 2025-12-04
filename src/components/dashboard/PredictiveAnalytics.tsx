@@ -5,7 +5,7 @@ import { predictStockouts, generateConsumptionTrend } from '../../utils/analytic
 import { useMemo } from 'react';
 
 export function PredictiveAnalytics() {
-    const { inventories, auditLogs } = useApp();
+    const { inventories, auditLogs, isLoading } = useApp();
 
     // Flatten all inventory items from all sites to analyze global stock risk
     const allInventoryItems = useMemo(() =>
@@ -33,6 +33,29 @@ export function PredictiveAnalytics() {
         // eslint-disable-next-line react-hooks/purity
         return new Date(Date.now() + 86400000 * 3).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-col items-center gap-2">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-primary-600"></div>
+                    <p className="text-sm text-slate-500">Analyzing inventory data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (allInventoryItems.length === 0) {
+        return (
+            <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-col items-center gap-2 text-center">
+                    <AlertTriangle className="h-8 w-8 text-amber-500" />
+                    <h3 className="text-lg font-bold text-slate-900">No Inventory Data</h3>
+                    <p className="text-sm text-slate-500">Add inventory items to see predictive analytics.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">

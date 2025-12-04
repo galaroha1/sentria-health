@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Clock, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 
 interface ProductCardProps {
@@ -25,16 +27,26 @@ export function ProductCard({
     verified,
 }: ProductCardProps) {
     const { addToCart } = useCart();
+    const [isAnimating, setIsAnimating] = useState(false);
     const savings = Math.round(((originalPrice - price) / originalPrice) * 100);
 
     const handleAddToCart = () => {
-        addToCart({
-            id: Math.random(), // In a real app, use actual ID
-            name,
-            price,
-            quantity: 1,
-            seller,
-        });
+        // Prevent multiple clicks
+        if (isAnimating) return;
+
+        setIsAnimating(true);
+
+        // Wait for animation to finish before actually adding to cart
+        setTimeout(() => {
+            addToCart({
+                id: Math.random(), // In a real app, use actual ID
+                name,
+                price,
+                quantity: 1,
+                seller,
+            });
+            setIsAnimating(false);
+        }, 800); // Match animation duration
     };
 
     return (
@@ -78,13 +90,48 @@ export function ProductCard({
                     </div>
                     <button
                         onClick={handleAddToCart}
-                        className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors"
+                        disabled={isAnimating}
+                        className="relative flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors disabled:opacity-70"
                     >
                         <ShoppingCart className="h-4 w-4" />
-                        Add to Cart
+                        {isAnimating ? 'Adding...' : 'Add to Cart'}
                     </button>
                 </div>
             </div>
+
+            {/* Flying Animation Element */}
+            <AnimatePresence>
+                {isAnimating && (
+                    <motion.div
+                        initial={{
+                            position: 'fixed',
+                            zIndex: 50,
+                            scale: 1,
+                            opacity: 1,
+                            // We need to calculate these dynamically or use a simpler fixed start for now
+                            // Since we don't have refs easily set up for exact button position without more code,
+                            // let's center it on the screen or use a generic "fly up" animation.
+                            // Better: use layoutId or just animate from center of card to top right of screen.
+                            top: '50%',
+                            left: '50%',
+                            x: '-50%',
+                            y: '-50%'
+                        }}
+                        animate={{
+                            top: '20px', // Approximate header cart position
+                            right: '20px', // Approximate header cart position
+                            left: 'auto',
+                            scale: 0.2,
+                            opacity: 0
+                        }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.8, ease: "easeInOut" }}
+                        className="pointer-events-none fixed z-50 flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-white shadow-xl"
+                    >
+                        <ShoppingCart className="h-8 w-8" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
