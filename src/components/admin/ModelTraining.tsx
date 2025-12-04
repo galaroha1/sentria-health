@@ -10,6 +10,7 @@ export function ModelTraining() {
     const [isTraining, setIsTraining] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [eta, setEta] = useState<string>('--:--');
     const [patientCount, setPatientCount] = useState(50);
     const [logs, setLogs] = useState<string[]>([]);
     const [stats, setStats] = useState({
@@ -34,36 +35,66 @@ export function ModelTraining() {
         setLogs(prev => [...prev.slice(-19), `[${new Date().toLocaleTimeString()}] ${message}`]);
     };
 
+    const formatTime = (ms: number) => {
+        if (!isFinite(ms) || ms < 0) return '--:--';
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
     const startTraining = async () => {
         setIsTraining(true);
         setIsFetching(true);
         setGeneratedData([]);
         setProgress(0);
+        setEta('--:--');
         setLogs([
             'Initializing Synthea™ Patient Generator...',
             `Connecting to Live Data Stream (randomuser.me) to fetch ${patientCount} identities...`
         ]);
 
+        const startTime = Date.now();
+
         try {
             // 1. Fetch Data First (Async & Chunked)
-            const data = await SyntheaGenerator.generateBatch(patientCount);
+            // Progress 0-40%
+            const data = await SyntheaGenerator.generateBatch(patientCount, (p) => {
+                setProgress(p * 0.4);
+
+                // Estimate time based on generation speed
+                const elapsed = Date.now() - startTime;
+                const rate = (p / 100) / elapsed; // progress per ms
+                const remaining = (1 - (p / 100)) / rate;
+                setEta(formatTime(remaining));
+            });
+
             setGeneratedData(data);
             setIsFetching(false);
             addLog(`Successfully fetched ${data.length} unique patient profiles.`);
             addLog('Starting Clinical Analysis & Model Training...');
 
             // 2. Simulate Training on the Data (Non-blocking loop)
+            // Progress 40-80%
             let processed = 0;
             let conditions = 0;
             const batchSize = Math.max(1, Math.ceil(patientCount / 100)); // Smaller batches for smoother UI
+            const trainingStartTime = Date.now();
 
             const processBatch = async () => {
                 const batch = data.slice(processed, processed + batchSize);
                 processed += batch.length;
                 conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
 
-                const currentProgress = Math.min(100, (processed / patientCount) * 100);
-                setProgress(currentProgress);
+                const trainingProgress = processed / patientCount;
+                const totalProgress = 40 + (trainingProgress * 40); // Map to 40-80%
+                setProgress(totalProgress);
+
+                // Update ETA
+                const elapsed = Date.now() - trainingStartTime;
+                const rate = trainingProgress / elapsed;
+                const remaining = (1 - trainingProgress) / rate;
+                setEta(formatTime(remaining));
 
                 // Log a sample occasionally
                 if (batch.length > 0 && Math.random() < 0.1) {
@@ -82,12 +113,13 @@ export function ModelTraining() {
                     setTimeout(processBatch, 0);
                 } else {
                     // Training Complete
-                    setIsTraining(false);
                     addLog('Training Complete. Model weights updated.');
                     addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
 
                     // 3. Save to Firestore / Context (Batched)
+                    // Progress 80-100%
                     await saveToDatabase(data);
+                    setIsTraining(false);
                 }
             };
 
@@ -110,6 +142,7 @@ export function ModelTraining() {
 
         const conditionEntries = Object.entries(MEDICAL_DATABASE);
         const SAVE_BATCH_SIZE = 50; // Save 50 at a time to avoid network congestion
+        const saveStartTime = Date.now();
 
         for (let i = 0; i < data.length; i += SAVE_BATCH_SIZE) {
             const chunk = data.slice(i, i + SAVE_BATCH_SIZE);
@@ -157,11 +190,24 @@ export function ModelTraining() {
                     status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
                     price: prediction.price,
                     profile: profile,
-                    aiPrediction: prediction
+                    aiPrediction: prediction,
+                    // @ts-ignore - We'll add this field to the type definition next
+                    rawBundle: bundle
                 });
             });
 
             await Promise.all(savePromises);
+
+            // Update Progress & ETA
+            const processed = i + chunk.length;
+            const saveProgress = processed / data.length;
+            const totalProgress = 80 + (saveProgress * 20); // Map to 80-100%
+            setProgress(totalProgress);
+
+            const elapsed = Date.now() - saveStartTime;
+            const rate = saveProgress / elapsed;
+            const remaining = (1 - saveProgress) / rate;
+            setEta(formatTime(remaining));
 
             // Yield to UI
             await new Promise(resolve => setTimeout(resolve, 10));
@@ -358,10 +404,10 @@ export function ModelTraining() {
                                     <p className="text-xs text-slate-500">Real-time simulation events</p>
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${isTraining
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${isTraining || isFetching || isSaving
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                                 : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                                {isTraining ? '● Processing' : '○ Ready'}
+                                {isTraining || isFetching || isSaving ? '● Processing' : '○ Ready'}
                             </div>
                         </div>
 
@@ -397,11 +443,19 @@ export function ModelTraining() {
                         </div>
 
                         {/* Progress Bar */}
-                        {isTraining && (
+                        {(isTraining || isFetching || isSaving) && (
                             <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-slate-100 p-6 z-10">
                                 <div className="flex justify-between text-sm font-bold text-slate-700 mb-2">
-                                    <span>Progress</span>
-                                    <span>{Math.round(progress)}%</span>
+                                    <div className="flex items-center gap-2">
+                                        <span>Progress</span>
+                                        <span className="text-xs font-normal text-slate-500">
+                                            ({isFetching ? 'Generating Data' : isTraining ? 'Training Model' : 'Saving Data'})
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-indigo-600">ETA: {eta}</span>
+                                        <span>{Math.round(progress)}%</span>
+                                    </div>
                                 </div>
                                 <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                                     <div

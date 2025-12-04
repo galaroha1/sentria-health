@@ -34,9 +34,7 @@ export interface FHIRCondition {
             display: string;
         }];
     };
-    subject: {
-        reference: string; // Patient/ID
-    };
+    subject: { reference: string }; // Patient/ID
     onsetDateTime: string;
 }
 
@@ -52,27 +50,67 @@ export interface FHIRMedicationRequest {
             display: string;
         }];
     };
-    subject: {
-        reference: string;
-    };
+    subject: { reference: string };
     authoredOn: string;
+}
+
+export interface FHIREncounter {
+    resourceType: 'Encounter';
+    id: string;
+    status: 'finished';
+    class: { code: 'AMB' | 'IMP' | 'EMER' }; // Ambulatory, Inpatient, Emergency
+    type: [{ text: string }];
+    subject: { reference: string };
+    period: { start: string; end: string };
+}
+
+export interface FHIRObservation {
+    resourceType: 'Observation';
+    id: string;
+    status: 'final';
+    code: { coding: [{ display: string; code: string; system: string }] };
+    subject: { reference: string };
+    valueQuantity?: { value: number; unit: string };
+    effectiveDateTime: string;
+}
+
+export interface FHIRImmunization {
+    resourceType: 'Immunization';
+    id: string;
+    status: 'completed';
+    vaccineCode: { coding: [{ display: string; code: string }] };
+    patient: { reference: string };
+    occurrenceDateTime: string;
+}
+
+export interface FHIRProcedure {
+    resourceType: 'Procedure';
+    id: string;
+    status: 'completed';
+    code: { coding: [{ display: string; code: string }] };
+    subject: { reference: string };
+    performedDateTime: string;
 }
 
 export interface SyntheticBundle {
     patient: FHIRPatient;
     conditions: FHIRCondition[];
     medications: FHIRMedicationRequest[];
+    encounters: FHIREncounter[];
+    observations: FHIRObservation[];
+    immunizations: FHIRImmunization[];
+    procedures: FHIRProcedure[];
 }
 
 export class SyntheaGenerator {
 
-    static async generateBatch(count: number): Promise<SyntheticBundle[]> {
+    static async generateBatch(count: number, onProgress?: (progress: number) => void): Promise<SyntheticBundle[]> {
         const MAX_API_FETCH = 200; // Threshold for switching to local generation for speed
 
         // For large datasets, use local generation to avoid API rate limits and latency
         if (count > MAX_API_FETCH) {
             console.log(`Generating ${count} patients locally for performance...`);
-            return await this.generateLocalBatch(count);
+            return await this.generateLocalBatch(count, onProgress);
         }
 
         return this._fetchFromApi(count);
@@ -146,6 +184,10 @@ export class SyntheaGenerator {
     private static _generateClinicalData(patient: FHIRPatient): SyntheticBundle {
         const conditions: FHIRCondition[] = [];
         const medications: FHIRMedicationRequest[] = [];
+        const encounters: FHIREncounter[] = [];
+        const observations: FHIRObservation[] = [];
+        const immunizations: FHIRImmunization[] = [];
+        const procedures: FHIRProcedure[] = [];
 
         // 1. Assign Primary Condition (from our Medical Database)
         const conditionKeys = Object.keys(MEDICAL_DATABASE);
@@ -209,7 +251,80 @@ export class SyntheaGenerator {
             });
         }
 
-        return { patient, conditions, medications };
+        // 4. Generate Encounters (1-5 past visits)
+        const numEncounters = Math.floor(Math.random() * 5) + 1;
+        for (let i = 0; i < numEncounters; i++) {
+            const date = new Date(Date.now() - Math.random() * 31536000000); // Past year
+            encounters.push({
+                resourceType: 'Encounter',
+                id: generateId(),
+                status: 'finished',
+                class: { code: Math.random() > 0.8 ? 'EMER' : 'AMB' },
+                type: [{ text: Math.random() > 0.8 ? 'Emergency Room Visit' : 'General Examination' }],
+                subject: { reference: `Patient/${patient.id}` },
+                period: { start: date.toISOString(), end: new Date(date.getTime() + 3600000).toISOString() }
+            });
+
+            // 5. Generate Observations (Vitals/Labs) for each encounter
+            observations.push({
+                resourceType: 'Observation',
+                id: generateId(),
+                status: 'final',
+                code: { coding: [{ system: 'http://loinc.org', code: '8302-2', display: 'Body Height' }] },
+                subject: { reference: `Patient/${patient.id}` },
+                valueQuantity: { value: 160 + Math.random() * 30, unit: 'cm' },
+                effectiveDateTime: date.toISOString()
+            });
+            observations.push({
+                resourceType: 'Observation',
+                id: generateId(),
+                status: 'final',
+                code: { coding: [{ system: 'http://loinc.org', code: '29463-7', display: 'Body Weight' }] },
+                subject: { reference: `Patient/${patient.id}` },
+                valueQuantity: { value: 50 + Math.random() * 50, unit: 'kg' },
+                effectiveDateTime: date.toISOString()
+            });
+            // Add CBC or Blood Panel mock
+            if (Math.random() > 0.5) {
+                observations.push({
+                    resourceType: 'Observation',
+                    id: generateId(),
+                    status: 'final',
+                    code: { coding: [{ system: 'http://loinc.org', code: '58410-2', display: 'CBC Panel' }] },
+                    subject: { reference: `Patient/${patient.id}` },
+                    valueQuantity: { value: 1, unit: 'count' }, // Simplified
+                    effectiveDateTime: date.toISOString()
+                });
+            }
+        }
+
+        // 6. Immunizations
+        const vaccines = ['Influenza', 'Tetanus', 'COVID-19', 'Hepatitis B'];
+        const numVaccines = Math.floor(Math.random() * 3);
+        for (let i = 0; i < numVaccines; i++) {
+            immunizations.push({
+                resourceType: 'Immunization',
+                id: generateId(),
+                status: 'completed',
+                vaccineCode: { coding: [{ display: vaccines[i], code: 'mock-vax' }] },
+                patient: { reference: `Patient/${patient.id}` },
+                occurrenceDateTime: new Date(Date.now() - Math.random() * 63072000000).toISOString()
+            });
+        }
+
+        // 7. Procedures
+        if (Math.random() > 0.7) {
+            procedures.push({
+                resourceType: 'Procedure',
+                id: generateId(),
+                status: 'completed',
+                code: { coding: [{ display: 'Chest X-Ray', code: 'mock-proc' }] },
+                subject: { reference: `Patient/${patient.id}` },
+                performedDateTime: new Date(Date.now() - Math.random() * 15768000000).toISOString()
+            });
+        }
+
+        return { patient, conditions, medications, encounters, observations, immunizations, procedures };
     }
 
     // Fallback method

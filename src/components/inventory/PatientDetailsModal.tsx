@@ -148,7 +148,88 @@ export function PatientDetailsModal({ patient, onClose }: PatientDetailsModalPro
                             </div>
                         )}
 
-                        {!profile && (
+                        {/* Extended EHR Data (Encounters, Labs, Immunizations) */}
+                        {patient.rawBundle && (
+                            <div className="grid gap-6 md:grid-cols-2">
+                                {/* Encounters */}
+                                <div className="rounded-xl border border-slate-200 p-5">
+                                    <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-900">
+                                        <Activity className="h-5 w-5 text-indigo-500" /> Recent Encounters
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {patient.rawBundle.encounters?.map((enc: any, i: number) => (
+                                            <div key={i} className="flex items-center justify-between text-sm border-b border-slate-50 pb-2 last:border-0">
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{enc.type[0].text}</p>
+                                                    <p className="text-xs text-slate-500">{new Date(enc.period.start).toLocaleDateString()}</p>
+                                                </div>
+                                                <span className="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">
+                                                    {enc.class.code}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Labs & Observations */}
+                                <div className="rounded-xl border border-slate-200 p-5">
+                                    <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-900">
+                                        <Activity className="h-5 w-5 text-emerald-500" /> Lab Results
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {patient.rawBundle.observations?.map((obs: any, i: number) => (
+                                            <div key={i} className="flex items-center justify-between text-sm border-b border-slate-50 pb-2 last:border-0">
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{obs.code.coding[0].display}</p>
+                                                    <p className="text-xs text-slate-500">{new Date(obs.effectiveDateTime).toLocaleDateString()}</p>
+                                                </div>
+                                                <span className="font-mono font-bold text-slate-700">
+                                                    {obs.valueQuantity?.value.toFixed(1)} {obs.valueQuantity?.unit}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Immunizations */}
+                                <div className="rounded-xl border border-slate-200 p-5">
+                                    <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-900">
+                                        <Activity className="h-5 w-5 text-amber-500" /> Immunizations
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {patient.rawBundle.immunizations?.map((imm: any, i: number) => (
+                                            <div key={i} className="flex items-center justify-between text-sm border-b border-slate-50 pb-2 last:border-0">
+                                                <p className="font-medium text-slate-900">{imm.vaccineCode.coding[0].display}</p>
+                                                <p className="text-xs text-slate-500">{new Date(imm.occurrenceDateTime).toLocaleDateString()}</p>
+                                            </div>
+                                        ))}
+                                        {(!patient.rawBundle.immunizations || patient.rawBundle.immunizations.length === 0) && (
+                                            <p className="text-sm text-slate-400 italic">No immunizations on record</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Procedures */}
+                                <div className="rounded-xl border border-slate-200 p-5">
+                                    <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-900">
+                                        <Activity className="h-5 w-5 text-blue-500" /> Procedures
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {patient.rawBundle.procedures?.map((proc: any, i: number) => (
+                                            <div key={i} className="flex items-center justify-between text-sm border-b border-slate-50 pb-2 last:border-0">
+                                                <p className="font-medium text-slate-900">{proc.code.coding[0].display}</p>
+                                                <p className="text-xs text-slate-500">{new Date(proc.performedDateTime).toLocaleDateString()}</p>
+                                            </div>
+                                        ))}
+                                        {(!patient.rawBundle.procedures || patient.rawBundle.procedures.length === 0) && (
+                                            <p className="text-sm text-slate-400 italic">No procedures on record</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {!profile && !patient.rawBundle && (
                             <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
                                 <p>Detailed clinical profile not available for this simulation record.</p>
                             </div>

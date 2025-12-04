@@ -19,6 +19,7 @@ export interface SimulationResult {
     price: number;
     profile?: PatientProfile; // Detailed profile
     aiPrediction?: PredictionResult; // AI analysis
+    rawBundle?: any; // Full FHIR-like bundle
 }
 
 interface SimulationContextType {
