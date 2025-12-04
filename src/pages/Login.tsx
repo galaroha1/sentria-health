@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
@@ -6,7 +6,7 @@ import { ShieldCheck, AlertCircle } from 'lucide-react';
 const REMEMBER_ME_KEY = 'sentria_remember_me';
 
 export function Login() {
-    const { login, signup, isAuthenticated } = useAuth();
+    const { login, signup, isAuthenticated, isLoading: useAuthLoading } = useAuth();
     // Initialize state from localStorage
     const [email, setEmail] = useState(() => {
         try {
@@ -44,6 +44,16 @@ export function Login() {
     if (isAuthenticated) {
         return <Navigate to="/" replace />;
     }
+
+    // Watch for auth state changes to handle errors during login
+    // If we are locally loading (waiting for login), but global auth finishes loading and we are NOT authenticated,
+    // it means the login succeeded but the profile load failed (e.g. Firestore permissions).
+    useEffect(() => {
+        if (isLoading && !useAuthLoading && !isAuthenticated) {
+            setError('Login successful, but failed to load user profile. Please check your Firestore Security Rules or network connection.');
+            setIsLoading(false);
+        }
+    }, [useAuthLoading, isAuthenticated, isLoading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
