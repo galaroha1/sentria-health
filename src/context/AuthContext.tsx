@@ -55,13 +55,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             isLoading: false,
                         });
                     } else {
-                        // Handle case where user exists in Auth but not Firestore (shouldn't happen ideally)
-                        console.error('User document not found in Firestore');
-                        setAuthState({
-                            user: null,
-                            isAuthenticated: false,
-                            isLoading: false,
-                        });
+                        // Handle case where user exists in Auth but not Firestore
+                        console.warn('User document not found in Firestore. Checking if it is a demo account...');
+
+                        const DEMO_ACCOUNTS: Record<string, { role: UserRole; name: string; department: string }> = {
+                            'admin@sentria.health': { role: UserRole.SUPER_ADMIN, name: 'Super Admin', department: 'Administration' },
+                            'pharmacy@sentria.health': { role: UserRole.PHARMACY_MANAGER, name: 'Pharmacy Manager', department: 'Pharmacy' },
+                            'procurement@sentria.health': { role: UserRole.PROCUREMENT_OFFICER, name: 'Procurement Officer', department: 'Procurement' }
+                        };
+
+                        const email = firebaseUser.email?.toLowerCase();
+                        const demoAccount = email ? DEMO_ACCOUNTS[email] : null;
+
+                        if (demoAccount && email) {
+                            console.log('Restoring missing demo account profile for:', email);
+                            const newUser: User = {
+                                id: firebaseUser.uid,
+                                email: email,
+                                name: demoAccount.name,
+                                role: demoAccount.role,
+                                department: demoAccount.department,
+                                status: UserStatus.ACTIVE,
+                                createdAt: new Date().toISOString(),
+                                lastLogin: new Date().toISOString(),
+                            };
+
+                            await FirestoreService.set('users', firebaseUser.uid, newUser);
+
+                            setAuthState({
+                                user: newUser,
+                                isAuthenticated: true,
+                                isLoading: false,
+                            });
+                        } else {
+                            console.error('User document not found and not a demo account.');
+                            setAuthState({
+                                user: null,
+                                isAuthenticated: false,
+                                isLoading: false,
+                            });
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching user details:', error);
