@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { SyntheaGenerator } from '../../utils/syntheaGenerator';
-import { Brain, Database, Terminal, Play, CheckCircle, Activity } from 'lucide-react';
+import { SyntheaGenerator, type SyntheticBundle } from '../../utils/syntheaGenerator';
+import { Brain, Database, Terminal, Play, CheckCircle, Activity, Download } from 'lucide-react';
 
 export function ModelTraining() {
     const [isTraining, setIsTraining] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [patientCount, setPatientCount] = useState(1000);
+    const [patientCount, setPatientCount] = useState(100);
     const [logs, setLogs] = useState<string[]>([]);
     const [stats, setStats] = useState({
         totalPatients: 0,
         conditionsIdentified: 0,
         accuracy: 87.5 // Initial baseline
     });
+    const [generatedData, setGeneratedData] = useState<SyntheticBundle[]>([]);
     const logsEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -28,54 +30,75 @@ export function ModelTraining() {
 
     const startTraining = async () => {
         setIsTraining(true);
+        setIsFetching(true);
+        setGeneratedData([]);
         setProgress(0);
         setLogs([
             'Initializing Synthea™ Patient Generator...',
-            'Connecting to Live Data Stream (randomuser.me)...',
-            'Loading clinical protocols (ICD-10, SNOMED-CT)...'
+            `Connecting to Live Data Stream (randomuser.me) to fetch ${patientCount} identities...`
         ]);
 
-        const batchSize = Math.max(1, Math.ceil(patientCount / 100)); // Ensure at least 1
-        let generated = 0;
-        let conditions = 0;
+        try {
+            // 1. Fetch Data First
+            const data = await SyntheaGenerator.generateBatch(patientCount);
+            setGeneratedData(data);
+            setIsFetching(false);
+            addLog(`Successfully fetched ${data.length} unique patient profiles.`);
+            addLog('Starting Clinical Analysis & Model Training...');
 
-        const interval = setInterval(async () => {
-            try {
-                generated += batchSize;
-                const currentProgress = Math.min(100, (generated / patientCount) * 100);
+            // 2. Simulate Training on the Data
+            let processed = 0;
+            let conditions = 0;
+            const batchSize = Math.max(1, Math.ceil(patientCount / 50)); // Process in 50 steps
 
-                // Generate a small batch to simulate work
-                // Now async, fetching from API
-                const batch = await SyntheaGenerator.generateBatch(Math.min(5, batchSize));
+            const interval = setInterval(() => {
+                const batch = data.slice(processed, processed + batchSize);
+                processed += batch.length;
                 conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
 
-                // Update logs with realistic details
+                const currentProgress = Math.min(100, (processed / patientCount) * 100);
+                setProgress(currentProgress);
+
+                // Log a sample
                 if (batch.length > 0) {
                     const sample = batch[0];
-                    addLog(`Fetched Identity: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family} (${sample.patient.address[0].state})`);
-                    addLog(`  -> Assigned Condition: ${sample.conditions[0]?.code.coding[0].display}`);
+                    addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family} | Dx: ${sample.conditions[0]?.code.coding[0].display}`);
                 }
 
-                setProgress(currentProgress);
                 setStats(prev => ({
-                    totalPatients: Math.min(generated, patientCount),
+                    totalPatients: processed,
                     conditionsIdentified: conditions,
-                    accuracy: Math.min(99.2, prev.accuracy + 0.1) // Simulate learning
+                    accuracy: Math.min(99.2, prev.accuracy + 0.1)
                 }));
 
-                if (generated >= patientCount) {
+                if (processed >= data.length) {
                     clearInterval(interval);
                     setIsTraining(false);
                     addLog('Training Complete. Model weights updated.');
                     addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
+                    addLog('Dataset ready for export.');
                 }
-            } catch (error: any) {
-                clearInterval(interval);
-                setIsTraining(false);
-                addLog(`ERROR: Simulation failed - ${error.message}`);
-                console.error(error);
-            }
-        }, 1000); // Slow down to 1s to allow API fetch time and readability
+            }, 50); // Fast processing
+
+        } catch (error: any) {
+            setIsFetching(false);
+            setIsTraining(false);
+            addLog(`ERROR: Data fetch failed - ${error.message}`);
+            console.error(error);
+        }
+    };
+
+    const downloadData = () => {
+        const jsonString = JSON.stringify(generatedData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `synthea_dataset_${new Date().toISOString()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        addLog('Dataset downloaded successfully.');
     };
 
     return (
@@ -102,39 +125,44 @@ export function ModelTraining() {
                                 <div className="flex gap-4 items-center mb-2">
                                     <input
                                         type="number"
-                                        min="100"
-                                        max="100000"
+                                        min="10"
+                                        max="10000"
                                         value={patientCount}
                                         onChange={(e) => setPatientCount(Number(e.target.value))}
-                                        disabled={isTraining}
+                                        disabled={isTraining || isFetching}
                                         className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                     <input
                                         type="range"
-                                        min="100"
+                                        min="10"
                                         max="10000"
-                                        step="100"
+                                        step="10"
                                         value={patientCount}
                                         onChange={(e) => setPatientCount(Number(e.target.value))}
-                                        disabled={isTraining}
+                                        disabled={isTraining || isFetching}
                                         className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                                     />
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500">
-                                    <span>100</span>
-                                    <span>10,000+</span>
+                                    <span>10</span>
+                                    <span>10,000</span>
                                 </div>
                             </div>
 
                             <button
                                 onClick={startTraining}
-                                disabled={isTraining}
-                                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-white transition-all ${isTraining
-                                    ? 'bg-slate-400 cursor-not-allowed'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
+                                disabled={isTraining || isFetching}
+                                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-white transition-all ${isTraining || isFetching
+                                        ? 'bg-slate-400 cursor-not-allowed'
+                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
                                     }`}
                             >
-                                {isTraining ? (
+                                {isFetching ? (
+                                    <>
+                                        <Activity className="h-5 w-5 animate-spin" />
+                                        Fetching Data...
+                                    </>
+                                ) : isTraining ? (
                                     <>
                                         <Activity className="h-5 w-5 animate-spin" />
                                         Training...
@@ -146,6 +174,16 @@ export function ModelTraining() {
                                     </>
                                 )}
                             </button>
+
+                            {generatedData.length > 0 && !isTraining && (
+                                <button
+                                    onClick={downloadData}
+                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all"
+                                >
+                                    <Download className="h-5 w-5" />
+                                    Download Dataset ({generatedData.length})
+                                </button>
+                            )}
                         </div>
                     </div>
 

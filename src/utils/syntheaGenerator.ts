@@ -67,6 +67,33 @@ export interface SyntheticBundle {
 export class SyntheaGenerator {
 
     static async generateBatch(count: number): Promise<SyntheticBundle[]> {
+        const MAX_PER_REQUEST = 5000;
+
+        // If count is small enough, just fetch once
+        if (count <= MAX_PER_REQUEST) {
+            return this._fetchFromApi(count);
+        }
+
+        // Otherwise, chunk the requests
+        const chunks: Promise<SyntheticBundle[]>[] = [];
+        let remaining = count;
+
+        while (remaining > 0) {
+            const size = Math.min(remaining, MAX_PER_REQUEST);
+            chunks.push(this._fetchFromApi(size));
+            remaining -= size;
+        }
+
+        try {
+            const results = await Promise.all(chunks);
+            return results.flat();
+        } catch (error) {
+            console.error("Batch fetch failed", error);
+            return this._fetchFromApi(count); // Fallback to single attempt or local
+        }
+    }
+
+    private static async _fetchFromApi(count: number): Promise<SyntheticBundle[]> {
         try {
             // Fetch real user identities from Random User Generator API
             const response = await fetch(`https://randomuser.me/api/?results=${count}&nat=us`);
