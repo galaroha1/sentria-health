@@ -29,25 +29,31 @@ export function ModelTraining() {
     const startTraining = async () => {
         setIsTraining(true);
         setProgress(0);
-        setLogs(['Initializing Synthea™ Patient Generator...', 'Loading clinical protocols (ICD-10, SNOMED-CT)...']);
+        setLogs([
+            'Initializing Synthea™ Patient Generator...',
+            'Connecting to Live Data Stream (randomuser.me)...',
+            'Loading clinical protocols (ICD-10, SNOMED-CT)...'
+        ]);
 
         const batchSize = Math.max(1, Math.ceil(patientCount / 100)); // Ensure at least 1
         let generated = 0;
         let conditions = 0;
 
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
             try {
                 generated += batchSize;
                 const currentProgress = Math.min(100, (generated / patientCount) * 100);
 
                 // Generate a small batch to simulate work
-                const batch = SyntheaGenerator.generateBatch(Math.min(5, batchSize));
+                // Now async, fetching from API
+                const batch = await SyntheaGenerator.generateBatch(Math.min(5, batchSize));
                 conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
 
                 // Update logs with realistic details
                 if (batch.length > 0) {
                     const sample = batch[0];
-                    addLog(`Generated Patient: ${sample.patient.id.substring(0, 8)}... | Condition: ${sample.conditions[0]?.code.coding[0].display}`);
+                    addLog(`Fetched Identity: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family} (${sample.patient.address[0].state})`);
+                    addLog(`  -> Assigned Condition: ${sample.conditions[0]?.code.coding[0].display}`);
                 }
 
                 setProgress(currentProgress);
@@ -69,7 +75,7 @@ export function ModelTraining() {
                 addLog(`ERROR: Simulation failed - ${error.message}`);
                 console.error(error);
             }
-        }, 100);
+        }, 1000); // Slow down to 1s to allow API fetch time and readability
     };
 
     return (
@@ -124,8 +130,8 @@ export function ModelTraining() {
                                 onClick={startTraining}
                                 disabled={isTraining}
                                 className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-white transition-all ${isTraining
-                                        ? 'bg-slate-400 cursor-not-allowed'
-                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
+                                    ? 'bg-slate-400 cursor-not-allowed'
+                                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
                                     }`}
                             >
                                 {isTraining ? (
