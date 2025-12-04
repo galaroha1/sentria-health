@@ -26,12 +26,19 @@ export function DecisionsTab() {
 
     // Run optimization on mount or when requested
     const runOptimization = async () => {
-        setIsOptimizing(true);
-        // Simulate calculation delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults);
-        setProposals(newProposals);
-        setIsOptimizing(false);
+        try {
+            setIsOptimizing(true);
+            setProposals([]); // Clear existing to show refresh
+            // Simulate calculation delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults);
+            setProposals(newProposals);
+        } catch (error) {
+            console.error("Optimization failed:", error);
+            toast.error("Failed to run optimization");
+        } finally {
+            setIsOptimizing(false);
+        }
     };
 
     useEffect(() => {
