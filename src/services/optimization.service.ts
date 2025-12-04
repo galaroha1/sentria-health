@@ -148,21 +148,11 @@ export class OptimizationService {
                     if (drug && drug.quantity < 100) {
                         const key = `${site.id}-${drug.ndc}`;
 
-                        // Check incoming transfers for this specific patient need? 
-                        // It's harder to map 1:1, but we can check aggregate incoming vs aggregate demand.
-                        // For simplicity, we'll just check if there's *any* incoming stock covering this.
-                        const incoming = getIncomingStock(site.id, drug.ndc);
-
-                        // We need to be careful not to double count incoming stock against both inventory low stock AND patient demand.
-                        // Ideally we'd sum up ALL demand first, then subtract incoming.
-                        // But for this patch, we'll just check if we have a proposal already or if incoming covers it.
-
                         const existing = demandMap.get(key);
                         if (existing) {
                             existing.quantity += 1;
                             existing.reason = `${existing.reason} + Patient Demand (${patient.patientName})`;
                         } else {
-                            // If incoming covers this 1 unit, maybe skip? 
                             // But incoming might be for the low stock alert. 
                             // Let's add it to demandMap and let the logic handle it?
                             // Actually, let's just add it. The "deficit" logic above handles the inventory part.
