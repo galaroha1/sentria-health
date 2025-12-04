@@ -73,8 +73,26 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             setSimulationResults([]);
             return;
         }
-        // We no longer subscribe to ALL data. 
-        // Components must request data via fetchSimulations.
+
+        // Fetch total count for stats
+        const fetchCount = async () => {
+            try {
+                const { getCountFromServer, collection } = await import('firebase/firestore');
+                const { db } = await import('../config/firebase');
+                const coll = collection(db, `users/${user.id}/simulations`);
+                const snapshot = await getCountFromServer(coll);
+                const count = snapshot.data().count;
+
+                setStats(prev => ({
+                    ...prev,
+                    totalPatients: count
+                }));
+            } catch (error) {
+                console.error("Failed to fetch patient count:", error);
+            }
+        };
+
+        fetchCount();
     }, [user]);
 
     const fetchSimulations = async (pageSize: number = 20, startAfterDoc: any = null, sortField: string = 'date', sortDirection: 'asc' | 'desc' = 'desc') => {

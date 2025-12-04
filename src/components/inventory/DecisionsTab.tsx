@@ -7,7 +7,7 @@ import { OptimizationApprovals } from './OptimizationApprovals';
 import toast from 'react-hot-toast';
 
 export function DecisionsTab() {
-    const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead } = useApp();
+    const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory } = useApp();
     const { simulationResults, fetchSimulations } = useSimulation();
     const [activeSection, setActiveSection] = useState<'approvals' | 'optimization' | 'alerts'>('approvals');
 
@@ -31,7 +31,8 @@ export function DecisionsTab() {
             setProposals([]); // Clear existing to show refresh
             // Simulate calculation delay
             await new Promise(resolve => setTimeout(resolve, 1000));
-            const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults);
+            // Pass active requests to filter out already addressed demand
+            const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
             setProposals(newProposals);
         } catch (error) {
             console.error("Optimization failed:", error);
@@ -57,11 +58,52 @@ export function DecisionsTab() {
         toast.error('Request Denied');
     };
 
-    const handleOptimizationAction = (proposal: OptimizationProposal, action: 'approve' | 'reject') => {
+    const handleOptimizationAction = async (proposal: OptimizationProposal, action: 'approve' | 'reject') => {
         if (action === 'approve') {
-            // Logic to execute proposal would go here (similar to OperationsTab)
-            toast.success(`Executed ${proposal.type}: ${proposal.drugName}`);
+            try {
+                if (proposal.type === 'transfer') {
+                    // Create a real Network Request
+                    const sourceSite = sites.find(s => s.id === proposal.sourceSiteId);
+                    const targetSite = sites.find(s => s.id === proposal.targetSiteId);
+
+                    if (sourceSite && targetSite) {
+                        await addRequest({
+                            id: `req-${Date.now()}`,
+                            requestedBy: 'System AI',
+                            requestedBySite: targetSite, // The site needing the drug
+                            targetSite: sourceSite,      // The site providing the drug
+                            drug: {
+                                name: proposal.drugName,
+                                ndc: proposal.ndc,
+                                quantity: proposal.quantity
+                            },
+                            reason: proposal.reason,
+                            urgency: 'urgent',
+                            status: 'pending',
+                            requestedAt: new Date().toISOString()
+                        });
+                        toast.success(`Transfer Request Created: ${proposal.drugName}`);
+                    }
+                } else {
+                    // Procurement: Simulate order arrival (update inventory immediately for demo)
+                    // In a real app, this would create a Purchase Order
+                    await updateInventory(
+                        proposal.targetSiteId,
+                        proposal.ndc,
+                        proposal.quantity,
+                        `Procurement Order (Auto-Approved): ${proposal.reason}`,
+                        'system',
+                        'System AI'
+                    );
+                    toast.success(`Procurement Order Placed: ${proposal.drugName}`);
+                }
+            } catch (error) {
+                console.error("Failed to execute proposal:", error);
+                toast.error("Failed to execute action");
+                return; // Don't remove from list if failed
+            }
         }
+        // Remove from local list
         setProposals(prev => prev.filter(p => p.id !== proposal.id));
     };
 

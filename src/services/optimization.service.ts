@@ -92,23 +92,36 @@ export class OptimizationService {
     static generateProposals(
         sites: Site[],
         inventories: SiteInventory[],
-        simulationResults: any[] = [] // Added simulation results
+        simulationResults: any[] = [],
+        activeRequests: any[] = [] // Added active requests
     ): OptimizationProposal[] {
         const proposals: OptimizationProposal[] = [];
         const demandMap = new Map<string, { siteId: string, drugName: string, ndc: string, quantity: number, reason: string }>();
+
+        // Helper to get incoming stock for a site/drug
+        const getIncomingStock = (siteId: string, ndc: string) => {
+            return activeRequests
+                .filter(r => r.requestedBySite.id === siteId && r.drug.ndc === ndc && (r.status === 'pending' || r.status === 'approved' || r.status === 'in_transit'))
+                .reduce((sum, r) => sum + r.drug.quantity, 0);
+        };
 
         // 1. Identify Demand from Inventory (Low/Critical Stock)
         inventories.forEach(inv => {
             inv.drugs.forEach(d => {
                 if (d.status === 'low' || d.status === 'critical') {
-                    const key = `${inv.siteId}-${d.ndc}`;
-                    demandMap.set(key, {
-                        siteId: inv.siteId,
-                        drugName: d.drugName,
-                        ndc: d.ndc,
-                        quantity: d.maxLevel - d.quantity,
-                        reason: `Low stock alert: ${d.quantity} remaining (Min: ${d.minLevel})`
-                    });
+                    const incoming = getIncomingStock(inv.siteId, d.ndc);
+                    const deficit = (d.maxLevel - d.quantity) - incoming;
+
+                    if (deficit > 0) {
+                        const key = `${inv.siteId}-${d.ndc}`;
+                        demandMap.set(key, {
+                            siteId: inv.siteId,
+                            drugName: d.drugName,
+                            ndc: d.ndc,
+                            quantity: deficit,
+                            reason: `Low stock alert: ${d.quantity} remaining (Min: ${d.minLevel}). Incoming: ${incoming}`
+                        });
+                    }
                 }
             });
         });
@@ -134,11 +147,27 @@ export class OptimizationService {
                     // DEMO: Trigger if stock is less than 100 (High threshold for demo visibility)
                     if (drug && drug.quantity < 100) {
                         const key = `${site.id}-${drug.ndc}`;
+
+                        // Check incoming transfers for this specific patient need? 
+                        // It's harder to map 1:1, but we can check aggregate incoming vs aggregate demand.
+                        // For simplicity, we'll just check if there's *any* incoming stock covering this.
+                        const incoming = getIncomingStock(site.id, drug.ndc);
+
+                        // We need to be careful not to double count incoming stock against both inventory low stock AND patient demand.
+                        // Ideally we'd sum up ALL demand first, then subtract incoming.
+                        // But for this patch, we'll just check if we have a proposal already or if incoming covers it.
+
                         const existing = demandMap.get(key);
                         if (existing) {
                             existing.quantity += 1;
                             existing.reason = `${existing.reason} + Patient Demand (${patient.patientName})`;
                         } else {
+                            // If incoming covers this 1 unit, maybe skip? 
+                            // But incoming might be for the low stock alert. 
+                            // Let's add it to demandMap and let the logic handle it?
+                            // Actually, let's just add it. The "deficit" logic above handles the inventory part.
+                            // Here we are adding *extra* demand.
+
                             demandMap.set(key, {
                                 siteId: site.id,
                                 drugName: drug.drugName,

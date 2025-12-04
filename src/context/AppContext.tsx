@@ -236,6 +236,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Request Handlers
     const addRequest = async (request: NetworkRequest) => {
+        // Optimistic update
+        setRequests(prev => [...prev, request]);
+
         await FirestoreService.set('transfers', request.id, request);
 
         // Add corresponding notification
