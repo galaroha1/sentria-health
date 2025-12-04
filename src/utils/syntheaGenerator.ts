@@ -72,7 +72,7 @@ export class SyntheaGenerator {
         // For large datasets, use local generation to avoid API rate limits and latency
         if (count > MAX_API_FETCH) {
             console.log(`Generating ${count} patients locally for performance...`);
-            return this.generateLocalBatch(count);
+            return await this.generateLocalBatch(count);
         }
 
         return this._fetchFromApi(count);
@@ -114,12 +114,32 @@ export class SyntheaGenerator {
             });
         } catch (error) {
             console.error("Failed to fetch from Random User API, falling back to local generation", error);
-            return this.generateLocalBatch(count);
+            return await this.generateLocalBatch(count);
         }
     }
 
-    static generateLocalBatch(count: number): SyntheticBundle[] {
-        return Array.from({ length: count }, () => this.generateLocalPatient());
+    static async generateLocalBatch(count: number, onProgress?: (progress: number) => void): Promise<SyntheticBundle[]> {
+        const CHUNK_SIZE = 100;
+        const results: SyntheticBundle[] = [];
+
+        for (let i = 0; i < count; i += CHUNK_SIZE) {
+            const chunkEnd = Math.min(i + CHUNK_SIZE, count);
+
+            // Generate chunk
+            for (let j = i; j < chunkEnd; j++) {
+                results.push(this.generateLocalPatient());
+            }
+
+            // Report progress
+            if (onProgress) {
+                onProgress(Math.round((chunkEnd / count) * 100));
+            }
+
+            // Yield to main thread to keep UI responsive
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        return results;
     }
 
     // Shared logic for clinical data generation

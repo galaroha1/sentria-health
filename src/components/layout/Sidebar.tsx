@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { LayoutDashboard, ShoppingCart, Package, Users, Settings, X, ArrowRightLeft, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
@@ -29,6 +30,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const location = useLocation();
     const { hasPermission, user } = useAuth();
+    const [isHovered, setIsHovered] = useState(false);
 
     // Filter navigation items based on user permissions
     const visibleNavigation = navigation.filter(item => hasPermission(item.requirePermission));
@@ -45,17 +47,25 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {/* Sidebar */}
             <div
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 className={clsx(
-                    "fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-slate-900 text-white transition-transform duration-300 lg:static lg:translate-x-0",
-                    isOpen ? "translate-x-0" : "-translate-x-full"
+                    "fixed inset-y-0 left-0 z-30 flex flex-col bg-slate-900 text-white transition-all duration-300 ease-in-out lg:static",
+                    isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+                    isHovered ? "w-64" : "w-20"
                 )}
             >
-                <div className="flex h-16 items-center px-6">
+                <div className="flex h-16 items-center px-6 overflow-hidden whitespace-nowrap">
                     <div className="flex items-center gap-3">
                         <div className="h-8 w-8 shrink-0 rounded-lg bg-primary-500 flex items-center justify-center">
                             <span className="text-xl font-bold text-white">S</span>
                         </div>
-                        <span className="text-xl font-bold">Sentria</span>
+                        <span className={clsx(
+                            "text-xl font-bold transition-opacity duration-300",
+                            isHovered ? "opacity-100" : "opacity-0 w-0 hidden"
+                        )}>
+                            Sentria
+                        </span>
                     </div>
                     <button
                         onClick={onClose}
@@ -74,14 +84,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 to={item.href}
                                 onClick={onClose}
                                 className={clsx(
-                                    'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                    'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap overflow-hidden',
                                     isActive
                                         ? 'bg-primary-600 text-white'
                                         : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                 )}
                             >
                                 <item.icon className={clsx('h-5 w-5 shrink-0 transition-colors', isActive ? 'text-white' : 'text-slate-400 group-hover:text-white')} />
-                                <span className="ml-3">
+                                <span className={clsx(
+                                    "ml-3 transition-opacity duration-300",
+                                    isHovered ? "opacity-100" : "opacity-0 w-0 hidden"
+                                )}>
                                     {item.name}
                                 </span>
                             </Link>
@@ -89,7 +102,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     })}
                 </nav>
 
-                <div className="border-t border-slate-800 p-4">
+                <div className="border-t border-slate-800 p-4 overflow-hidden whitespace-nowrap">
                     <div className="flex items-center gap-3 px-3 py-2">
                         <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-primary-100 flex items-center justify-center">
                             {user?.avatar ? (
@@ -98,17 +111,23 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 <span className="text-sm font-bold text-primary-600">{user?.name.charAt(0)}</span>
                             )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className={clsx(
+                            "flex-1 min-w-0 transition-opacity duration-300",
+                            isHovered ? "opacity-100" : "opacity-0 w-0 hidden"
+                        )}>
                             <p className="text-sm font-medium text-white truncate">{user?.name}</p>
                             <p className="text-xs text-slate-400 truncate">{user?.role}</p>
                         </div>
                     </div>
                     <Link
                         to="/profile"
-                        className="group mt-2 flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                        className="group mt-2 flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors whitespace-nowrap"
                     >
                         <Settings className="h-5 w-5 shrink-0 text-slate-400 group-hover:text-white" />
-                        <span className="ml-3">
+                        <span className={clsx(
+                            "ml-3 transition-opacity duration-300",
+                            isHovered ? "opacity-100" : "opacity-0 w-0 hidden"
+                        )}>
                             Settings
                         </span>
                     </Link>

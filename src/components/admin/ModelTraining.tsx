@@ -45,19 +45,19 @@ export function ModelTraining() {
         ]);
 
         try {
-            // 1. Fetch Data First
+            // 1. Fetch Data First (Async & Chunked)
             const data = await SyntheaGenerator.generateBatch(patientCount);
             setGeneratedData(data);
             setIsFetching(false);
             addLog(`Successfully fetched ${data.length} unique patient profiles.`);
             addLog('Starting Clinical Analysis & Model Training...');
 
-            // 2. Simulate Training on the Data
+            // 2. Simulate Training on the Data (Non-blocking loop)
             let processed = 0;
             let conditions = 0;
-            const batchSize = Math.max(1, Math.ceil(patientCount / 50)); // Process in 50 steps
+            const batchSize = Math.max(1, Math.ceil(patientCount / 100)); // Smaller batches for smoother UI
 
-            const interval = setInterval(async () => {
+            const processBatch = async () => {
                 const batch = data.slice(processed, processed + batchSize);
                 processed += batch.length;
                 conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
@@ -65,8 +65,8 @@ export function ModelTraining() {
                 const currentProgress = Math.min(100, (processed / patientCount) * 100);
                 setProgress(currentProgress);
 
-                // Log a sample
-                if (batch.length > 0) {
+                // Log a sample occasionally
+                if (batch.length > 0 && Math.random() < 0.1) {
                     const sample = batch[0];
                     addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family} | Dx: ${sample.conditions[0]?.code.coding[0].display}`);
                 }
@@ -77,81 +77,22 @@ export function ModelTraining() {
                     accuracy: Math.min(99.2, prev.accuracy + 0.1)
                 }));
 
-                if (processed >= data.length) {
-                    clearInterval(interval);
+                if (processed < data.length && isTraining) {
+                    // Schedule next batch
+                    setTimeout(processBatch, 0);
+                } else {
+                    // Training Complete
                     setIsTraining(false);
                     addLog('Training Complete. Model weights updated.');
                     addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
 
-                    // 3. Save to Firestore / Context
-                    setIsSaving(true);
-                    addLog('Syncing generated patients to database...');
-
-                    const conditionEntries = Object.entries(MEDICAL_DATABASE);
-
-                    // Process in chunks to avoid blocking UI
-                    const savePromises = data.map(async (bundle) => {
-                        const patient = bundle.patient;
-                        const conditionName = bundle.conditions[0]?.code.coding[0].display;
-
-                        // Reverse map condition name to ID
-                        const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
-                        const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc'; // Fallback
-
-                        // Create Profile
-                        const birthDate = new Date(patient.birthDate);
-                        const age = new Date().getFullYear() - birthDate.getFullYear();
-
-                        const profile: PatientProfile = {
-                            name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
-                            age: age,
-                            gender: patient.gender === 'male' ? 'Male' : 'Female',
-                            conditionId: conditionId,
-                            medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
-                            vitals: {
-                                bpSystolic: 120 + Math.floor(Math.random() * 20),
-                                bpDiastolic: 80 + Math.floor(Math.random() * 10),
-                                heartRate: 60 + Math.floor(Math.random() * 40),
-                                temperature: 98.6,
-                                weight: 70
-                            },
-                            allergies: []
-                        };
-
-                        const prediction = predictTreatment(profile);
-
-                        return addSimulationResult({
-                            id: patient.id,
-                            date: new Date(),
-                            timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            patientName: profile.name,
-                            condition: conditionName || 'Unknown',
-                            visitType: 'Initial Consultation',
-                            location: 'Main Clinic',
-                            drug: prediction.recommendedDrug,
-                            acquisitionMethod: prediction.acquisitionMethod,
-                            status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
-                            price: prediction.price,
-                            profile: profile,
-                            aiPrediction: prediction
-                        });
-                    });
-
-                    await Promise.all(savePromises);
-                    setIsSaving(false);
-                    addLog('✓ Data successfully synced to Patient Records.');
-                    toast.success(`${data.length} patients synced to database!`, {
-                        duration: 5000,
-                        position: 'bottom-right',
-                        style: {
-                            background: '#10B981',
-                            color: '#fff',
-                            fontWeight: 'bold',
-                        },
-                        icon: '🚀'
-                    });
+                    // 3. Save to Firestore / Context (Batched)
+                    await saveToDatabase(data);
                 }
-            }, 50); // Fast processing
+            };
+
+            // Start the loop
+            setTimeout(processBatch, 0);
 
         } catch (error: any) {
             setIsFetching(false);
@@ -161,6 +102,83 @@ export function ModelTraining() {
             toast.error(`Simulation failed: ${error.message}`);
             console.error(error);
         }
+    };
+
+    const saveToDatabase = async (data: SyntheticBundle[]) => {
+        setIsSaving(true);
+        addLog('Syncing generated patients to database...');
+
+        const conditionEntries = Object.entries(MEDICAL_DATABASE);
+        const SAVE_BATCH_SIZE = 50; // Save 50 at a time to avoid network congestion
+
+        for (let i = 0; i < data.length; i += SAVE_BATCH_SIZE) {
+            const chunk = data.slice(i, i + SAVE_BATCH_SIZE);
+
+            const savePromises = chunk.map(async (bundle) => {
+                const patient = bundle.patient;
+                const conditionName = bundle.conditions[0]?.code.coding[0].display;
+
+                // Reverse map condition name to ID
+                const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
+                const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc'; // Fallback
+
+                // Create Profile
+                const birthDate = new Date(patient.birthDate);
+                const age = new Date().getFullYear() - birthDate.getFullYear();
+
+                const profile: PatientProfile = {
+                    name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
+                    age: age,
+                    gender: patient.gender === 'male' ? 'Male' : 'Female',
+                    conditionId: conditionId,
+                    medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
+                    vitals: {
+                        bpSystolic: 120 + Math.floor(Math.random() * 20),
+                        bpDiastolic: 80 + Math.floor(Math.random() * 10),
+                        heartRate: 60 + Math.floor(Math.random() * 40),
+                        temperature: 98.6,
+                        weight: 70
+                    },
+                    allergies: []
+                };
+
+                const prediction = predictTreatment(profile);
+
+                return addSimulationResult({
+                    id: patient.id,
+                    date: new Date(),
+                    timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    patientName: profile.name,
+                    condition: conditionName || 'Unknown',
+                    visitType: 'Initial Consultation',
+                    location: 'Main Clinic',
+                    drug: prediction.recommendedDrug,
+                    acquisitionMethod: prediction.acquisitionMethod,
+                    status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
+                    price: prediction.price,
+                    profile: profile,
+                    aiPrediction: prediction
+                });
+            });
+
+            await Promise.all(savePromises);
+
+            // Yield to UI
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+
+        setIsSaving(false);
+        addLog('✓ Data successfully synced to Patient Records.');
+        toast.success(`${data.length} patients synced to database!`, {
+            duration: 5000,
+            position: 'bottom-right',
+            style: {
+                background: '#10B981',
+                color: '#fff',
+                fontWeight: 'bold',
+            },
+            icon: '🚀'
+        });
     };
 
     const downloadData = () => {
