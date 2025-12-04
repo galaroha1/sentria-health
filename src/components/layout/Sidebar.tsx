@@ -44,20 +44,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             )}
 
             {/* Sidebar */}
-            <div className={clsx(
-                "fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-slate-900 text-white transition-transform duration-300 lg:static lg:translate-x-0",
-                isOpen ? "translate-x-0" : "-translate-x-full"
-            )}>
-                <div className="flex h-16 items-center justify-between px-6">
-                    <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg bg-primary-500 flex items-center justify-center">
+            <div
+                className={clsx(
+                    "fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-slate-900 text-white transition-transform duration-300 lg:static lg:translate-x-0",
+                    isOpen ? "translate-x-0" : "-translate-x-full"
+                )}
+            >
+                <div className="flex h-16 items-center px-6">
+                    <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 shrink-0 rounded-lg bg-primary-500 flex items-center justify-center">
                             <span className="text-xl font-bold text-white">S</span>
                         </div>
                         <span className="text-xl font-bold">Sentria</span>
                     </div>
                     <button
                         onClick={onClose}
-                        className="lg:hidden text-slate-400 hover:text-white"
+                        className="ml-auto lg:hidden text-slate-400 hover:text-white"
                     >
                         <X className="h-6 w-6" />
                     </button>
@@ -72,16 +74,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 to={item.href}
                                 onClick={onClose}
                                 className={clsx(
-                                    'group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                    'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                                     isActive
                                         ? 'bg-primary-600 text-white'
                                         : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                 )}
                             >
-                                <div className="flex items-center gap-3">
-                                    <item.icon className={clsx('h-5 w-5', isActive ? 'text-white' : 'text-slate-400 group-hover:text-white')} />
+                                <item.icon className={clsx('h-5 w-5 shrink-0 transition-colors', isActive ? 'text-white' : 'text-slate-400 group-hover:text-white')} />
+                                <span className="ml-3">
                                     {item.name}
-                                </div>
+                                </span>
                             </Link>
                         );
                     })}
@@ -89,7 +91,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 <div className="border-t border-slate-800 p-4">
                     <div className="flex items-center gap-3 px-3 py-2">
-                        <div className="h-8 w-8 rounded-full overflow-hidden bg-primary-100 flex items-center justify-center">
+                        <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-primary-100 flex items-center justify-center">
                             {user?.avatar ? (
                                 <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                             ) : (
@@ -105,8 +107,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         to="/profile"
                         className="group mt-2 flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                     >
-                        <Settings className="mr-3 h-5 w-5 text-slate-400 group-hover:text-white" />
-                        Settings
+                        <Settings className="h-5 w-5 shrink-0 text-slate-400 group-hover:text-white" />
+                        <span className="ml-3">
+                            Settings
+                        </span>
                     </Link>
                 </div>
             </div>

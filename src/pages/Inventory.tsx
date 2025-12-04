@@ -62,34 +62,51 @@ export function Inventory() {
 
     return (
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-            {/* Sticky Sidebar Navigation */}
-            <div className="w-full shrink-0 lg:sticky lg:top-6 lg:w-64">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="mb-4 px-2">
-                        <h1 className="text-xl font-bold text-slate-900">Inventory</h1>
-                        <p className="text-xs text-slate-500">PAM-IMS Workflow</p>
+            {/* Dynamic Sidebar Navigation */}
+            <div className="w-full shrink-0 lg:sticky lg:top-6 lg:w-72">
+                <div className="rounded-2xl bg-white p-4 shadow-xl border border-slate-100">
+                    <div className="mb-6 px-4 pt-2">
+                        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700">Inventory</h1>
+                        <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mt-1">PAM-IMS Workflow</p>
                     </div>
-                    <nav className="space-y-1">
+                    <nav className="space-y-2">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-all ${activeTab === tab.id
-                                        ? 'bg-slate-900 text-white shadow-md'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    className={`group relative flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-left transition-all duration-200 ease-out ${isActive
+                                            ? 'bg-slate-900 text-white shadow-lg scale-105 translate-x-2'
+                                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 hover:scale-105 hover:translate-x-1 hover:shadow-md'
                                         }`}
                                 >
-                                    <div className={`rounded-md p-1.5 transition-colors ${activeTab === tab.id ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-700'
+                                    {/* Active Indicator Line */}
+                                    {isActive && (
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-indigo-500 rounded-r-full" />
+                                    )}
+
+                                    <div className={`rounded-lg p-2 transition-all duration-300 ${isActive
+                                            ? 'bg-white/20 text-white rotate-0'
+                                            : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-600 group-hover:rotate-12 group-hover:shadow-sm'
                                         }`}>
                                         <Icon className="h-5 w-5" />
                                     </div>
-                                    <div>
-                                        <span className="block text-sm font-bold">{tab.label}</span>
-                                        <span className={`block text-[10px] ${activeTab === tab.id ? 'text-slate-300' : 'text-slate-400'}`}>
+
+                                    <div className="flex-1">
+                                        <span className={`block text-sm font-bold transition-colors ${isActive ? 'text-white' : 'text-slate-700 group-hover:text-slate-900'}`}>
+                                            {tab.label}
+                                        </span>
+                                        <span className={`block text-[10px] font-medium transition-colors ${isActive ? 'text-slate-400' : 'text-slate-400 group-hover:text-indigo-500/80'
+                                            }`}>
                                             {tab.desc}
                                         </span>
+                                    </div>
+
+                                    {/* Hover Arrow */}
+                                    <div className={`transition-all duration-200 ${isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-indigo-400' : 'bg-indigo-600'}`} />
                                     </div>
                                 </button>
                             );

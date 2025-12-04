@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { SyntheaGenerator, type SyntheticBundle } from '../../utils/syntheaGenerator';
-import { Brain, Database, Terminal, Play, CheckCircle, Activity, Download } from 'lucide-react';
+import { Brain, Database, Play, CheckCircle, Activity, Download, Users } from 'lucide-react';
+import { useSimulation } from '../../context/SimulationContext';
+import { MEDICAL_DATABASE } from '../../data/medicalDatabase';
+import { predictTreatment, type PatientProfile } from '../../utils/aiPrediction';
+import toast, { Toaster } from 'react-hot-toast';
 
 export function ModelTraining() {
     const [isTraining, setIsTraining] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [patientCount, setPatientCount] = useState(100);
+    const [patientCount, setPatientCount] = useState(50);
     const [logs, setLogs] = useState<string[]>([]);
     const [stats, setStats] = useState({
         totalPatients: 0,
@@ -15,6 +19,8 @@ export function ModelTraining() {
     });
     const [generatedData, setGeneratedData] = useState<SyntheticBundle[]>([]);
     const logsEndRef = useRef<HTMLDivElement>(null);
+    const { addSimulationResult } = useSimulation();
+    const [isSaving, setIsSaving] = useState(false);
 
     const scrollToBottom = () => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +57,7 @@ export function ModelTraining() {
             let conditions = 0;
             const batchSize = Math.max(1, Math.ceil(patientCount / 50)); // Process in 50 steps
 
-            const interval = setInterval(() => {
+            const interval = setInterval(async () => {
                 const batch = data.slice(processed, processed + batchSize);
                 processed += batch.length;
                 conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
@@ -76,14 +82,83 @@ export function ModelTraining() {
                     setIsTraining(false);
                     addLog('Training Complete. Model weights updated.');
                     addLog(`Final Accuracy: ${stats.accuracy.toFixed(1)}%`);
-                    addLog('Dataset ready for export.');
+
+                    // 3. Save to Firestore / Context
+                    setIsSaving(true);
+                    addLog('Syncing generated patients to database...');
+
+                    const conditionEntries = Object.entries(MEDICAL_DATABASE);
+
+                    // Process in chunks to avoid blocking UI
+                    const savePromises = data.map(async (bundle) => {
+                        const patient = bundle.patient;
+                        const conditionName = bundle.conditions[0]?.code.coding[0].display;
+
+                        // Reverse map condition name to ID
+                        const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
+                        const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc'; // Fallback
+
+                        // Create Profile
+                        const birthDate = new Date(patient.birthDate);
+                        const age = new Date().getFullYear() - birthDate.getFullYear();
+
+                        const profile: PatientProfile = {
+                            name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
+                            age: age,
+                            gender: patient.gender === 'male' ? 'Male' : 'Female',
+                            conditionId: conditionId,
+                            medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
+                            vitals: {
+                                bpSystolic: 120 + Math.floor(Math.random() * 20),
+                                bpDiastolic: 80 + Math.floor(Math.random() * 10),
+                                heartRate: 60 + Math.floor(Math.random() * 40),
+                                temperature: 98.6,
+                                weight: 70
+                            },
+                            allergies: []
+                        };
+
+                        const prediction = predictTreatment(profile);
+
+                        return addSimulationResult({
+                            id: patient.id,
+                            date: new Date(),
+                            timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            patientName: profile.name,
+                            condition: conditionName || 'Unknown',
+                            visitType: 'Initial Consultation',
+                            location: 'Main Clinic',
+                            drug: prediction.recommendedDrug,
+                            acquisitionMethod: prediction.acquisitionMethod,
+                            status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
+                            price: prediction.price,
+                            profile: profile,
+                            aiPrediction: prediction
+                        });
+                    });
+
+                    await Promise.all(savePromises);
+                    setIsSaving(false);
+                    addLog('✓ Data successfully synced to Patient Records.');
+                    toast.success(`${data.length} patients synced to database!`, {
+                        duration: 5000,
+                        position: 'bottom-right',
+                        style: {
+                            background: '#10B981',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                        },
+                        icon: '🚀'
+                    });
                 }
             }, 50); // Fast processing
 
         } catch (error: any) {
             setIsFetching(false);
             setIsTraining(false);
+            setIsSaving(false);
             addLog(`ERROR: Data fetch failed - ${error.message}`);
+            toast.error(`Simulation failed: ${error.message}`);
             console.error(error);
         }
     };
@@ -99,48 +174,48 @@ export function ModelTraining() {
         link.click();
         document.body.removeChild(link);
         addLog('Dataset downloaded successfully.');
+        toast.success('Dataset downloaded!');
     };
 
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="h-full flex flex-col gap-6">
+            <Toaster />
+            {/* Header */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Control Panel */}
-                <div className="md:col-span-1 space-y-6">
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-indigo-100 rounded-lg">
-                                <Brain className="h-6 w-6 text-indigo-600" />
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                                    <Brain className="h-6 w-6 text-white" />
+                                </div>
+                                <h2 className="text-xl font-bold">AI Model Training</h2>
                             </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900">AI Model Training</h2>
-                                <p className="text-sm text-slate-500">Synthea™ Data Engine</p>
-                            </div>
+                            <p className="text-indigo-100 text-sm">Synthea™ Data Engine & Predictive Modeling</p>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="p-6 space-y-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Number of Patients to Simulate
+                                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                                    Simulation Parameters
                                 </label>
-                                <div className="space-y-3">
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            min="10"
-                                            max="10000"
-                                            value={patientCount}
-                                            onChange={(e) => setPatientCount(Number(e.target.value))}
-                                            disabled={isTraining || isFetching}
-                                            className="w-full px-4 py-3 border border-slate-300 rounded-lg text-lg font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                                            placeholder="e.g. 50"
-                                        />
-                                        <div className="absolute right-3 top-3.5 text-slate-400 text-sm font-medium">
-                                            patients
+                                <div className="space-y-4">
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="text-sm font-medium text-slate-700">Target Patient Count</label>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="10000"
+                                                    value={patientCount}
+                                                    onChange={(e) => setPatientCount(Math.max(1, Math.min(10000, Number(e.target.value))))}
+                                                    className="w-20 px-2 py-1 text-right text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                />
+                                                <span className="text-sm font-bold text-indigo-600">patients</span>
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-xs text-slate-500 font-medium">Quick Adjust:</span>
                                         <input
                                             type="range"
                                             min="10"
@@ -148,103 +223,156 @@ export function ModelTraining() {
                                             step="10"
                                             value={patientCount}
                                             onChange={(e) => setPatientCount(Number(e.target.value))}
-                                            disabled={isTraining || isFetching}
-                                            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                                         />
+                                        <div className="flex justify-between text-xs text-slate-500 mt-2">
+                                            <span>10</span>
+                                            <span>10,000</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <button
+                                data-testid="start-simulation-btn"
                                 onClick={startTraining}
-                                disabled={isTraining || isFetching}
-                                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-white transition-all ${isTraining || isFetching
+                                disabled={isTraining || isFetching || isSaving}
+                                className={`w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-white shadow-lg transition-all duration-300 ${isTraining || isFetching || isSaving
                                     ? 'bg-slate-400 cursor-not-allowed'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200'
+                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/30 hover:-translate-y-0.5'
                                     }`}
                             >
                                 {isFetching ? (
                                     <>
                                         <Activity className="h-5 w-5 animate-spin" />
-                                        Fetching Data...
+                                        <span>Fetching Live Data...</span>
                                     </>
                                 ) : isTraining ? (
                                     <>
                                         <Activity className="h-5 w-5 animate-spin" />
-                                        Training...
+                                        <span>Training Model...</span>
+                                    </>
+                                ) : isSaving ? (
+                                    <>
+                                        <Database className="h-5 w-5 animate-bounce" />
+                                        <span>Syncing Database...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Play className="h-5 w-5" />
-                                        Start Simulation
+                                        <Play className="h-5 w-5 fill-current" />
+                                        <span>Start Simulation</span>
                                     </>
                                 )}
                             </button>
 
-                            {generatedData.length > 0 && !isTraining && (
-                                <button
-                                    onClick={downloadData}
-                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all"
-                                >
-                                    <Download className="h-5 w-5" />
-                                    Download Dataset ({generatedData.length})
-                                </button>
+                            {generatedData.length > 0 && !isTraining && !isSaving && (
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={downloadData}
+                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-all"
+                                    >
+                                        <Download className="h-5 w-5" />
+                                        Download Dataset ({generatedData.length})
+                                    </button>
+
+                                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                                        <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold mb-1">
+                                            <CheckCircle className="h-5 w-5" />
+                                            <span>Sync Complete</span>
+                                        </div>
+                                        <p className="text-xs text-emerald-600 mb-3">
+                                            {generatedData.length} patients added to live records.
+                                        </p>
+                                        <a
+                                            href="/sentria-health/inventory"
+                                            className="block w-full py-2 px-4 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors"
+                                        >
+                                            View Patient Data
+                                        </a>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
 
                     {/* Stats */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-4">Model Performance</h3>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <Database className="h-5 w-5 text-blue-500" />
-                                    <span className="text-sm text-slate-600">Dataset Size</span>
-                                </div>
-                                <span className="font-mono font-bold text-slate-900">{stats.totalPatients.toLocaleString()}</span>
+                    <div className="grid grid-cols-1 gap-4">
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-100 transition-all">
+                            <div>
+                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Dataset Size</p>
+                                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalPatients.toLocaleString()}</p>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <Activity className="h-5 w-5 text-orange-500" />
-                                    <span className="text-sm text-slate-600">Data Points</span>
-                                </div>
-                                <span className="font-mono font-bold text-slate-900">{stats.conditionsIdentified.toLocaleString()}</span>
+                            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+                                <Database className="h-6 w-6" />
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="h-5 w-5 text-green-600" />
-                                    <span className="text-sm text-green-900">Model Accuracy</span>
-                                </div>
-                                <span className="font-mono font-bold text-green-700">{stats.accuracy.toFixed(1)}%</span>
+                        </div>
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-100 transition-all">
+                            <div>
+                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Data Points</p>
+                                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.conditionsIdentified.toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 bg-orange-50 text-orange-600 rounded-lg group-hover:bg-orange-100 transition-colors">
+                                <Activity className="h-6 w-6" />
+                            </div>
+                        </div>
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-100 transition-all">
+                            <div>
+                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Model Accuracy</p>
+                                <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.accuracy.toFixed(1)}%</p>
+                            </div>
+                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                                <CheckCircle className="h-6 w-6" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Terminal / Visualization */}
-                <div className="md:col-span-2">
-                    <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden flex flex-col h-[500px]">
-                        <div className="bg-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-700">
-                            <div className="flex items-center gap-2">
-                                <Terminal className="h-4 w-4 text-slate-400" />
-                                <span className="text-xs font-mono text-slate-400">synthea-cli — v2.4.0</span>
+                {/* Activity Stream */}
+                <div className="lg:col-span-2">
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden flex flex-col h-[600px] relative">
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <Activity className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900">Live Activity Stream</h3>
+                                    <p className="text-xs text-slate-500">Real-time simulation events</p>
+                                </div>
                             </div>
-                            <div className="flex gap-1.5">
-                                <div className="w-3 h-3 rounded-full bg-red-500" />
-                                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                                <div className="w-3 h-3 rounded-full bg-green-500" />
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${isTraining
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                                {isTraining ? '● Processing' : '○ Ready'}
                             </div>
                         </div>
 
-                        <div className="flex-1 p-4 font-mono text-sm overflow-y-auto space-y-2">
+                        <div className="flex-1 p-6 overflow-y-auto space-y-3 bg-slate-50/30">
                             {logs.length === 0 && (
-                                <div className="text-slate-500 italic">Ready to initialize simulation...</div>
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+                                    <div className="p-6 bg-slate-50 rounded-full border border-slate-100">
+                                        <Brain className="h-10 w-10 opacity-20" />
+                                    </div>
+                                    <p className="text-sm font-medium">Waiting to start simulation...</p>
+                                </div>
                             )}
                             {logs.map((log, i) => (
-                                <div key={i} className="text-green-400 break-all">
-                                    <span className="text-slate-500 mr-2">$</span>
-                                    {log}
+                                <div key={i} className="flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 group">
+                                    <div className="flex flex-col items-center">
+                                        <div className={`w-2 h-2 rounded-full mt-2 ${log.includes('ERROR') ? 'bg-red-500' :
+                                            log.includes('Success') ? 'bg-emerald-500' :
+                                                'bg-indigo-500'
+                                            }`} />
+                                        {i !== logs.length - 1 && <div className="w-px h-full bg-slate-200 my-1" />}
+                                    </div>
+                                    <div className="flex-1 bg-white p-3 rounded-xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all">
+                                        <p className={`text-sm ${log.includes('ERROR') ? 'text-red-600 font-medium' :
+                                            log.includes('Success') ? 'text-emerald-700 font-medium' :
+                                                'text-slate-600'
+                                            }`}>
+                                            {log}
+                                        </p>
+                                    </div>
                                 </div>
                             ))}
                             <div ref={logsEndRef} />
@@ -252,16 +380,18 @@ export function ModelTraining() {
 
                         {/* Progress Bar */}
                         {isTraining && (
-                            <div className="bg-slate-800 p-4 border-t border-slate-700">
-                                <div className="flex justify-between text-xs text-slate-400 mb-2">
-                                    <span>Training Progress</span>
+                            <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-slate-100 p-6 z-10">
+                                <div className="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                                    <span>Progress</span>
                                     <span>{Math.round(progress)}%</span>
                                 </div>
-                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
+                                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 relative"
                                         style={{ width: `${progress}%` }}
-                                    />
+                                    >
+                                        <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
+                                    </div>
                                 </div>
                             </div>
                         )}

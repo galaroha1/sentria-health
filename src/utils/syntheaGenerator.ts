@@ -67,36 +67,23 @@ export interface SyntheticBundle {
 export class SyntheaGenerator {
 
     static async generateBatch(count: number): Promise<SyntheticBundle[]> {
-        const MAX_PER_REQUEST = 5000;
+        const MAX_API_FETCH = 200; // Threshold for switching to local generation for speed
 
-        // If count is small enough, just fetch once
-        if (count <= MAX_PER_REQUEST) {
-            return this._fetchFromApi(count);
+        // For large datasets, use local generation to avoid API rate limits and latency
+        if (count > MAX_API_FETCH) {
+            console.log(`Generating ${count} patients locally for performance...`);
+            return this.generateLocalBatch(count);
         }
 
-        // Otherwise, chunk the requests
-        const chunks: Promise<SyntheticBundle[]>[] = [];
-        let remaining = count;
-
-        while (remaining > 0) {
-            const size = Math.min(remaining, MAX_PER_REQUEST);
-            chunks.push(this._fetchFromApi(size));
-            remaining -= size;
-        }
-
-        try {
-            const results = await Promise.all(chunks);
-            return results.flat();
-        } catch (error) {
-            console.error("Batch fetch failed", error);
-            return this._fetchFromApi(count); // Fallback to single attempt or local
-        }
+        return this._fetchFromApi(count);
     }
 
     private static async _fetchFromApi(count: number): Promise<SyntheticBundle[]> {
         try {
             // Fetch real user identities from Random User Generator API
             const response = await fetch(`https://randomuser.me/api/?results=${count}&nat=us`);
+            if (!response.ok) throw new Error('API request failed');
+
             const data = await response.json();
             const users = data.results;
 
@@ -123,87 +110,95 @@ export class SyntheaGenerator {
                     }]
                 };
 
-                const conditions: FHIRCondition[] = [];
-                const medications: FHIRMedicationRequest[] = [];
-
-                // 1. Assign Primary Condition (from our Medical Database)
-                const conditionKeys = Object.keys(MEDICAL_DATABASE);
-                const primaryConditionKey = conditionKeys[Math.floor(Math.random() * conditionKeys.length)];
-                const primaryCondition = MEDICAL_DATABASE[primaryConditionKey];
-
-                conditions.push({
-                    resourceType: 'Condition',
-                    id: generateId(),
-                    clinicalStatus: 'active',
-                    verificationStatus: 'confirmed',
-                    code: {
-                        coding: [{
-                            system: 'http://hl7.org/fhir/sid/icd-10',
-                            code: primaryCondition.icd10,
-                            display: primaryCondition.name
-                        }]
-                    },
-                    subject: { reference: `Patient/${patientId}` },
-                    onsetDateTime: new Date(Date.now() - Math.random() * 10000000000).toISOString()
-                });
-
-                // 2. Assign Comorbidities (0-3)
-                const numComorbidities = Math.floor(Math.random() * 4);
-                for (let i = 0; i < numComorbidities; i++) {
-                    const comorbidity = COMORBIDITIES_LIST[Math.floor(Math.random() * COMORBIDITIES_LIST.length)];
-                    conditions.push({
-                        resourceType: 'Condition',
-                        id: generateId(),
-                        clinicalStatus: 'active',
-                        verificationStatus: 'confirmed',
-                        code: {
-                            coding: [{
-                                system: 'http://snomed.info/sct',
-                                code: 'mock-code',
-                                display: comorbidity
-                            }]
-                        },
-                        subject: { reference: `Patient/${patientId}` },
-                        onsetDateTime: new Date(Date.now() - Math.random() * 20000000000).toISOString()
-                    });
-                }
-
-                // 3. Assign Medications (based on primary condition)
-                if (Math.random() < 0.8 && primaryCondition.suggestedDrugs.length > 0) {
-                    const drug = primaryCondition.suggestedDrugs[Math.floor(Math.random() * primaryCondition.suggestedDrugs.length)];
-                    medications.push({
-                        resourceType: 'MedicationRequest',
-                        id: generateId(),
-                        status: 'active',
-                        intent: 'order',
-                        medicationCodeableConcept: {
-                            coding: [{
-                                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
-                                code: 'mock-rxnorm',
-                                display: drug.name
-                            }]
-                        },
-                        subject: { reference: `Patient/${patientId}` },
-                        authoredOn: new Date().toISOString()
-                    });
-                }
-
-                return { patient, conditions, medications };
+                return this._generateClinicalData(patient);
             });
         } catch (error) {
             console.error("Failed to fetch from Random User API, falling back to local generation", error);
-            // Fallback to local generation if API fails (e.g. offline)
-            return Array.from({ length: count }, () => this.generateLocalPatient());
+            return this.generateLocalBatch(count);
         }
+    }
+
+    static generateLocalBatch(count: number): SyntheticBundle[] {
+        return Array.from({ length: count }, () => this.generateLocalPatient());
+    }
+
+    // Shared logic for clinical data generation
+    private static _generateClinicalData(patient: FHIRPatient): SyntheticBundle {
+        const conditions: FHIRCondition[] = [];
+        const medications: FHIRMedicationRequest[] = [];
+
+        // 1. Assign Primary Condition (from our Medical Database)
+        const conditionKeys = Object.keys(MEDICAL_DATABASE);
+        const primaryConditionKey = conditionKeys[Math.floor(Math.random() * conditionKeys.length)];
+        const primaryCondition = MEDICAL_DATABASE[primaryConditionKey];
+
+        conditions.push({
+            resourceType: 'Condition',
+            id: generateId(),
+            clinicalStatus: 'active',
+            verificationStatus: 'confirmed',
+            code: {
+                coding: [{
+                    system: 'http://hl7.org/fhir/sid/icd-10',
+                    code: primaryCondition.icd10,
+                    display: primaryCondition.name
+                }]
+            },
+            subject: { reference: `Patient/${patient.id}` },
+            onsetDateTime: new Date(Date.now() - Math.random() * 10000000000).toISOString()
+        });
+
+        // 2. Assign Comorbidities (0-3)
+        const numComorbidities = Math.floor(Math.random() * 4);
+        for (let i = 0; i < numComorbidities; i++) {
+            const comorbidity = COMORBIDITIES_LIST[Math.floor(Math.random() * COMORBIDITIES_LIST.length)];
+            conditions.push({
+                resourceType: 'Condition',
+                id: generateId(),
+                clinicalStatus: 'active',
+                verificationStatus: 'confirmed',
+                code: {
+                    coding: [{
+                        system: 'http://snomed.info/sct',
+                        code: 'mock-code',
+                        display: comorbidity
+                    }]
+                },
+                subject: { reference: `Patient/${patient.id}` },
+                onsetDateTime: new Date(Date.now() - Math.random() * 20000000000).toISOString()
+            });
+        }
+
+        // 3. Assign Medications (based on primary condition)
+        if (Math.random() < 0.8 && primaryCondition.suggestedDrugs.length > 0) {
+            const drug = primaryCondition.suggestedDrugs[Math.floor(Math.random() * primaryCondition.suggestedDrugs.length)];
+            medications.push({
+                resourceType: 'MedicationRequest',
+                id: generateId(),
+                status: 'active',
+                intent: 'order',
+                medicationCodeableConcept: {
+                    coding: [{
+                        system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                        code: 'mock-rxnorm',
+                        display: drug.name
+                    }]
+                },
+                subject: { reference: `Patient/${patient.id}` },
+                authoredOn: new Date().toISOString()
+            });
+        }
+
+        return { patient, conditions, medications };
     }
 
     // Fallback method
     static generateLocalPatient(): SyntheticBundle {
         const FIRST_NAMES = {
-            male: ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles'],
-            female: ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen']
+            male: ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles', 'Daniel', 'Matthew', 'Anthony', 'Mark', 'Donald'],
+            female: ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen', 'Nancy', 'Lisa', 'Betty', 'Margaret', 'Sandra']
         };
-        const LAST_NAMES = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+        const LAST_NAMES = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson'];
 
         const gender = Math.random() > 0.5 ? 'male' : 'female';
         const firstName = FIRST_NAMES[gender][Math.floor(Math.random() * FIRST_NAMES[gender].length)];
@@ -231,9 +226,6 @@ export class SyntheaGenerator {
             }]
         };
 
-        // ... (Reuse clinical logic or simplify for fallback)
-        // For brevity in fallback, we'll just return the patient with empty clinical data or duplicate logic
-        // To avoid code duplication in this snippet, let's just return basic data for fallback
-        return { patient, conditions: [], medications: [] };
+        return this._generateClinicalData(patient);
     }
 }
