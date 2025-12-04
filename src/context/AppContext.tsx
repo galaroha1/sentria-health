@@ -6,6 +6,7 @@ import type { AuditLogEntry } from '../types/audit';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { mockNotifications as initialNotifications } from '../data/notifications/mockData';
 import { FirestoreService } from '../services/firebase.service';
+import { OptimizationService } from '../services/optimization.service';
 
 interface AppContextType {
     // Location & Requests
@@ -129,42 +130,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    // Check inventory levels and generate alerts
+    // Check inventory levels and generate alerts using Optimization Service
     useEffect(() => {
-        inventories.forEach(siteInv => {
-            const site = sites.find(s => s.id === siteInv.siteId);
-            if (!site) return;
+        if (sites.length === 0 || inventories.length === 0) return;
 
-            siteInv.drugs.forEach(drug => {
-                if (drug.status === 'low' || drug.status === 'critical') {
-                    setNotifications(prevNotifications => {
-                        // Check if we already have an active notification for this item today
-                        const today = new Date().toISOString().split('T')[0];
-                        const hasNotification = prevNotifications.some(n =>
-                            n.title.includes(drug.drugName) &&
-                            n.message.includes(site.name) &&
-                            n.timestamp.startsWith(today)
-                        );
+        // Run the optimization algorithm to find solutions for low stock
+        const proposals = OptimizationService.generateProposals(sites, inventories);
 
-                        if (!hasNotification) {
-                            return [{
-                                id: `alert-${site.id}-${drug.ndc}-${Date.now()}`,
-                                type: drug.status === 'critical' ? 'critical' : 'warning',
-                                category: 'alert',
-                                title: `${drug.status === 'critical' ? 'Critical' : 'Low'} Stock: ${drug.drugName}`,
-                                message: `${site.name} is running low on ${drug.drugName}. Current quantity: ${drug.quantity} (Min: ${drug.minLevel})`,
-                                timestamp: new Date().toISOString(),
-                                read: false,
-                                link: '/inventory',
-                                actionUrl: `/transfers?source=${site.id}&drug=${drug.ndc}` // Suggest transfer
-                            }, ...prevNotifications];
-                        }
-                        return prevNotifications;
-                    });
+        proposals.forEach(proposal => {
+            setNotifications(prevNotifications => {
+                // Check if we already have an active notification for this item today
+                const today = new Date().toISOString().split('T')[0];
+                const hasNotification = prevNotifications.some(n =>
+                    n.title.includes(proposal.drugName) &&
+                    n.message.includes(proposal.targetSiteName) &&
+                    n.timestamp.startsWith(today)
+                );
+
+                if (!hasNotification) {
+                    const isTransfer = proposal.type === 'transfer';
+                    const title = isTransfer
+                        ? `Optimization: Transfer Available for ${proposal.drugName}`
+                        : `Low Stock: ${proposal.drugName}`;
+
+                    const message = isTransfer
+                        ? `${proposal.targetSiteName} needs ${proposal.quantity} units. ${proposal.reason}`
+                        : `${proposal.targetSiteName} is low on ${proposal.drugName}. ${proposal.reason}`;
+
+                    const actionUrl = isTransfer
+                        ? `/transfers?source=${proposal.sourceSiteId}&target=${proposal.targetSiteId}&drug=${proposal.ndc}&qty=${proposal.quantity}`
+                        : `/inventory`; // Or procurement tab
+
+                    return [{
+                        id: `opt-${proposal.id}`,
+                        type: isTransfer ? 'success' : 'warning', // Green for solution, Orange for warning
+                        category: 'alert',
+                        title,
+                        message,
+                        timestamp: new Date().toISOString(),
+                        read: false,
+                        link: '/inventory',
+                        actionUrl
+                    }, ...prevNotifications];
                 }
+                return prevNotifications;
             });
         });
-    }, [inventories]); // Run when inventories change
+    }, [inventories, sites]); // Run when inventories change
 
     // Inventory Management
     const updateInventory = async (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {

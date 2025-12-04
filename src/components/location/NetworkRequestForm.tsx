@@ -1,7 +1,8 @@
+import { OptimizationService } from '../../services/optimization.service';
 import { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import type { Site, SiteInventory, NetworkRequest } from '../../types/location';
-import { sites as allSites } from '../../data/location/mockData';
+import { useApp } from '../../context/AppContext';
 
 interface NetworkRequestFormProps {
     sourceSite: Site;
@@ -12,6 +13,7 @@ interface NetworkRequestFormProps {
 }
 
 export function NetworkRequestForm({ sourceSite, destinationSite, inventories, onClose, onSubmit }: NetworkRequestFormProps) {
+    const { sites: allSites } = useApp();
     const [selectedDrug, setSelectedDrug] = useState('');
     const [quantity, setQuantity] = useState('');
     const [reason, setReason] = useState('');
@@ -19,6 +21,7 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
     const [destSite, setDestSite] = useState(destinationSite?.id || '');
     const [sourceDeptId, setSourceDeptId] = useState(sourceSite.departments?.[0]?.id || '');
     const [destDeptId, setDestDeptId] = useState('');
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     const sourceInventory = inventories.find(inv => inv.siteId === sourceSite.id);
     const availableDrugs = sourceInventory?.drugs || [];
@@ -94,20 +97,67 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
                         <div className="space-y-2">
                             <div>
                                 <label className="mb-2 block text-sm font-medium text-slate-700">To (Destination)</label>
-                                <select
-                                    value={destSite}
-                                    onChange={(e) => {
-                                        setDestSite(e.target.value);
-                                        setDestDeptId('');
-                                    }}
-                                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                                    required
-                                >
-                                    <option value="">Select destination...</option>
-                                    {allSites.filter(s => s.id !== sourceSite.id).map(site => (
-                                        <option key={site.id} value={site.id}>{site.name}</option>
-                                    ))}
-                                </select>
+                                <div className="flex gap-2">
+                                    <select
+                                        value={destSite}
+                                        onChange={(e) => {
+                                            const newDestId = e.target.value;
+                                            setDestSite(newDestId);
+                                            setDestDeptId('');
+
+                                            // Validation
+                                            if (newDestId) {
+                                                const target = allSites.find(s => s.id === newDestId);
+                                                if (target) {
+                                                    const result = OptimizationService.validateTransfer(sourceSite, target);
+                                                    if (!result.valid) {
+                                                        setValidationError(result.reason || 'Invalid transfer');
+                                                    } else {
+                                                        setValidationError(null);
+                                                    }
+                                                }
+                                            } else {
+                                                setValidationError(null);
+                                            }
+                                        }}
+                                        className={`w-full rounded-lg border px-4 py-2 text-sm outline-none focus:ring-2 ${validationError ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-slate-200 focus:border-primary-500 focus:ring-primary-100'}`}
+                                        required
+                                    >
+                                        <option value="">Select destination...</option>
+                                        {allSites.filter(s => s.id !== sourceSite.id).map(site => (
+                                            <option key={site.id} value={site.id}>{site.name}</option>
+                                        ))}
+                                    </select>
+
+                                    {/* Smart Suggest Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            // Simple logic: find closest compliant site
+                                            // For now, just pick the first compliant one that isn't source
+                                            const compliantSite = allSites.find(s =>
+                                                s.id !== sourceSite.id &&
+                                                OptimizationService.validateTransfer(sourceSite, s).valid
+                                            );
+                                            if (compliantSite) {
+                                                setDestSite(compliantSite.id);
+                                                setValidationError(null);
+                                            } else {
+                                                alert('No compliant sites found.');
+                                            }
+                                        }}
+                                        className="whitespace-nowrap rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-medium text-purple-700 hover:bg-purple-100"
+                                        title="Find best compliant site"
+                                    >
+                                        Auto-Select
+                                    </button>
+                                </div>
+                                {validationError && (
+                                    <div className="mt-2 flex items-center gap-1 text-xs text-red-600 animate-in slide-in-from-top-1">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        {validationError}
+                                    </div>
+                                )}
                             </div>
                             {destSite && (
                                 <div>

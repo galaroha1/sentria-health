@@ -67,6 +67,23 @@ export class OptimizationService {
     }
 
     /**
+     * Validate if a transfer is regulatory compliant
+     */
+    static validateTransfer(source: Site, target: Site): { valid: boolean; reason?: string } {
+        // 1. DSCSA Compliance
+        if (!target.regulatoryProfile.dscsaCompliant || !source.regulatoryProfile.dscsaCompliant) {
+            return { valid: false, reason: 'DSCSA Violation: One or both sites are not compliant.' };
+        }
+
+        // 2. 340B Compliance
+        if (target.regulatoryProfile.is340B !== source.regulatoryProfile.is340B) {
+            return { valid: false, reason: `340B Mismatch: Cannot transfer between ${source.regulatoryProfile.is340B ? '340B' : 'Standard'} and ${target.regulatoryProfile.is340B ? '340B' : 'Standard'} sites.` };
+        }
+
+        return { valid: true };
+    }
+
+    /**
      * Run the optimization algorithm
      */
     static generateProposals(
