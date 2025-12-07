@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ShoppingCart, Package, Users, Settings, X, ArrowRightLeft, MapPin, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Users, Settings, X, ArrowRightLeft, MapPin, Zap, Truck } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { useAuth } from '../../context/AuthContext';
@@ -13,14 +13,19 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard, requirePermission: 'dashboard' },
-    { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart, requirePermission: 'marketplace' },
     { name: 'Inventory', href: '/inventory', icon: Package, requirePermission: 'inventory' },
-    { name: 'Decisions', href: '/decisions', icon: Zap, requirePermission: 'inventory' },
-    { name: 'Transfers', href: '/transfers', icon: ArrowRightLeft, requirePermission: 'transfers' },
-    { name: 'Locations', href: '/locations', icon: MapPin, requirePermission: 'locations' },
-    { name: 'Users', href: '/users', icon: Users, requirePermission: 'dashboard' },
-    { name: 'Vendors', href: '/vendors', icon: Users, requirePermission: 'vendors' },
-
+    { name: 'Logistics', href: '/logistics', icon: Truck, requirePermission: 'transfers' }, // Using Truck for Logistics
+    { name: 'Analytics', href: '/decisions', icon: Zap, requirePermission: 'inventory' }, // Decisions -> Analytics
+    { name: 'Settings', href: '/admin', icon: Settings, requirePermission: 'manage_users' }, // Admin -> Settings (or keep separate?) - Request asked for [Dashboard, Inventory, Logistics, Analytics, Settings]
+    // The user request said: "Sidebar: [Dashboard, Inventory, Logistics, Analytics, Settings]"
+    // Existing "Decisions" seems to map to "Analytics".
+    // Existing "Admin" or "Profile" could be "Settings". The mockup usually puts Settings at the bottom.
+    // Let's map "Decisions" to "Analytics" and keep "Settings" as the bottom link (which is already there in the component, but maybe I should add it to the main list if requested, or just rely on the bottom link).
+    // The bottom link in the existing code is "Settings" pointing to "/profile".
+    // The user list: Dashboard, Inventory, Logistics, Analytics, Settings.
+    // I will add Analytics. I will keep the bottom Settings link as is, or maybe the user wants it in the main list?
+    // "Sidebar: The main sidebar should now be simplified to just: [Dashboard, Inventory, Logistics, Analytics, Settings]."
+    // I'll put them in the main list.
 ];
 
 interface SidebarProps {

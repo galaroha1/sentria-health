@@ -1,16 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
-import { Marketplace } from './pages/Marketplace';
+import { InventoryHub } from './pages/InventoryHub';
+import { LogisticsHub } from './pages/LogisticsHub';
 import { Cart } from './pages/Cart';
-import { Inventory } from './pages/Inventory';
 
-import { Vendors } from './pages/Vendors';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
 import { ForgotPassword } from './pages/ForgotPassword';
-import { Transfers } from './pages/Transfers';
-import { LocationMap } from './pages/LocationMap';
 import { UserManagement } from './pages/UserManagement';
 import { Admin } from './pages/Admin';
 import { Decisions } from './pages/Decisions';
@@ -70,35 +67,24 @@ function App() {
                   >
                     <Route index element={<Dashboard />} />
                     <Route
-                      path="marketplace"
+                      path="inventory"
                       element={
-                        <ProtectedRoute requirePermission="marketplace">
-                          <Marketplace />
+                        <ProtectedRoute requirePermission="inventory">
+                          <InventoryHub />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="logistics"
+                      element={
+                        <ProtectedRoute requirePermission="transfers">
+                          <LogisticsHub />
                         </ProtectedRoute>
                       }
                     />
                     <Route path="cart" element={<Cart />} />
-                    <Route
-                      path="inventory"
-                      element={
-                        <ProtectedRoute requirePermission="inventory">
-                          <Inventory />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="vendors"
-                      element={
-                        <ProtectedRoute requirePermission="vendors">
-                          <Vendors />
-                        </ProtectedRoute>
-                      }
-                    />
 
                     <Route path="profile" element={<Profile />} />
-                    <Route path="transfers" element={<Transfers />} />
-                    <Route path="transfers" element={<Transfers />} />
-                    <Route path="locations" element={<LocationMap />} />
                     <Route path="decisions" element={<Decisions />} />
                     <Route
                       path="admin"
