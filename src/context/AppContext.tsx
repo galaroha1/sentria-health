@@ -29,6 +29,14 @@ interface AppContextType {
     // Audit Logs
     auditLogs: AuditLogEntry[];
 
+    // Metrics
+    metrics: {
+        potentialSavings: number;
+        realizedSavings: number;
+        optimizationCount: number;
+        activeTransfers: number;
+    };
+
     // Loading State
     isLoading: boolean;
 }
@@ -108,6 +116,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
             unsubscribeAuditLogs();
         };
     }, []);
+
+    // ------------------------------------------------------------------
+    // AMIOP METRICS ENGINE
+    // ------------------------------------------------------------------
+    const [metrics, setMetrics] = useState({
+        potentialSavings: 0,
+        realizedSavings: 0,
+        optimizationCount: 0,
+        activeTransfers: 0
+    });
+
+    // Recalculate metrics whenever Inventories or Requests change
+    useEffect(() => {
+        if (sites.length === 0 || inventories.length === 0) return;
+
+        // 1. Calculate Potential Savings (Optimization Opportunities)
+        const proposals = OptimizationService.generateProposals(sites, inventories, [], requests);
+        const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
+
+        // 2. Calculate Realized Savings (Completed/Approved Transfers)
+        // We assume "savings" is stored on the request, or we re-calculate.
+        const realized = requests
+            .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
+            .reduce((sum, _r) => sum + 4250, 0); // Mock avg savings per transfer
+
+        setMetrics({
+            potentialSavings,
+            realizedSavings: realized,
+            optimizationCount: proposals.length,
+            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
+        });
+    }, [inventories, sites, requests]);
 
     // Sync across tabs
     useEffect(() => {
@@ -334,6 +374,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             markNotificationAsRead,
             markAllNotificationsAsRead,
             auditLogs,
+            metrics,
             isLoading
         }}>
             {children}

@@ -1,44 +1,54 @@
 import { DollarSign, TrendingUp, Package, ArrowUpRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useApp } from '../../context/AppContext';
 
-const savingsData = [
-    { month: 'Jul', transferSavings: 12500, vendorOptimization: 8300, bulkDiscounts: 5200 },
-    { month: 'Aug', transferSavings: 15200, vendorOptimization: 9100, bulkDiscounts: 6800 },
-    { month: 'Sep', transferSavings: 18700, vendorOptimization: 11200, bulkDiscounts: 7500 },
-    { month: 'Oct', transferSavings: 21300, vendorOptimization: 12800, bulkDiscounts: 8900 },
-    { month: 'Nov', transferSavings: 24800, vendorOptimization: 14500, bulkDiscounts: 9600 },
-];
-
-const savingsBreakdown = [
-    {
-        category: 'Inter-Service Transfers',
-        amount: 24800,
-        change: '+16.5%',
-        description: 'Avoided purchases by redistributing existing stock',
-        icon: Package,
-        color: 'emerald',
-    },
-    {
-        category: 'Vendor Optimization',
-        amount: 14500,
-        change: '+13.3%',
-        description: 'Better prices from preferred vendors',
-        icon: TrendingUp,
-        color: 'blue',
-    },
-    {
-        category: 'Bulk Discounts',
-        amount: 9600,
-        change: '+7.9%',
-        description: 'Volume-based pricing advantages',
-        icon: DollarSign,
-        color: 'purple',
-    },
-];
+// Base mock data for visual stability in demo
+const BASE_SAVINGS = 24800; // Original hardcoded value for transfers
 
 export function SavingsProjection() {
+    const { metrics } = useApp();
+
+    // Combine Mock + Realized for the "Transfer" category
+    // This allows the demo to look populated but react to user actions
+    const totalTransferSavings = BASE_SAVINGS + metrics.realizedSavings;
+
+    const savingsBreakdown = [
+        {
+            category: 'Inter-Service Transfers',
+            amount: totalTransferSavings,
+            change: '+16.5%',
+            description: 'Avoided purchases by redistributing existing stock',
+            icon: Package,
+            color: 'emerald',
+        },
+        {
+            category: 'Vendor Optimization',
+            amount: 14500,
+            change: '+13.3%',
+            description: 'Better prices from preferred vendors',
+            icon: TrendingUp,
+            color: 'blue',
+        },
+        {
+            category: 'Bulk Discounts',
+            amount: 9600,
+            change: '+7.9%',
+            description: 'Volume-based pricing advantages',
+            icon: DollarSign,
+            color: 'purple',
+        },
+    ];
+
     const totalSavings = savingsBreakdown.reduce((sum, item) => sum + item.amount, 0);
     const annualizedSavings = totalSavings * 12;
+
+    const savingsData = [
+        { month: 'Jul', transferSavings: 12500, vendorOptimization: 8300, bulkDiscounts: 5200 },
+        { month: 'Aug', transferSavings: 15200, vendorOptimization: 9100, bulkDiscounts: 6800 },
+        { month: 'Sep', transferSavings: 18700, vendorOptimization: 11200, bulkDiscounts: 7500 },
+        { month: 'Oct', transferSavings: 21300, vendorOptimization: 12800, bulkDiscounts: 8900 },
+        { month: 'Nov', transferSavings: totalTransferSavings, vendorOptimization: 14500, bulkDiscounts: 9600 },
+    ];
 
     return (
         <div className="space-y-6">
