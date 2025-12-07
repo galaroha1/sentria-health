@@ -11,18 +11,33 @@ export function NetworkHub() {
     const [activity, setActivity] = useState<SharedInventoryItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => {
+    const refreshData = () => {
         networkService.getNearbyOrganizations().then(setPartners);
         networkService.getNetworkActivity().then(setActivity);
+    };
+
+    useEffect(() => {
+        refreshData();
     }, []);
 
     const handleRequest = (item: SharedInventoryItem) => {
         const result = networkService.requestTransfer(item.id, 10); // Mock qty
-        toast.success(result.message);
+        if (result.success) {
+            toast.success(result.message);
+            refreshData(); // Refresh UI
+        } else {
+            toast.error(result.message);
+        }
     };
 
     const handleOfferHelp = (item: SharedInventoryItem) => {
-        toast.success(`Offer sent to ${item.orgName} for ${item.name}`);
+        const result = networkService.offerHelp(item.id);
+        if (result.success) {
+            toast.success(result.message);
+            refreshData(); // Refresh UI
+        } else {
+            toast.error(result.message);
+        }
     };
 
     return (

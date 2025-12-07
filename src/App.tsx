@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { Dashboard } from './pages/Dashboard';
 import { InventoryHub } from './pages/InventoryHub';
 import { LogisticsHub } from './pages/LogisticsHub';
@@ -74,6 +75,7 @@ function App() {
           <SimulationProvider>
             <CartProvider>
               <BrowserRouter basename={import.meta.env.BASE_URL}>
+                <Toaster position="top-right" />
                 <CommandPalette />
                 <Routes>
                   <Route path="/login" element={<Login />} />

@@ -117,14 +117,17 @@ const MOCK_SHARED_ITEMS: SharedInventoryItem[] = [
     }
 ];
 
-export const networkService = {
-    getNearbyOrganizations(): Promise<Organization[]> {
-        return Promise.resolve(MOCK_ORGS);
-    },
+class NetworkService {
+    private organizations: Organization[] = [...MOCK_ORGS];
+    private sharedItems: SharedInventoryItem[] = [...MOCK_SHARED_ITEMS];
 
-    getNetworkActivity(): Promise<SharedInventoryItem[]> {
-        return Promise.resolve(MOCK_SHARED_ITEMS);
-    },
+    async getNearbyOrganizations(): Promise<Organization[]> {
+        return Promise.resolve([...this.organizations]);
+    }
+
+    async getNetworkActivity(): Promise<SharedInventoryItem[]> {
+        return Promise.resolve([...this.sharedItems]);
+    }
 
     /**
      * Search the network for a specific item by NDC or Name.
@@ -135,22 +138,56 @@ export const networkService = {
         // Simulate network latency
         await new Promise(resolve => setTimeout(resolve, 600));
 
-        return MOCK_SHARED_ITEMS.filter(item =>
+        return this.sharedItems.filter(item =>
             item.type === 'Surplus' && (
                 item.name.toLowerCase().includes(lowerQuery) ||
                 item.ndc.includes(query)
             )
         );
-    },
+    }
 
     /**
      * Request a mutual aid transfer.
      */
-    requestTransfer(_itemId: string, _quantity: number) {
-        return {
-            success: true,
-            requestId: Math.random().toString(36).substr(2, 9),
-            message: 'Request sent to partner. Awaiting approval.'
-        };
+    requestTransfer(itemId: string, quantity: number) {
+        const itemIndex = this.sharedItems.findIndex(i => i.id === itemId);
+        if (itemIndex > -1) {
+            const item = this.sharedItems[itemIndex];
+            // Logic: If we request it, it's no longer available for others (simplified)
+            // In a real app, this would create a transaction record.
+            // For demo: Remove it or decrease quantity.
+            if (item.quantity <= quantity) {
+                this.sharedItems.splice(itemIndex, 1);
+            } else {
+                this.sharedItems[itemIndex].quantity -= quantity;
+            }
+
+            return {
+                success: true,
+                requestId: Math.random().toString(36).substr(2, 9),
+                message: `Request sent for ${quantity} units of ${item.name}.`
+            };
+        }
+        return { success: false, message: 'Item not found or unavailable.' };
     }
-};
+
+    /**
+     * Offer help for a shortage.
+     */
+    offerHelp(itemId: string) {
+        const itemIndex = this.sharedItems.findIndex(i => i.id === itemId);
+        if (itemIndex > -1) {
+            const item = this.sharedItems[itemIndex];
+            // Logic: We are fulfilling this shortage.
+            this.sharedItems.splice(itemIndex, 1);
+
+            return {
+                success: true,
+                message: `Offer sent to ${item.orgName} for ${item.name}.`
+            };
+        }
+        return { success: false, message: 'Request not found.' };
+    }
+}
+
+export const networkService = new NetworkService();
