@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Warehouse } from 'lucide-react';
+import { Search, Filter, Warehouse, ShoppingCart, Building2 } from 'lucide-react';
 import { Inventory } from './Inventory';
 import { Marketplace } from './Marketplace';
 import { Vendors } from './Vendors';
