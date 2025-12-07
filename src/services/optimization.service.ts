@@ -238,11 +238,24 @@ export class OptimizationService {
             for (const sourceInv of inventories) {
                 if (sourceInv.siteId === demand.siteId) continue;
                 const sourceItem = sourceInv.drugs.find(d => d.ndc === demand.ndc);
+
+                // Only consider if stock sufficient
                 if (sourceItem && (sourceItem.status === 'well_stocked' || sourceItem.status === 'overstocked') && sourceItem.quantity > neededQty) {
                     const sourceSite = sites.find(s => s.id === sourceInv.siteId);
                     if (sourceSite) {
-                        const regCheck = RegulatoryService.checkOwnUseTransfer(sourceSite, targetSite);
-                        if (!regCheck.valid) continue;
+                        // LOGIC GATES (3-Layer Check)
+                        // Assume source stock might be 340B if source is 340B (Strict Case for Demo)
+                        const assumedChannel: DrugChannel = sourceSite.regulatoryProfile.is340B ? '340B' : 'WAC';
+
+                        const compliance = RegulatoryService.checkTransferCompliance(
+                            sourceSite,
+                            targetSite,
+                            assumedChannel, // Testing the Hardest Path
+                            demand.reason
+                        );
+
+                        // If HARD BLOCK (Wholesale or Diversion), skip.
+                        if (!compliance.valid) continue;
 
                         const distance = this.calculateDistance(sourceSite, targetSite);
                         const costs = this.calculateTotalCost(distance, neededQty, 0, 'routine'); // 0 item cost internal
@@ -251,7 +264,7 @@ export class OptimizationService {
                         const proposal: ProcurementProposal = {
                             id: `trans-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                             type: 'transfer',
-                            channel: 'WAC', // Internal movement 
+                            channel: assumedChannel, // Internal movement 
                             targetSiteId: targetSite.id,
                             targetSiteName: targetSite.name,
                             sourceSiteId: sourceSite.id,
@@ -269,10 +282,15 @@ export class OptimizationService {
                             fulfillmentNode: 'DirectDrop',
                             regulatoryJustification: {
                                 passed: true,
-                                details: ['Own Use Validated', 'DSCSA Checked'],
-                                riskScore: 5
+                                // Show the Gate Trace!
+                                details: [
+                                    `Wholesale Gate: ${compliance.gates?.wholesale}`,
+                                    `DSCSA Gate: ${compliance.gates?.dscsa}`,
+                                    `Diversion Gate: ${compliance.gates?.diversion}`
+                                ],
+                                riskScore: compliance.riskScore // Metric for T3 complexity
                             },
-                            reason: `Transfer from ${sourceSite.name}`,
+                            reason: `Transfer from ${sourceSite.name} (${compliance.notes?.join(', ')})`,
                             score: 95
                         };
 

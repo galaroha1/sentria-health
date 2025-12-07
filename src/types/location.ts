@@ -12,13 +12,20 @@ export interface Site {
     type: 'hospital' | 'clinic' | 'warehouse' | 'pharmacy';
     regulatoryAvatar: RegulatoryAvatar;
     classOfTrade: ClassOfTrade;
+    parentEntity: string; // e.g. "Penn Medicine System"
     regulatoryProfile: {
         is340B: boolean;
+        is340B_ID?: string; // Specific ID for Diversion Check
         deaLicense: ('II' | 'III' | 'IV' | 'V')[]; // Controlled substance schedules allowed
         dscsaCompliant: boolean; // Drug Supply Chain Security Act
         stateLicense: string;
+        licenseType?: 'pharmacy' | 'wholesaler'; // For Act 145
         orphanDrugExclusion: boolean; // Cannot use 340B for orphan drugs
         gpoProhibition: boolean; // Cannot use GPO for outpatient drugs
+        totalDispensingStats?: { // For Act 145 5% Rule
+            transfersYTD: number;
+            totalDispensing: number;
+        };
     };
     departments: Department[];
     coordinates: {

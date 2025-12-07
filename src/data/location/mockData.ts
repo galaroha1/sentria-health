@@ -9,13 +9,20 @@ export const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'DSH', // Disproportionate Share Hospital
         classOfTrade: 'acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: true,
+            is340B_ID: 'DSH340B-HUP-001', // Unique ID
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-HOSP-001',
-            orphanDrugExclusion: false, // DSH can use 340B for orphans
-            gpoProhibition: true // Cannot use GPO for outpatient
+            licenseType: 'pharmacy',
+            orphanDrugExclusion: false,
+            gpoProhibition: true,
+            totalDispensingStats: {
+                transfersYTD: 45000,
+                totalDispensing: 2000000 // 2.25% - Safe
+            }
         },
         departments: [
             { id: 'dept-1-1', name: 'Main Pharmacy', type: 'pharmacy' },
@@ -37,13 +44,20 @@ export const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'DSH',
         classOfTrade: 'acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: true,
+            is340B_ID: 'DSH340B-PMC-002', // Different ID from HUP!
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-HOSP-002',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
-            gpoProhibition: true
+            gpoProhibition: true,
+            totalDispensingStats: {
+                transfersYTD: 12000,
+                totalDispensing: 1500000 // 0.8% - Safe
+            }
         },
         departments: [
             { id: 'dept-2-1', name: 'Inpatient Pharmacy', type: 'pharmacy' },
@@ -64,13 +78,15 @@ export const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'DSH',
         classOfTrade: 'acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
-            is340B: false, // Standard DSH but not 340B enrolled for this demo
+            is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-HOSP-003',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
-            gpoProhibition: true // Still restricted if they were 340B, but moot if not.
+            gpoProhibition: true
         },
         departments: [
             { id: 'dept-3-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -93,13 +109,19 @@ export const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'RRC', // Rural Referral Center
         classOfTrade: 'acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-HOSP-004',
-            orphanDrugExclusion: true, // RRC cannot use 340B for orphans
-            gpoProhibition: false // RRC/CAH/SCH allowed GPO (in some cases) or simplification
+            licenseType: 'pharmacy',
+            orphanDrugExclusion: true,
+            gpoProhibition: false,
+            totalDispensingStats: {
+                transfersYTD: 49000,
+                totalDispensing: 1000000 // 4.9% - DANGER ZONE
+            }
         },
         departments: [
             { id: 'dept-4-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -119,13 +141,16 @@ export const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'FreeStandingCancer', // For demo variety
         classOfTrade: 'acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: true,
+            is340B_ID: 'CAN340B-LGH-005',
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-HOSP-005',
-            orphanDrugExclusion: true, // Cancer Hospital HAS orphan exclusion
-            gpoProhibition: true // Cancer Hospital HAS GPO prohibition
+            licenseType: 'pharmacy',
+            orphanDrugExclusion: true,
+            gpoProhibition: true
         },
         departments: [
             { id: 'dept-5-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -145,12 +170,14 @@ export const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'CAH', // Critical Access Hospital (Mock)
         classOfTrade: 'acute',
+        parentEntity: 'Princeton Health', // Different Parent! Test DSCSA check.
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'NJ-HOSP-001',
-            orphanDrugExclusion: true, // CAH cannot use 340B for orphans
+            licenseType: 'pharmacy',
+            orphanDrugExclusion: true,
             gpoProhibition: false
         },
         departments: [
@@ -173,11 +200,13 @@ export const sites: Site[] = [
         type: 'clinic',
         regulatoryAvatar: 'Clinic',
         classOfTrade: 'non_acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: false,
-            deaLicense: ['III', 'IV', 'V'], // Limited license
+            deaLicense: ['III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-CLINIC-001',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
             gpoProhibition: false
         },
@@ -199,11 +228,13 @@ export const sites: Site[] = [
         type: 'clinic',
         regulatoryAvatar: 'Clinic',
         classOfTrade: 'non_acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-CLINIC-002',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
             gpoProhibition: false
         },
@@ -225,13 +256,16 @@ export const sites: Site[] = [
         type: 'clinic',
         regulatoryAvatar: 'Clinic',
         classOfTrade: 'non_acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: true,
+            is340B_ID: 'CLIN340B-UC-003',
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-CLINIC-003',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
-            gpoProhibition: false // Clinics are usually GPO eligible (Child Site) but complex. Assume OK for demo.
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-9-1', name: 'Dispensary', type: 'pharmacy' },
@@ -251,11 +285,13 @@ export const sites: Site[] = [
         type: 'clinic',
         regulatoryAvatar: 'Clinic',
         classOfTrade: 'non_acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'NJ-CLINIC-001',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
             gpoProhibition: false
         },
@@ -277,11 +313,14 @@ export const sites: Site[] = [
         type: 'clinic',
         regulatoryAvatar: 'Clinic',
         classOfTrade: 'non_acute',
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: true,
+            is340B_ID: 'CLIN340B-RIT-004',
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-CLINIC-004',
+            licenseType: 'pharmacy',
             orphanDrugExclusion: false,
             gpoProhibition: false
         },
@@ -305,11 +344,13 @@ export const sites: Site[] = [
         type: 'warehouse',
         regulatoryAvatar: 'Pharmacy', // Or Distributor
         classOfTrade: 'retail', // Or wholesale
+        parentEntity: 'Penn Medicine System',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
             stateLicense: 'PA-DIST-001',
+            licenseType: 'wholesaler', // IT HAS THE LICENSE!
             orphanDrugExclusion: false,
             gpoProhibition: false
         },

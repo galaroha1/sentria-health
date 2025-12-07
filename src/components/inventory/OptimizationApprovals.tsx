@@ -54,9 +54,13 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
 
                                 {/* Compliance Justification */}
                                 {proposal.regulatoryJustification && (
-                                    <div className="mt-2 text-xs text-emerald-600 flex items-center gap-1">
-                                        <Check className="h-3 w-3" />
-                                        {proposal.regulatoryJustification.details.join(', ')}
+                                    <div className="mt-3 space-y-1">
+                                        {proposal.regulatoryJustification.details.map((detail, idx) => (
+                                            <div key={idx} className="flex items-start gap-1.5 text-xs text-emerald-700 bg-emerald-50/50 px-2 py-1 rounded border border-emerald-100">
+                                                <Check className="h-3 w-3 mt-0.5 flex-shrink-0 text-emerald-600" />
+                                                <span className="font-medium">{detail}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
