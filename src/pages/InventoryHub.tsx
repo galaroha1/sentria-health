@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Warehouse, ShoppingCart, Building2 } from 'lucide-react';
+import { Search, Filter, Warehouse } from 'lucide-react';
 import { Inventory } from './Inventory';
 import { Marketplace } from './Marketplace';
 import { Vendors } from './Vendors';
@@ -54,8 +54,8 @@ export function InventoryHub() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-900'
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-900'
                                 }`}
                         >
                             <Icon className={`h-4 w-4 ${isActive ? 'text-primary-600' : 'text-slate-400'}`} />

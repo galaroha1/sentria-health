@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Plus, Search, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { MapPin, Plus, Search, Building2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LocationActivity } from '../components/logistics/LocationActivity';
 import { TransferRequestForm } from '../components/transfers/TransferRequestForm';
@@ -91,8 +91,8 @@ export function LogisticsHub() {
                                     key={site.id}
                                     onClick={() => setSelectedSiteId(site.id)}
                                     className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors ${isSelected
-                                            ? 'bg-white shadow-sm ring-1 ring-slate-200'
-                                            : 'hover:bg-slate-100'
+                                        ? 'bg-white shadow-sm ring-1 ring-slate-200'
+                                        : 'hover:bg-slate-100'
                                         }`}
                                 >
                                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isSelected ? 'bg-primary-50 text-primary-600' : 'bg-white text-slate-400 shadow-sm'
