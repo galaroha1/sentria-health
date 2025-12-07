@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,6 +15,7 @@ export function Sidebar() {
     const navigation: NavigationItem[] = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
         { name: 'CPO View', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
+        { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
         { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
         { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
         { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },

@@ -6,7 +6,8 @@ import {
     Settings,
     Scan,
     Stethoscope,
-    FileText
+    FileText,
+    Share2
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +26,7 @@ export function MobileNav() {
     const navigation: NavigationItem[] = [
         { name: 'Home', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
         { name: 'CPO', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
+        { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
         { name: 'Stock', href: '/inventory', icon: Package, permission: 'inventory' },
         { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
         { name: 'Scan', href: '/scan', icon: Scan, permission: 'inventory', isFab: true }, // Add Scan as an item
