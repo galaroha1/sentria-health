@@ -69,7 +69,7 @@ function App() {
         <AuthProvider>
           <SimulationProvider>
             <CartProvider>
-              <BrowserRouter>
+              <BrowserRouter basename={import.meta.env.BASE_URL}>
                 <CommandPalette />
                 <Routes>
                   <Route path="/login" element={<Login />} />
