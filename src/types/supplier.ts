@@ -1,4 +1,4 @@
-export type SupplierId = 'mckesson' | 'cardinal' | 'amerisource';
+export type SupplierId = 'mckesson' | 'cardinal' | 'amerisource' | 'goodrx' | 'express_scripts';
 
 export interface Supplier {
     id: SupplierId;
@@ -16,6 +16,9 @@ export interface SupplierQuote {
     availableQuantity: number;
     deliveryDate: string; // ISO string
     moq: number; // Minimum Order Quantity
+    manufacturer?: string; // From FDA
+    isRealTime: boolean; // True if from API, False if simulated
+    quoteType?: 'Distributor' | 'Retail' | 'PBM';
 }
 
 export interface MarketSignal {
