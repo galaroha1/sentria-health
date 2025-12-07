@@ -1,11 +1,11 @@
 
 import { useState } from 'react';
-import { ClipboardList, Stethoscope, TrendingDown } from 'lucide-react';
+import { ClipboardList, Stethoscope, TrendingDown, Calendar, Syringe } from 'lucide-react';
 import { clinicalService } from '../services/clinicalService';
 import type { PreferenceCard, UsageReport } from '../services/clinicalService';
 
 export function ClinicalHub() {
-    const [activeTab, setActiveTab] = useState<'cards' | 'vac'>('cards');
+    const [activeTab, setActiveTab] = useState<'cards' | 'vac' | 'schedule'>('schedule');
 
     // Mock Data for Demo
     const mockCard: PreferenceCard = {
@@ -28,6 +28,14 @@ export function ClinicalHub() {
 
     const recommendations = clinicalService.analyzePreferenceCard(mockCard, mockHistory);
 
+    // Mock Schedule Data
+    const schedule = [
+        { time: '07:30', patient: 'James Wilson', procedure: 'Total Knee Arthroplasty', surgeon: 'Dr. Chen', or: 'OR-1', status: 'In Prep', drugs: ['Ancef 2g', 'Tranexamic Acid 1g'] },
+        { time: '09:00', patient: 'Maria Garcia', procedure: 'Laparoscopic Cholecystectomy', surgeon: 'Dr. Smith', or: 'OR-3', status: 'Scheduled', drugs: ['Rocephin 1g'] },
+        { time: '10:15', patient: 'Robert Taylor', procedure: 'Hernia Repair', surgeon: 'Dr. Jones', or: 'OR-2', status: 'Scheduled', drugs: ['Ancef 1g'] },
+        { time: '12:30', patient: 'Linda Brown', procedure: 'Hip Replacement', surgeon: 'Dr. Chen', or: 'OR-1', status: 'Scheduled', drugs: ['Vancomycin 1g', 'Tranexamic Acid 1g'] },
+    ];
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -36,6 +44,13 @@ export function ClinicalHub() {
                     <p className="text-sm text-slate-500">Bridge the gap between supply chain and patient care.</p>
                 </div>
                 <div className="flex rounded-lg bg-slate-100 p-1">
+                    <button
+                        onClick={() => setActiveTab('schedule')}
+                        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${activeTab === 'schedule' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                    >
+                        <Calendar className="h-4 w-4" />
+                        OR Schedule
+                    </button>
                     <button
                         onClick={() => setActiveTab('cards')}
                         className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${activeTab === 'cards' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
@@ -52,6 +67,48 @@ export function ClinicalHub() {
                     </button>
                 </div>
             </div>
+
+            {activeTab === 'schedule' && (
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                        <h3 className="font-bold text-slate-900">Today's Surgical Schedule</h3>
+                        <div className="text-sm text-slate-500">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                        {schedule.map((slot, i) => (
+                            <div key={i} className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start">
+                                <div className="flex w-24 shrink-0 flex-col items-center justify-center rounded-lg bg-slate-50 p-3">
+                                    <span className="text-lg font-bold text-slate-900">{slot.time}</span>
+                                    <span className="text-xs font-medium text-slate-500">{slot.or}</span>
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-bold text-slate-900">{slot.procedure}</h4>
+                                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${slot.status === 'In Prep' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                                            }`}>
+                                            {slot.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-600">
+                                        <span className="font-medium text-slate-900">{slot.patient}</span> • {slot.surgeon}
+                                    </p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {slot.drugs.map((drug, j) => (
+                                            <span key={j} className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 border border-emerald-100">
+                                                <Syringe className="h-3 w-3" />
+                                                {drug}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                                    View Case Cart
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {activeTab === 'cards' && (
                 <div className="grid gap-6 lg:grid-cols-2">

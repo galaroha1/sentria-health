@@ -21,7 +21,7 @@ export function NetworkHub() {
     };
 
     return (
-        <div className="space-y-6 bg-slate-50/50 min-h-screen p-6">
+        <div className="space-y-6 p-6">
             <div className="flex flex-col gap-4 border-b border-blue-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Regional Network</h1>
@@ -123,10 +123,10 @@ export function NetworkHub() {
                                         <div className="flex items-center gap-3">
                                             <h4 className="text-lg font-bold text-slate-900">{org.name}</h4>
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${org.status === 'Active' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' :
-                                                    org.status === 'Pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : 'bg-slate-100 text-slate-600 ring-slate-200'
+                                                org.status === 'Pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : 'bg-slate-100 text-slate-600 ring-slate-200'
                                                 }`}>
                                                 <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${org.status === 'Active' ? 'bg-emerald-500' :
-                                                        org.status === 'Pending' ? 'bg-amber-500' : 'bg-slate-400'
+                                                    org.status === 'Pending' ? 'bg-amber-500' : 'bg-slate-400'
                                                     }`}></span>
                                                 {org.status}
                                             </span>

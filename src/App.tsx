@@ -32,7 +32,7 @@ import { MobileNav } from './components/layout/MobileNav';
 
 function DashboardLayout() {
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-blue-50">
       <Sidebar />
       <main className="flex-1 overflow-auto p-8 pb-24 md:pb-8">
         <Outlet />

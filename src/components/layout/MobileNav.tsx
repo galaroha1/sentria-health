@@ -7,7 +7,8 @@ import {
     Scan,
     Stethoscope,
     FileText,
-    Share2
+    Share2,
+    Brain
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -24,14 +25,15 @@ export function MobileNav() {
     const { user, hasPermission } = useAuth();
 
     const navigation: NavigationItem[] = [
-        { name: 'Home', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
-        { name: 'CPO', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
+        { name: 'CPO View', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
+        { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
         { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
-        { name: 'Stock', href: '/inventory', icon: Package, permission: 'inventory' },
+        { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
         { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
-        { name: 'Scan', href: '/scan', icon: Scan, permission: 'inventory', isFab: true }, // Add Scan as an item
-        { name: 'Map', href: '/logistics', icon: Truck, permission: 'transfers' },
-        { name: 'Data', href: '/analytics', icon: BarChart3, permission: 'reports' },
+        { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
+        { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
+        { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
         { name: 'More', href: '/settings', icon: Settings, permission: 'manage_users' },
     ];
 
@@ -65,10 +67,10 @@ export function MobileNav() {
                             key={item.name}
                             to={item.href}
                             className={({ isActive }: { isActive: boolean }) =>
-                                `flex flex-col items-center gap-1 p-2 text-[10px] font-medium transition-colors ${isActive
+                                `flex flex - col items - center gap - 1 p - 2 text - [10px] font - medium transition - colors ${isActive
                                     ? 'text-indigo-600'
                                     : 'text-slate-500'
-                                }`
+                                } `
                             }
                         >
                             <Icon className="h-6 w-6" />

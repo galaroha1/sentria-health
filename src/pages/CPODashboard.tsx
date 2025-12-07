@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 export function CPODashboard() {
     return (
-        <div className="space-y-8 pb-12 bg-slate-50/50 min-h-screen p-8">
+        <div className="space-y-8 pb-12 p-8">
             <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 p-10 text-white shadow-xl shadow-blue-200">
                 <div className="flex items-start justify-between">
                     <div>
