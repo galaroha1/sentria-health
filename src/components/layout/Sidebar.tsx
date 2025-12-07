@@ -1,6 +1,5 @@
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Zap } from 'lucide-react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { clsx } from 'clsx';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3 } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export function Sidebar() {
