@@ -1,10 +1,21 @@
 import { useState } from 'react';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { ProductCard } from '../components/marketplace/ProductCard';
+import realDrugCatalog from '../data/real-drug-catalog.json';
 
-import { DrugGenerator } from '../services/mock/drug-generator';
-
-const products = DrugGenerator.generateMarketplaceListings(250);
+const products = realDrugCatalog.slice(0, 250).map((drug, index) => ({
+    id: index + 1,
+    name: `${drug.name} (${drug.genericName})`,
+    manufacturer: drug.manufacturer,
+    ndc: drug.ndc,
+    expiryDate: new Date(Date.now() + Math.random() * 31536000000).toISOString().split('T')[0], // Random future date
+    quantity: Math.floor(Math.random() * 50) + 1,
+    price: drug.price,
+    originalPrice: drug.price * 1.2,
+    seller: 'Sentria Direct Supply', // Simplified Seller
+    verified: true,
+    category: drug.category
+}));
 
 export function Marketplace() {
     const [searchTerm, setSearchTerm] = useState('');

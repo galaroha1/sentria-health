@@ -369,10 +369,15 @@ export const sites: Site[] = [
     },
 ];
 
-import { DrugGenerator } from '../../services/mock/drug-generator';
+import realDrugCatalog from '../../data/real-drug-catalog.json';
 
 // Generate a master catalog for the simulation to ensure consistency across sites
-const MASTER_CATALOG = DrugGenerator.generateCatalog(50); // Small subset for sites to hold common items
+// We use the same JSON source
+const MASTER_CATALOG = realDrugCatalog.slice(0, 100).map(d => ({
+    name: `${d.name} ${d.form}`,
+    ndc: d.ndc,
+    // Add other fields if useful for simulation logic, but name/ndc are core
+}));
 
 // Helper to generate random inventory for sites
 const generateInventory = (siteId: string): SiteInventory => {
