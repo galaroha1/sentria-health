@@ -10,8 +10,8 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { UserManagement } from './pages/UserManagement';
 import { Admin } from './pages/Admin';
 import { Decisions } from './pages/Decisions';
-import { Analytics } from './pages/Analytics';
-import { Settings } from './pages/Settings';
+import { Analytics } from './pages/AnalyticsPage';
+import { Settings } from './pages/SettingsPage';
 import { CommandCenter } from './components/simulation/CommandCenter';
 
 import { CartProvider } from './context/CartContext';
