@@ -1,10 +1,10 @@
 import { Check, X, ArrowRight, TrendingDown } from 'lucide-react';
-import type { OptimizationProposal } from '../../services/optimization.service';
+import type { ProcurementProposal } from '../../types/procurement';
 
 interface OptimizationApprovalsProps {
-    proposals: OptimizationProposal[];
-    onApprove: (proposal: OptimizationProposal) => void;
-    onReject: (proposal: OptimizationProposal) => void;
+    proposals: ProcurementProposal[];
+    onApprove: (proposal: ProcurementProposal) => void;
+    onReject: (proposal: ProcurementProposal) => void;
 }
 
 export function OptimizationApprovals({ proposals, onApprove, onReject }: OptimizationApprovalsProps) {
@@ -23,19 +23,20 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                 {proposals.map((proposal) => (
                     <div key={proposal.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md">
                         {/* Score Indicator */}
-                        <div className="absolute right-0 top-0 rounded-bl-xl bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500 border-b border-l border-slate-100">
-                            Score: {proposal.score}
+                        <div className={`absolute right-0 top-0 rounded-bl-xl px-3 py-1 text-xs font-bold border-b border-l ${proposal.regulatoryJustification.riskScore > 0 ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-500 border-slate-100'
+                            }`}>
+                            Match Score: {proposal.score}
                         </div>
 
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             {/* Main Info */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.type === 'transfer'
-                                        ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
-                                        : 'bg-amber-50 text-amber-700 ring-amber-600/20'
+                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.channel === '340B' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
+                                        proposal.channel === 'GPO' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                            'bg-slate-50 text-slate-700 ring-slate-600/20'
                                         }`}>
-                                        {proposal.type === 'transfer' ? 'Network Transfer' : 'Procurement'}
+                                        {proposal.channel}
                                     </span>
                                     <h4 className="font-bold text-slate-900">{proposal.drugName}</h4>
                                     <span className="text-sm text-slate-500">({proposal.quantity} units)</span>
@@ -50,6 +51,14 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                 <p className="mt-2 text-sm text-slate-500 italic">
                                     "{proposal.reason}"
                                 </p>
+
+                                {/* Compliance Justification */}
+                                {proposal.regulatoryJustification && (
+                                    <div className="mt-2 text-xs text-emerald-600 flex items-center gap-1">
+                                        <Check className="h-3 w-3" />
+                                        {proposal.regulatoryJustification.details.join(', ')}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Cost Analysis */}

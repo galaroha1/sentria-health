@@ -7,11 +7,15 @@ export const sites: Site[] = [
         id: 'site-1',
         name: 'Hospital of the Univ. of Pennsylvania',
         type: 'hospital',
+        regulatoryAvatar: 'DSH', // Disproportionate Share Hospital
+        classOfTrade: 'acute',
         regulatoryProfile: {
             is340B: true,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-HOSP-001'
+            stateLicense: 'PA-HOSP-001',
+            orphanDrugExclusion: false, // DSH can use 340B for orphans
+            gpoProhibition: true // Cannot use GPO for outpatient
         },
         departments: [
             { id: 'dept-1-1', name: 'Main Pharmacy', type: 'pharmacy' },
@@ -31,11 +35,15 @@ export const sites: Site[] = [
         id: 'site-2',
         name: 'Penn Presbyterian Medical Center',
         type: 'hospital',
+        regulatoryAvatar: 'DSH',
+        classOfTrade: 'acute',
         regulatoryProfile: {
             is340B: true,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-HOSP-002'
+            stateLicense: 'PA-HOSP-002',
+            orphanDrugExclusion: false,
+            gpoProhibition: true
         },
         departments: [
             { id: 'dept-2-1', name: 'Inpatient Pharmacy', type: 'pharmacy' },
@@ -54,11 +62,15 @@ export const sites: Site[] = [
         id: 'site-3',
         name: 'Pennsylvania Hospital',
         type: 'hospital',
+        regulatoryAvatar: 'DSH',
+        classOfTrade: 'acute',
         regulatoryProfile: {
-            is340B: false,
+            is340B: false, // Standard DSH but not 340B enrolled for this demo
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-HOSP-003'
+            stateLicense: 'PA-HOSP-003',
+            orphanDrugExclusion: false,
+            gpoProhibition: true // Still restricted if they were 340B, but moot if not.
         },
         departments: [
             { id: 'dept-3-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -79,11 +91,15 @@ export const sites: Site[] = [
         id: 'site-4',
         name: 'Chester County Hospital',
         type: 'hospital',
+        regulatoryAvatar: 'RRC', // Rural Referral Center
+        classOfTrade: 'acute',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-HOSP-004'
+            stateLicense: 'PA-HOSP-004',
+            orphanDrugExclusion: true, // RRC cannot use 340B for orphans
+            gpoProhibition: false // RRC/CAH/SCH allowed GPO (in some cases) or simplification
         },
         departments: [
             { id: 'dept-4-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -101,11 +117,15 @@ export const sites: Site[] = [
         id: 'site-5',
         name: 'Lancaster General Hospital',
         type: 'hospital',
+        regulatoryAvatar: 'FreeStandingCancer', // For demo variety
+        classOfTrade: 'acute',
         regulatoryProfile: {
             is340B: true,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-HOSP-005'
+            stateLicense: 'PA-HOSP-005',
+            orphanDrugExclusion: true, // Cancer Hospital HAS orphan exclusion
+            gpoProhibition: true // Cancer Hospital HAS GPO prohibition
         },
         departments: [
             { id: 'dept-5-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -123,11 +143,15 @@ export const sites: Site[] = [
         id: 'site-6',
         name: 'Princeton Medical Center',
         type: 'hospital',
+        regulatoryAvatar: 'CAH', // Critical Access Hospital (Mock)
+        classOfTrade: 'acute',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'NJ-HOSP-001'
+            stateLicense: 'NJ-HOSP-001',
+            orphanDrugExclusion: true, // CAH cannot use 340B for orphans
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-6-1', name: 'Pharmacy', type: 'pharmacy' },
@@ -147,11 +171,15 @@ export const sites: Site[] = [
         id: 'site-7',
         name: 'Penn Medicine Radnor',
         type: 'clinic',
+        regulatoryAvatar: 'Clinic',
+        classOfTrade: 'non_acute',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['III', 'IV', 'V'], // Limited license
             dscsaCompliant: true,
-            stateLicense: 'PA-CLINIC-001'
+            stateLicense: 'PA-CLINIC-001',
+            orphanDrugExclusion: false,
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-7-1', name: 'Dispensary', type: 'pharmacy' },
@@ -169,11 +197,15 @@ export const sites: Site[] = [
         id: 'site-8',
         name: 'Penn Medicine Valley Forge',
         type: 'clinic',
+        regulatoryAvatar: 'Clinic',
+        classOfTrade: 'non_acute',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-CLINIC-002'
+            stateLicense: 'PA-CLINIC-002',
+            orphanDrugExclusion: false,
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-8-1', name: 'Dispensary', type: 'pharmacy' },
@@ -191,11 +223,15 @@ export const sites: Site[] = [
         id: 'site-9',
         name: 'Penn Medicine University City',
         type: 'clinic',
+        regulatoryAvatar: 'Clinic',
+        classOfTrade: 'non_acute',
         regulatoryProfile: {
             is340B: true,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-CLINIC-003'
+            stateLicense: 'PA-CLINIC-003',
+            orphanDrugExclusion: false,
+            gpoProhibition: false // Clinics are usually GPO eligible (Child Site) but complex. Assume OK for demo.
         },
         departments: [
             { id: 'dept-9-1', name: 'Dispensary', type: 'pharmacy' },
@@ -213,11 +249,15 @@ export const sites: Site[] = [
         id: 'site-10',
         name: 'Penn Medicine Cherry Hill',
         type: 'clinic',
+        regulatoryAvatar: 'Clinic',
+        classOfTrade: 'non_acute',
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'NJ-CLINIC-001'
+            stateLicense: 'NJ-CLINIC-001',
+            orphanDrugExclusion: false,
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-10-1', name: 'Dispensary', type: 'pharmacy' },
@@ -235,11 +275,15 @@ export const sites: Site[] = [
         id: 'site-11',
         name: 'Penn Medicine Rittenhouse',
         type: 'clinic',
+        regulatoryAvatar: 'Clinic',
+        classOfTrade: 'non_acute',
         regulatoryProfile: {
             is340B: true,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-CLINIC-004'
+            stateLicense: 'PA-CLINIC-004',
+            orphanDrugExclusion: false,
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-11-1', name: 'Dispensary', type: 'pharmacy' },
@@ -259,11 +303,15 @@ export const sites: Site[] = [
         id: 'site-12',
         name: 'Penn Medicine Distribution Center',
         type: 'warehouse',
+        regulatoryAvatar: 'Pharmacy', // Or Distributor
+        classOfTrade: 'retail', // Or wholesale
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
             dscsaCompliant: true,
-            stateLicense: 'PA-DIST-001'
+            stateLicense: 'PA-DIST-001',
+            orphanDrugExclusion: false,
+            gpoProhibition: false
         },
         departments: [
             { id: 'dept-12-1', name: 'Main Inventory', type: 'logistics' },

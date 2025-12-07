@@ -4,15 +4,21 @@ export interface Department {
     type: 'clinical' | 'administrative' | 'pharmacy' | 'logistics';
 }
 
+import type { RegulatoryAvatar, ClassOfTrade } from './procurement';
+
 export interface Site {
     id: string;
     name: string;
     type: 'hospital' | 'clinic' | 'warehouse' | 'pharmacy';
+    regulatoryAvatar: RegulatoryAvatar;
+    classOfTrade: ClassOfTrade;
     regulatoryProfile: {
         is340B: boolean;
         deaLicense: ('II' | 'III' | 'IV' | 'V')[]; // Controlled substance schedules allowed
         dscsaCompliant: boolean; // Drug Supply Chain Security Act
         stateLicense: string;
+        orphanDrugExclusion: boolean; // Cannot use 340B for orphan drugs
+        gpoProhibition: boolean; // Cannot use GPO for outpatient drugs
     };
     departments: Department[];
     coordinates: {

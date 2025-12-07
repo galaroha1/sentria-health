@@ -67,31 +67,26 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     // const [lastDoc, setLastDoc] = useState<any>(null);
     const [loading, setLoading] = useState(false);
 
-    // Initial Load - just get stats or empty state
-    useEffect(() => {
-        if (!user) {
-            setSimulationResults([]);
-            return;
+    const fetchCount = async () => {
+        if (!user) return;
+        try {
+            const { getCountFromServer, collection } = await import('firebase/firestore');
+            const { db } = await import('../config/firebase');
+            const coll = collection(db, `users/${user.id}/simulations`);
+            const snapshot = await getCountFromServer(coll);
+            const count = snapshot.data().count;
+
+            setStats(prev => ({
+                ...prev,
+                totalPatients: count
+            }));
+        } catch (error) {
+            console.error("Failed to fetch patient count:", error);
         }
+    };
 
-        // Fetch total count for stats
-        const fetchCount = async () => {
-            try {
-                const { getCountFromServer, collection } = await import('firebase/firestore');
-                const { db } = await import('../config/firebase');
-                const coll = collection(db, `users/${user.id}/simulations`);
-                const snapshot = await getCountFromServer(coll);
-                const count = snapshot.data().count;
-
-                setStats(prev => ({
-                    ...prev,
-                    totalPatients: count
-                }));
-            } catch (error) {
-                console.error("Failed to fetch patient count:", error);
-            }
-        };
-
+    // Initial Load
+    useEffect(() => {
         fetchCount();
     }, [user]);
 
@@ -162,7 +157,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             `Connecting to Live Data Stream (randomuser.me) to fetch ${patientCount} identities...`
         ]);
 
-
+        // Capture initial count to add to
+        const initialCount = stats.totalPatients;
 
         try {
             // 1. Fetch Data First (Async & Chunked)
@@ -198,7 +194,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     setEta(formatTime(remaining));
 
                     setStats(prev => ({
-                        totalPatients: processed,
+                        totalPatients: initialCount + processed, // Add to initial count
                         conditionsIdentified: conditions,
                         accuracy: Math.min(99.2, prev.accuracy + 0.1)
                     }));
@@ -218,8 +214,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     await saveToDatabase(data);
                     setIsTraining(false);
 
-                    // Refresh the view
+                    // Refresh the view and stats
                     fetchSimulations();
+                    fetchCount();
                 }
             };
 

@@ -1,4 +1,6 @@
 import type { Site, SiteInventory } from '../types/location';
+import { RegulatoryService } from './regulatory.service';
+import type { ProcurementProposal, DrugChannel } from '../types/procurement';
 
 export interface OptimizationProposal {
     id: string;
@@ -50,20 +52,28 @@ export class OptimizationService {
     /**
      * The "Equation": Calculate Total Landed Cost
      */
+    /**
+     * The "Equation": Calculate Total Landed Cost
+     */
     private static calculateTotalCost(
         distanceKm: number,
         quantity: number,
         unitPrice: number,
         urgency: 'routine' | 'urgent' | 'emergency'
-    ): number {
-        const transportCost = (distanceKm * this.TRANSPORT_RATE_PER_KM) + this.BASE_PROCESSING_FEE;
-        const itemCost = quantity * unitPrice;
-
+    ): { total: number; transport: number; item: number } {
         let multiplier = 1.0;
         if (urgency === 'urgent') multiplier = this.URGENCY_MULTIPLIER; // 1.2
         if (urgency === 'emergency') multiplier = 1.5;
 
-        return (transportCost * multiplier) + itemCost;
+        const baseTransport = (distanceKm * this.TRANSPORT_RATE_PER_KM) + this.BASE_PROCESSING_FEE;
+        const transportCost = Math.round(baseTransport * multiplier);
+        const itemCost = Math.round(quantity * unitPrice);
+
+        return {
+            total: transportCost + itemCost,
+            transport: transportCost,
+            item: itemCost
+        };
     }
 
     /**
@@ -86,16 +96,13 @@ export class OptimizationService {
     /**
      * Run the optimization algorithm
      */
-    /**
-     * Run the optimization algorithm
-     */
     static generateProposals(
         sites: Site[],
         inventories: SiteInventory[],
         simulationResults: any[] = [],
         activeRequests: any[] = [] // Added active requests
-    ): OptimizationProposal[] {
-        const proposals: OptimizationProposal[] = [];
+    ): ProcurementProposal[] {
+        const proposals: ProcurementProposal[] = [];
         const demandMap = new Map<string, { siteId: string, drugName: string, ndc: string, quantity: number, reason: string }>();
 
         // Helper to get incoming stock for a site/drug
@@ -127,43 +134,28 @@ export class OptimizationService {
         });
 
         // 2. Identify Demand from Patients (Simulation)
-        // Aggregate demand by site and drug
         simulationResults.forEach(patient => {
-            // Only consider active patients who need drugs
             if (patient.status === 'Scheduled' || patient.status === 'Transport Needed') {
-                // Find the site (assuming patient.location matches site.name for simplicity, or map it)
-                // In a real app, patient.locationId would be better.
-                // For this demo, we'll try to match by name or default to the first site if not found (to ensure flow works)
                 const site = sites.find(s => s.name === patient.location) || sites[0];
-
                 if (site) {
-                    // Check if site already has enough stock?
-                    // For now, let's assume every patient creates a "demand signal" that we check against inventory
                     const inventory = inventories.find(inv => inv.siteId === site.id);
                     const drug = inventory?.drugs.find(d => d.drugName === patient.drug);
 
-                    // If drug exists and we have enough, we might not need a proposal.
-                    // But if we are "just in time", maybe we do.
-                    // DEMO: Trigger if stock is less than 100 (High threshold for demo visibility)
+                    // Simplistic demand aggregation
                     if (drug && drug.quantity < 100) {
                         const key = `${site.id}-${drug.ndc}`;
-
+                        // ... (same accumulation logic)
                         const existing = demandMap.get(key);
                         if (existing) {
                             existing.quantity += 1;
-                            existing.reason = `${existing.reason} + Patient Demand (${patient.patientName})`;
+                            existing.reason = `${existing.reason} + Patient Demand`;
                         } else {
-                            // But incoming might be for the low stock alert. 
-                            // Let's add it to demandMap and let the logic handle it?
-                            // Actually, let's just add it. The "deficit" logic above handles the inventory part.
-                            // Here we are adding *extra* demand.
-
                             demandMap.set(key, {
                                 siteId: site.id,
                                 drugName: drug.drugName,
                                 ndc: drug.ndc,
-                                quantity: 1, // One unit per patient
-                                reason: `Patient Demand: ${patient.patientName} needs ${patient.drug}`
+                                quantity: 1,
+                                reason: `Patient Demand: ${patient.patientName}`
                             });
                         }
                     }
@@ -171,85 +163,164 @@ export class OptimizationService {
             }
         });
 
-        // 3. Evaluate Options for each demand
+        // 3. Evaluate Options (AMIOP LOGIC)
         demandMap.forEach((demand) => {
             const targetSite = sites.find(s => s.id === demand.siteId);
             if (!targetSite) return;
 
             const neededQty = demand.quantity;
-            const mockUnitPrice = 100; // Placeholder price
+            const mockBasePrice = 100;
+            // BENCHMARK: Baseline WAC Purchase Landed Cost
+            // Assumed Vendor Distance = 500km
+            const benchmarkCosts = this.calculateTotalCost(500, neededQty, mockBasePrice, 'routine');
+            const benchmarkTotal = benchmarkCosts.total;
 
-            // Option A: Procurement (Vendor)
-            const vendorDistance = 500;
-            const procurementCost = this.calculateTotalCost(vendorDistance, neededQty, mockUnitPrice, 'routine');
+            const isOrphan = false; // Mock; real app checks master data
 
-            // Option B: Network Transfer (Find best source)
-            let bestTransferOption: { source: Site, cost: number, distance: number } | null = null;
+            // ----------------------------------------------------
+            // A. EVALUATE PROCUREMENT CHANNELS (WAC / GPO / 340B)
+            // ----------------------------------------------------
+            const channels: DrugChannel[] = ['WAC', 'GPO', '340B'];
+            const channelOptions: ProcurementProposal[] = [];
+
+            channels.forEach(channel => {
+                // Regulatory Filter
+                const check = RegulatoryService.checkChannelEligibility(
+                    targetSite,
+                    channel,
+                    isOrphan,
+                    'outpatient' // Assuming outpatient mostly for this demo
+                );
+
+                if (check.allowed) {
+                    // Pricing Logic
+                    let unitPrice = mockBasePrice;
+                    if (channel === 'GPO') unitPrice = mockBasePrice * 0.75; // 25% off
+                    if (channel === '340B') unitPrice = mockBasePrice * 0.50; // 50% off
+
+                    const distance = 500; // Vendor
+                    const costs = this.calculateTotalCost(distance, neededQty, unitPrice, 'routine');
+
+                    channelOptions.push({
+                        id: `proc-${channel}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                        type: 'procurement',
+                        channel: channel,
+                        targetSiteId: targetSite.id,
+                        targetSiteName: targetSite.name,
+                        vendorName: 'McKesson',
+                        drugName: demand.drugName,
+                        ndc: demand.ndc,
+                        quantity: neededQty,
+                        costAnalysis: {
+                            distanceKm: distance,
+                            transportCost: costs.transport,
+                            itemCost: costs.item,
+                            totalCost: costs.total,
+                            savings: benchmarkTotal - costs.total
+                        },
+                        fulfillmentNode: 'CentralPharmacy',
+                        regulatoryJustification: {
+                            passed: true,
+                            details: [`Channel ${channel} eligible for ${targetSite.regulatoryAvatar}`],
+                            riskScore: 0
+                        },
+                        reason: `${demand.reason}. Best configured ${channel} option.`,
+                        score: 0 // Calculated below
+                    });
+                }
+            });
+
+            // ----------------------------------------------------
+            // B. EVALUATE NETWORK TRANSFERS (Own Use)
+            // ----------------------------------------------------
+            let bestTransfer: ProcurementProposal | null = null;
 
             for (const sourceInv of inventories) {
-                if (sourceInv.siteId === demand.siteId) continue; // Skip self
-
+                if (sourceInv.siteId === demand.siteId) continue;
                 const sourceItem = sourceInv.drugs.find(d => d.ndc === demand.ndc);
-                // Only transfer if source has surplus
                 if (sourceItem && (sourceItem.status === 'well_stocked' || sourceItem.status === 'overstocked') && sourceItem.quantity > neededQty) {
                     const sourceSite = sites.find(s => s.id === sourceInv.siteId);
                     if (sourceSite) {
-                        // REGULATORY CHECK
-                        if (!targetSite.regulatoryProfile.dscsaCompliant || !sourceSite.regulatoryProfile.dscsaCompliant) continue;
-                        if (targetSite.regulatoryProfile.is340B !== sourceSite.regulatoryProfile.is340B) continue;
+                        const regCheck = RegulatoryService.checkOwnUseTransfer(sourceSite, targetSite);
+                        if (!regCheck.valid) continue;
 
                         const distance = this.calculateDistance(sourceSite, targetSite);
-                        const transferCost = this.calculateTotalCost(distance, neededQty, 0, 'routine');
+                        const costs = this.calculateTotalCost(distance, neededQty, 0, 'routine'); // 0 item cost internal
 
-                        if (!bestTransferOption || transferCost < bestTransferOption.cost) {
-                            bestTransferOption = { source: sourceSite, cost: transferCost, distance };
+                        // Compare logic...
+                        const proposal: ProcurementProposal = {
+                            id: `trans-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                            type: 'transfer',
+                            channel: 'WAC', // Internal movement 
+                            targetSiteId: targetSite.id,
+                            targetSiteName: targetSite.name,
+                            sourceSiteId: sourceSite.id,
+                            sourceSiteName: sourceSite.name,
+                            drugName: demand.drugName,
+                            ndc: demand.ndc,
+                            quantity: neededQty,
+                            costAnalysis: {
+                                distanceKm: Math.round(distance),
+                                transportCost: costs.transport,
+                                itemCost: 0,
+                                totalCost: costs.total,
+                                savings: benchmarkTotal - costs.total // This will be HUGE savings
+                            },
+                            fulfillmentNode: 'DirectDrop',
+                            regulatoryJustification: {
+                                passed: true,
+                                details: ['Own Use Validated', 'DSCSA Checked'],
+                                riskScore: 5
+                            },
+                            reason: `Transfer from ${sourceSite.name}`,
+                            score: 95
+                        };
+
+                        if (!bestTransfer || costs.total < bestTransfer.costAnalysis.totalCost) {
+                            bestTransfer = proposal;
                         }
                     }
                 }
             }
 
-            // 4. Decision Logic
-            if (bestTransferOption && bestTransferOption.cost < procurementCost) {
-                proposals.push({
-                    id: `prop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    type: 'transfer',
-                    targetSiteId: targetSite.id,
-                    targetSiteName: targetSite.name,
-                    sourceSiteId: bestTransferOption.source.id,
-                    sourceSiteName: bestTransferOption.source.name,
-                    drugName: demand.drugName,
-                    ndc: demand.ndc,
-                    quantity: neededQty,
-                    costAnalysis: {
-                        distanceKm: Math.round(bestTransferOption.distance),
-                        transportCost: Math.round(bestTransferOption.cost),
-                        itemCost: 0,
-                        totalCost: Math.round(bestTransferOption.cost),
-                        savings: Math.round(procurementCost - bestTransferOption.cost)
-                    },
-                    reason: `${demand.reason}. Transfer from ${bestTransferOption.source.name} is cheaper.`,
-                    score: 95
-                });
-            } else {
-                proposals.push({
-                    id: `prop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    type: 'procurement',
-                    targetSiteId: targetSite.id,
-                    targetSiteName: targetSite.name,
-                    vendorName: 'McKesson (Primary)',
-                    drugName: demand.drugName,
-                    ndc: demand.ndc,
-                    quantity: neededQty,
-                    costAnalysis: {
-                        distanceKm: vendorDistance,
-                        transportCost: Math.round(vendorDistance * this.TRANSPORT_RATE_PER_KM),
-                        itemCost: Math.round(neededQty * mockUnitPrice),
-                        totalCost: Math.round(procurementCost),
-                        savings: 0
-                    },
-                    reason: `${demand.reason}. Procurement required.`,
-                    score: 80
-                });
+            // ----------------------------------------------------
+            // C. RANKING & SELECTION
+            // ----------------------------------------------------
+            const allOptions = [...channelOptions];
+            if (bestTransfer) {
+                // Generally transfer is cheapest if closer
+                allOptions.push(bestTransfer);
+            }
+
+            // Assign Scores based on COST EFFICIENCY mostly
+            allOptions.forEach(opt => {
+                // Linear Scoring: 100 * (1 - TotalCost / Benchmark)
+                // If TotalCost > Benchmark (e.g. emergency shipping), score drops.
+                // If TotalCost = 0 (impossible), score = 100.
+
+                // Base score on savings percentage
+                const ratio = opt.costAnalysis.totalCost / benchmarkTotal;
+                let calculatedScore = Math.round(100 - (ratio * 50)); // Baseline 50 points if cost = benchmark. 
+                // Using simple heuristic for now:
+
+                if (opt.type === 'transfer') {
+                    // Prioritize transfers strongly if cost effective
+                    calculatedScore = 95 - (opt.costAnalysis.distanceKm / 100);
+                } else {
+                    // Procurement ranking
+                    if (opt.channel === '340B') calculatedScore = 90;
+                    else if (opt.channel === 'GPO') calculatedScore = 80;
+                    else calculatedScore = 60;
+                }
+                opt.score = Math.min(Math.max(Math.round(calculatedScore), 0), 100);
+            });
+
+            // Sort by score
+            allOptions.sort((a, b) => b.score - a.score);
+
+            // Pick TOP choice
+            if (allOptions.length > 0) {
+                proposals.push(allOptions[0]);
             }
         });
 

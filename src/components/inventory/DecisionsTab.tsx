@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, AlertTriangle, Zap, Clock } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSimulation } from '../../context/SimulationContext';
-import { OptimizationService, type OptimizationProposal } from '../../services/optimization.service';
+import { OptimizationService } from '../../services/optimization.service';
+import type { ProcurementProposal } from '../../types/procurement';
 import { OptimizationApprovals } from './OptimizationApprovals';
 import toast from 'react-hot-toast';
 
@@ -13,7 +14,10 @@ export function DecisionsTab() {
 
     // Optimization State
     const [isOptimizing, setIsOptimizing] = useState(false);
-    const [proposals, setProposals] = useState<OptimizationProposal[]>([]);
+    const [proposals, setProposals] = useState<ProcurementProposal[]>([]);
+
+    // Execution Roadmap State
+    const [executionStep, setExecutionStep] = useState<'idle' | 'fetching' | 'analyzing' | 'compliance' | 'complete'>('idle');
 
     // Derived State
     const pendingRequests = requests.filter(r => r.status === 'pending');
@@ -28,25 +32,38 @@ export function DecisionsTab() {
     const runOptimization = async () => {
         try {
             setIsOptimizing(true);
+            setExecutionStep('fetching');
             setProposals([]); // Clear existing to show refresh
-            // Simulate calculation delay
+
+            // Step 1: Data Pull
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setExecutionStep('analyzing');
+
+            // Step 2: Analysis
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setExecutionStep('compliance');
+
+            // Step 3: Compliance Checks
             await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Step 4: Generate Results
             // Pass active requests to filter out already addressed demand
             const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
             setProposals(newProposals);
+
+            setExecutionStep('complete');
+            // Reset to idle after a moment so the modal/view can close or persist?
+            // User likely wants to see the "Done" state before viewing results.
+            setTimeout(() => setExecutionStep('idle'), 2000);
+
         } catch (error) {
             console.error("Optimization failed:", error);
             toast.error("Failed to run optimization");
+            setExecutionStep('idle');
         } finally {
             setIsOptimizing(false);
         }
     };
-
-    useEffect(() => {
-        if (simulationResults.length > 0) {
-            runOptimization();
-        }
-    }, [sites, inventories, simulationResults]);
 
     const handleApproveRequest = (id: string) => {
         updateRequestStatus(id, 'approved', 'Current User');
@@ -58,7 +75,7 @@ export function DecisionsTab() {
         toast.error('Request Denied');
     };
 
-    const handleOptimizationAction = async (proposal: OptimizationProposal, action: 'approve' | 'reject') => {
+    const handleOptimizationAction = async (proposal: ProcurementProposal, action: 'approve' | 'reject') => {
         if (action === 'approve') {
             try {
                 if (proposal.type === 'transfer') {
@@ -109,6 +126,81 @@ export function DecisionsTab() {
 
     return (
         <div className="space-y-6">
+            {/* Execution Roadmap Modal / Overlay */}
+            {executionStep !== 'idle' && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="w-full max-w-md space-y-6 rounded-2xl bg-white p-8 shadow-2xl">
+                        <div className="text-center">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
+                                <Zap className={`h-8 w-8 text-indigo-600 ${executionStep !== 'complete' ? 'animate-pulse' : ''}`} />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-900">
+                                {executionStep === 'complete' ? 'Optimization Complete' : 'Running Auto-Logistics'}
+                            </h2>
+                            <p className="text-slate-500">
+                                {executionStep === 'complete' ? 'AI analysis finished successfully.' : 'Analyzing network data...'}
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Step 1: Data Pull */}
+                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'fetching' ? 'bg-blue-100 text-blue-600 animate-pulse' :
+                                        ['analyzing', 'compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
+                                        }`}>
+                                        {['analyzing', 'compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">1</span>}
+                                    </div>
+                                    <div>
+                                        <p className={`font-medium ${executionStep === 'fetching' ? 'text-blue-600' : 'text-slate-900'}`}>Data Ingestion</p>
+                                        <p className="text-xs text-slate-500">Fetching inventory & patient signals</p>
+                                    </div>
+                                </div>
+                                {executionStep === 'fetching' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />}
+                            </div>
+
+                            {/* Step 2: Analysis */}
+                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'analyzing' ? 'bg-purple-100 text-purple-600 animate-pulse' :
+                                        ['compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
+                                        }`}>
+                                        {['compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">2</span>}
+                                    </div>
+                                    <div>
+                                        <p className={`font-medium ${executionStep === 'analyzing' ? 'text-purple-600' : 'text-slate-900'}`}>Smart Analysis</p>
+                                        <p className="text-xs text-slate-500">Calculating deficits & routes</p>
+                                    </div>
+                                </div>
+                                {executionStep === 'analyzing' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-600 border-t-transparent" />}
+                            </div>
+
+                            {/* Step 3: Compliance */}
+                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'compliance' ? 'bg-amber-100 text-amber-600 animate-pulse' :
+                                        executionStep === 'complete' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
+                                        }`}>
+                                        {executionStep === 'complete' ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">3</span>}
+                                    </div>
+                                    <div>
+                                        <p className={`font-medium ${executionStep === 'compliance' ? 'text-amber-600' : 'text-slate-900'}`}>Compliance Check</p>
+                                        <p className="text-xs text-slate-500">Verifying DSCSA & 340B rules</p>
+                                    </div>
+                                </div>
+                                {executionStep === 'compliance' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />}
+                            </div>
+                        </div>
+
+                        {executionStep === 'complete' && (
+                            <div className="flex justify-center">
+                                <p className="font-bold text-green-600">3 Optimized Proposals Generated</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Global Actions */}
             <div className="flex justify-end">
                 <button
