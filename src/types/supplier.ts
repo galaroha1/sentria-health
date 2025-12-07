@@ -25,6 +25,14 @@ export interface SupplierQuote {
         pharm_class?: string[];
         labeler_name?: string;
     };
+    // Advanced Simulation Fields
+    storageRequirement?: 'ambient' | 'refrigerated' | 'frozen' | 'hazardous';
+    administrationRoute?: 'IV' | 'Oral' | 'Subcutaneous' | 'IM';
+    billing?: {
+        jCode?: string;
+        billingUnit?: string;
+        wholesaleAcquisitionCost?: number;
+    };
 }
 
 export interface MarketSignal {

@@ -106,3 +106,20 @@ export type MapFilter = {
     siteType?: 'all' | 'hospital' | 'clinic' | 'warehouse' | 'pharmacy';
     drug?: string;
 };
+export type TransportMethod = 'drone' | 'courier_bike' | 'courier_car' | 'van_refrigerated' | 'freight';
+
+export interface TransferSuggestion {
+    id: string;
+    targetSiteId: string;
+    sourceSiteId: string;
+    drugName: string;
+    ndc: string;
+    quantity: number;
+    urgency: 'routine' | 'urgent' | 'emergency';
+    priorityScore: number; // 0-100, higher is better
+    reason: string[];
+    transportMethod: TransportMethod;
+    estimatedCost: number;
+    estimatedTimeMinutes: number;
+}
+

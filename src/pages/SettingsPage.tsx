@@ -1,12 +1,24 @@
 import { User, Bell, Lock, Globe, Shield } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { ApiManager } from '../components/admin/ApiManager';
+import { UserRole } from '../types';
 
 export function Settings() {
+    const { user } = useAuth();
+
     return (
         <div className="max-w-4xl space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
                 <p className="text-slate-600">Manage your account and application preferences.</p>
             </div>
+
+            {/* SUPER ADMIN ONLY: System API Manager */}
+            {user?.role === UserRole.SUPER_ADMIN && (
+                <div className="animate-fade-in-up">
+                    <ApiManager />
+                </div>
+            )}
 
             <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div className="divide-y divide-slate-100">

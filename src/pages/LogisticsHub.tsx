@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Plus, Search, Building2, LayoutList, Map } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LocationActivity } from '../components/logistics/LocationActivity';
 import { TransferRequestForm } from '../components/transfers/TransferRequestForm';
 import { InteractiveMap } from '../components/location/InteractiveMap';
-import type { NetworkRequest, Site } from '../types/location';
+import { SmartTransferCard } from '../components/logistics/SmartTransferCard';
+import { autoLogisticsService } from '../services/logistics/AutoLogisticsService';
+import type { NetworkRequest, Site, TransferSuggestion } from '../types/location';
 
 export function LogisticsHub() {
     const { sites, requests, addRequest, inventories } = useApp();
@@ -12,8 +14,62 @@ export function LogisticsHub() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+    const [suggestions, setSuggestions] = useState<TransferSuggestion[]>([]);
 
     const selectedSite = sites.find(s => s.id === selectedSiteId);
+    const selectedInventory = inventories.find(inv => inv.siteId === selectedSiteId);
+
+    // Generate Auto-Logistics Suggestions
+    useEffect(() => {
+        if (!selectedSite || !selectedInventory) return;
+
+        // 1. Identify Shortages
+        const shortages = selectedInventory.drugs.filter(d => d.quantity < d.minLevel || d.status === 'critical' || d.status === 'low');
+
+        // 2. Generate Suggestions
+        let newSuggestions: TransferSuggestion[] = [];
+        shortages.forEach(shortageItem => {
+            const itemSuggestions = autoLogisticsService.generateSuggestions(
+                selectedSite,
+                shortageItem,
+                sites,
+                inventories
+            );
+            newSuggestions = [...newSuggestions, ...itemSuggestions];
+        });
+
+        // 3. Sort/Limit
+        setSuggestions(newSuggestions.slice(0, 3)); // Top 3
+    }, [selectedSite, selectedInventory, sites, inventories]);
+
+    const handleApproveSuggestion = (suggestion: TransferSuggestion) => {
+        // Convert suggestion to request
+        const sourceSite = sites.find(s => s.id === suggestion.sourceSiteId);
+        const targetSite = sites.find(s => s.id === suggestion.targetSiteId);
+
+        if (!sourceSite || !targetSite) return;
+
+        const newRequest: NetworkRequest = {
+            id: `TR-${Date.now()}`,
+            requestedBy: 'AutoLogistics AI',
+            requestedBySite: targetSite,
+            targetSite: sourceSite, // Requesting FROM source
+            drug: {
+                name: suggestion.drugName,
+                ndc: suggestion.ndc,
+                quantity: suggestion.quantity
+            },
+            reason: `Auto-generated: ${suggestion.reason[0]}`,
+            urgency: suggestion.urgency,
+            status: 'approved', // Auto-approve
+            requestedAt: new Date().toISOString(),
+            approvedBy: 'System',
+            approvedAt: new Date().toISOString()
+        };
+
+        addRequest(newRequest);
+        setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+    };
 
     const filteredSites = sites.filter(site =>
         site.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -182,6 +238,29 @@ export function LogisticsHub() {
                                         New Transfer
                                     </button>
                                 </div>
+
+
+                                {/* Smart Logistics Panel */}
+                                {suggestions.length > 0 && (
+                                    <div className="border-b border-slate-100 bg-slate-50/80 px-8 py-6">
+                                        <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500">
+                                            <span className="h-2 w-2 rounded-full bg-violet-500 animate-pulse"></span>
+                                            AI Optimization Opportunities
+                                        </h3>
+                                        <div className="grid gap-4 xl:grid-cols-2">
+                                            {suggestions.map(suggestion => (
+                                                <SmartTransferCard
+                                                    key={suggestion.id}
+                                                    suggestion={suggestion}
+                                                    sourceSite={sites.find(s => s.id === suggestion.sourceSiteId)!}
+                                                    targetSite={sites.find(s => s.id === suggestion.targetSiteId)!}
+                                                    onApprove={handleApproveSuggestion}
+                                                    onDismiss={(id) => setSuggestions(prev => prev.filter(s => s.id !== id))}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
                                     <LocationActivity site={selectedSite} requests={requests} />
