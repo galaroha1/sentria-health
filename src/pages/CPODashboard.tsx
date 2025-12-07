@@ -189,6 +189,46 @@ export function CPODashboard() {
                         </div>
                     </div>
                 </div>
+                {/* 5. Regional Network */}
+                <div className="group rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-lg hover:border-blue-200 lg:col-span-2">
+                    <div className="mb-6 flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 group-hover:bg-indigo-100 transition-colors">
+                            <Activity className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-900">Regional Supply Chain Network</h2>
+                            <p className="text-sm font-medium text-slate-500">Mutual Aid & Surplus Exchange</p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-100">
+                            <h3 className="mb-3 font-semibold text-slate-900 flex items-center gap-2">
+                                <Activity className="h-4 w-4 text-blue-500" /> The Logic
+                            </h3>
+                            <ul className="space-y-3 text-sm text-slate-600">
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-indigo-500 shrink-0" />
+                                    <span><strong className="text-slate-900">Federated Permission System:</strong> Connects independent health systems (e.g., Penn, Jefferson) with granular trust levels.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-indigo-500 shrink-0" />
+                                    <span><strong className="text-slate-900">Universal SKU Translator:</strong> Matches products across different ERPs using FDA UDI/NDC data.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="flex flex-col justify-center gap-4 rounded-xl border border-slate-100 p-6 bg-white group-hover:border-blue-100 transition-colors">
+                            <div>
+                                <p className="font-semibold text-slate-900">See it in action</p>
+                                <p className="text-xs font-medium text-slate-400">Network Hub &gt; Live Exchange</p>
+                            </div>
+                            <Link to="/network" className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-200">
+                                Launch Demo <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

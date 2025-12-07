@@ -221,7 +221,7 @@ export function DecisionsTab() {
 
                         {executionStep === 'complete' && (
                             <div className="flex justify-center">
-                                <p className="font-bold text-green-600">3 Optimized Proposals Generated</p>
+                                <p className="font-bold text-green-600">{currentProposals.length} Optimized Proposals Generated</p>
                             </div>
                         )}
                     </div>

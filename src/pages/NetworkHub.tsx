@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { MapPin, Search, ArrowUpRight, ArrowDownLeft, Building2, Activity, Users } from 'lucide-react';
 import { networkService } from '../services/networkService';
 import type { Organization, SharedInventoryItem } from '../services/networkService';
+import toast from 'react-hot-toast';
 
 export function NetworkHub() {
     const [activeTab, setActiveTab] = useState<'exchange' | 'partners'>('exchange');
@@ -17,7 +18,11 @@ export function NetworkHub() {
 
     const handleRequest = (item: SharedInventoryItem) => {
         const result = networkService.requestTransfer(item.id, 10); // Mock qty
-        alert(result.message);
+        toast.success(result.message);
+    };
+
+    const handleOfferHelp = (item: SharedInventoryItem) => {
+        toast.success(`Offer sent to ${item.orgName} for ${item.name}`);
     };
 
     return (
@@ -96,7 +101,10 @@ export function NetworkHub() {
                                         </button>
                                     )}
                                     {item.type === 'Shortage' && (
-                                        <button className="rounded-lg bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-100">
+                                        <button
+                                            onClick={() => handleOfferHelp(item)}
+                                            className="rounded-lg bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-100"
+                                        >
                                             Offer Help
                                         </button>
                                     )}
@@ -142,14 +150,20 @@ export function NetworkHub() {
                                         </div>
                                     </div>
                                 </div>
-                                <button className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm">
+                                <button
+                                    onClick={() => toast('Profile view coming soon', { icon: '👤' })}
+                                    className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm"
+                                >
                                     View Profile
                                 </button>
                             </div>
                         ))}
                     </div>
                     <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
-                        <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+                        <button
+                            onClick={() => toast('Invite feature coming soon', { icon: '📧' })}
+                            className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                        >
                             + Invite New Partner
                         </button>
                     </div>
