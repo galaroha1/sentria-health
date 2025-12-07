@@ -1,10 +1,10 @@
+
 import {
     LayoutDashboard,
     Package,
     Truck,
     BarChart3,
     Settings,
-    Scan,
     Stethoscope,
     FileText,
     Share2,
