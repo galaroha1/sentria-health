@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import type { Site, SiteInventory } from '../../types/location';
 import { Package, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 import './location.css';
 
 interface InteractiveMapProps {
@@ -75,6 +76,8 @@ function SitePopup({ site, summary, onAction }: { site: Site, summary: { critica
 }
 
 export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveMapProps) {
+    const { requests } = useApp();
+
     const getSiteStatus = (siteId: string): 'well_stocked' | 'low' | 'critical' | 'overstocked' => {
         const inventory = inventories.find(inv => inv.siteId === siteId);
         if (!inventory || inventory.drugs.length === 0) return 'well_stocked';
@@ -114,6 +117,23 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
         return { criticalCount, lowCount, totalDrugs };
     };
 
+    // Calculate active routes
+    const activeRoutes = requests
+        .filter(r => r.status === 'in_transit')
+        .map(r => {
+            const source = sites.find(s => s.id === r.sourceSiteId);
+            const target = sites.find(s => s.id === r.targetSiteId);
+            if (!source || !target) return null;
+            return {
+                id: r.id,
+                positions: [
+                    [source.coordinates.lat, source.coordinates.lng],
+                    [target.coordinates.lat, target.coordinates.lng]
+                ] as [number, number][]
+            };
+        })
+        .filter((r): r is { id: string; positions: [number, number][] } => r !== null);
+
     return (
         <MapContainer
             center={[39.9526, -75.1652] as [number, number]}
@@ -124,6 +144,14 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+
+            {activeRoutes.map(route => (
+                <Polyline
+                    key={route.id}
+                    positions={route.positions}
+                    pathOptions={{ color: '#6366f1', weight: 3, dashArray: '10, 10', opacity: 0.6 }}
+                />
+            ))}
 
             {sites.map((site) => {
                 const summary = getInventorySummary(site.id);

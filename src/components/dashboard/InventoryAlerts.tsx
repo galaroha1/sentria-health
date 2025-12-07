@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock, ArrowUpRight } from 'lucide-react';
+import { AlertTriangle, Clock, ShoppingCart, ArrowRightLeft } from 'lucide-react';
 import { useFirestore } from '../../hooks/useFirestore';
 
 interface InventoryAlert {
@@ -40,10 +40,14 @@ export function InventoryAlerts() {
                                 <p className="text-xs text-slate-500">Expires in {alert.expires}</p>
                             </div>
                         </div>
-                        <button className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200">
-                            List
-                            <ArrowUpRight className="h-3 w-3" />
-                        </button>
+                        <div className="flex gap-2">
+                            <button className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200" title="Quick Order">
+                                <ShoppingCart className="h-3 w-3" />
+                            </button>
+                            <button className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200" title="Transfer">
+                                <ArrowRightLeft className="h-3 w-3" />
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>

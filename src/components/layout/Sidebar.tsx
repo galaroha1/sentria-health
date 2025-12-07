@@ -22,88 +22,65 @@ const navigation: NavigationItem[] = [
     // Existing "Admin" or "Profile" could be "Settings". The mockup usually puts Settings at the bottom.
     // Let's map "Decisions" to "Analytics" and keep "Settings" as the bottom link (which is already there in the component, but maybe I should add it to the main list if requested, or just rely on the bottom link).
     // The bottom link in the existing code is "Settings" pointing to "/profile".
-    // The user list: Dashboard, Inventory, Logistics, Analytics, Settings.
-    // I will add Analytics. I will keep the bottom Settings link as is, or maybe the user wants it in the main list?
-    // "Sidebar: The main sidebar should now be simplified to just: [Dashboard, Inventory, Logistics, Analytics, Settings]."
-    // I'll put them in the main list.
-];
+export function Sidebar() {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
-interface SidebarProps {
-    isOpen?: boolean;
-    onClose?: () => void;
-}
+    const navigation = [
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'view_dashboard' },
+        { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
+        { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
+        { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'view_analytics' },
+        { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
+    ];
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
-    const location = useLocation();
-    const { hasPermission, user } = useAuth();
-    const [isHovered, setIsHovered] = useState(false);
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('Failed to log out', error);
+        }
+    };
 
-    // Filter navigation items based on user permissions
-    const visibleNavigation = navigation.filter(item => hasPermission(item.requirePermission));
+    // Filter navigation based on user permissions
+    const filteredNavigation = navigation.filter(item => {
+        if (!user) return false;
+        // If user is admin, show everything
+        if (user.role === 'admin') return true;
+        // Check specific permission
+        return user.permissions.includes(item.permission as any);
+    });
 
     return (
-        <>
-            {/* Mobile Backdrop */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 z-20 bg-slate-900/50 backdrop-blur-sm lg:hidden"
-                    onClick={onClose}
-                />
-            )}
-
-            {/* Sidebar */}
-            <div
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className={clsx(
-                    "fixed inset-y-0 left-0 z-30 flex flex-col bg-slate-900 text-white transition-all duration-300 ease-in-out lg:static",
-                    isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-                    isHovered ? "w-64" : "w-20"
-                )}
-            >
-                <div className="flex h-16 items-center px-6 overflow-hidden whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 shrink-0 rounded-lg bg-primary-500 flex items-center justify-center">
-                            <span className="text-xl font-bold text-white">S</span>
-                        </div>
-                        <span className={clsx(
-                            "text-xl font-bold transition-opacity duration-300",
-                            isHovered ? "opacity-100" : "opacity-0 w-0 hidden"
-                        )}>
-                            Sentria
-                        </span>
+        <aside className="hidden md:flex w-64 flex-col border-r border-slate-200 bg-white">
+            <div className="flex h-16 items-center border-b border-slate-200 px-6">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">
+                        S
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="ml-auto lg:hidden text-slate-400 hover:text-white"
-                    >
-                        <X className="h-6 w-6" />
-                    </button>
+                    <span className="text-lg font-bold text-slate-900">Sentria</span>
                 </div>
+            </div>
 
-                <nav className="flex-1 space-y-1 px-3 py-4">
-                    {visibleNavigation.map((item) => {
-                        const isActive = location.pathname === item.href;
+            <div className="flex flex-1 flex-col justify-between p-4">
+                <nav className="space-y-1">
+                    {filteredNavigation.map((item) => {
+                        const Icon = item.icon;
                         return (
-                            <Link
+                            <NavLink
                                 key={item.name}
                                 to={item.href}
-                                onClick={onClose}
-                                className={clsx(
-                                    'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap overflow-hidden',
-                                    isActive
-                                        ? 'bg-primary-600 text-white'
-                                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                )}
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive
+                                        ? 'bg-indigo-50 text-indigo-600'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    }`
+                                }
                             >
-                                <item.icon className={clsx('h-5 w-5 shrink-0 transition-colors', isActive ? 'text-white' : 'text-slate-400 group-hover:text-white')} />
-                                <span className={clsx(
-                                    "ml-3 transition-opacity duration-300",
-                                    isHovered ? "opacity-100" : "opacity-0 w-0 hidden"
-                                )}>
-                                    {item.name}
-                                </span>
-                            </Link>
+                                <Icon className="h-5 w-5" />
+                                {item.name}
+                            </NavLink>
                         );
                     })}
                 </nav>

@@ -86,38 +86,62 @@ export function StockTab({ inventories, sites, onLocate }: StockTabProps) {
                             <th className="px-6 py-4 font-medium">Drug Name</th>
                             <th className="px-6 py-4 font-medium">Location</th>
                             <th className="px-6 py-4 font-medium">NDC</th>
-                            <th className="px-6 py-4 font-medium">Quantity</th>
+                            <th className="px-6 py-4 font-medium w-48">Stock Level</th>
                             <th className="px-6 py-4 font-medium">Status</th>
                             <th className="px-6 py-4 font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {filteredItems.map((item, index) => (
-                            <tr key={`${item.siteId}-${item.ndc}-${index}`} className="hover:bg-slate-50">
-                                <td className="px-6 py-4 font-medium text-slate-900">{item.drugName}</td>
-                                <td className="px-6 py-4 text-slate-600">{item.siteName}</td>
-                                <td className="px-6 py-4 text-slate-500">{item.ndc}</td>
-                                <td className="px-6 py-4 font-medium text-slate-900">{item.quantity}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.status === 'critical' ? 'bg-red-100 text-red-800' :
-                                        item.status === 'low' ? 'bg-amber-100 text-amber-800' :
-                                            item.status === 'overstocked' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-emerald-100 text-emerald-800'
-                                        }`}>
-                                        {item.status.replace('_', ' ').toUpperCase()}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <button
-                                        onClick={() => onLocate(item.drugName, item.siteId)}
-                                        className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
-                                    >
-                                        <MapPin className="h-3 w-3" />
-                                        Locate
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {filteredItems.map((item, index) => {
+                            // Mock max capacity for visualization
+                            const maxCapacity = Math.max(item.quantity * 1.5, 100);
+                            const percentage = Math.min((item.quantity / maxCapacity) * 100, 100);
+                            const getProgressColor = (status: string) => {
+                                switch (status) {
+                                    case 'critical': return 'bg-red-500';
+                                    case 'low': return 'bg-amber-500';
+                                    case 'overstocked': return 'bg-blue-500';
+                                    default: return 'bg-emerald-500';
+                                }
+                            };
+
+                            return (
+                                <tr key={`${item.siteId}-${item.ndc}-${index}`} className="hover:bg-slate-50">
+                                    <td className="px-6 py-4 font-medium text-slate-900">{item.drugName}</td>
+                                    <td className="px-6 py-4 text-slate-600">{item.siteName}</td>
+                                    <td className="px-6 py-4 text-slate-500">{item.ndc}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full ${getProgressColor(item.status)}`}
+                                                    style={{ width: `${percentage}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-700 w-8 text-right">{item.quantity}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.status === 'critical' ? 'bg-red-100 text-red-800' :
+                                            item.status === 'low' ? 'bg-amber-100 text-amber-800' :
+                                                item.status === 'overstocked' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-emerald-100 text-emerald-800'
+                                            }`}>
+                                            {item.status.replace('_', ' ').toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => onLocate(item.drugName, item.siteId)}
+                                            className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
+                                        >
+                                            <MapPin className="h-3 w-3" />
+                                            Locate
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

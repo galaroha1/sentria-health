@@ -7,6 +7,7 @@ import { InventoryAlerts } from '../components/dashboard/InventoryAlerts';
 import { PredictiveAnalytics } from '../components/dashboard/PredictiveAnalytics';
 import { SavingsProjection } from '../components/dashboard/SavingsProjection';
 import { ModelTraining } from '../components/admin/ModelTraining';
+import { MorningBriefing } from '../components/dashboard/MorningBriefing';
 import { useApp } from '../context/AppContext';
 
 type TabType = 'overview' | 'analytics' | 'savings' | 'training';
@@ -67,22 +68,29 @@ export function Dashboard() {
 
                 <div className="p-6">
                     {activeTab === 'overview' && (
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {/* New card for Active Transfers */}
-                            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500">Active Transfers</p>
-                                        <p className="text-2xl font-bold text-slate-900">{activeTransfersCount}</p>
-                                    </div>
-                                    <div className="rounded-full bg-purple-100 p-3 text-purple-600">
-                                        <Truck className="h-6 w-6" />
+                        <div className="space-y-6">
+                            <MorningBriefing />
+
+                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {/* New card for Active Transfers */}
+                                <div
+                                    onClick={() => navigate('/logistics')}
+                                    className="cursor-pointer rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Active Transfers</p>
+                                            <p className="text-2xl font-bold text-slate-900">{activeTransfersCount}</p>
+                                        </div>
+                                        <div className="rounded-full bg-purple-100 p-3 text-purple-600 group-hover:bg-purple-200 transition-colors">
+                                            <Truck className="h-6 w-6" />
+                                        </div>
                                     </div>
                                 </div>
+                                <PredictiveProcurement />
+                                <CostOptimizer />
+                                <InventoryAlerts />
                             </div>
-                            <PredictiveProcurement />
-                            <CostOptimizer />
-                            <InventoryAlerts />
                         </div>
                     )}
 
