@@ -1,4 +1,9 @@
 import type { Supplier, SupplierQuote, MarketSignal } from '../types/supplier';
+import { McKessonService } from './integration/mckesson.service';
+import { CardinalService } from './integration/cardinal.service';
+import { GoodRxService } from './integration/goodrx.service';
+import { ExpressScriptsService } from './integration/express-scripts.service';
+import { FdaService } from './integration/fda.service';
 
 const SUPPLIERS: Supplier[] = [
     { id: 'mckesson', name: 'McKesson', logo: 'MK', reliabilityScore: 98, averageDeliveryTimeHours: 24 },
@@ -11,31 +16,61 @@ export class SupplierService {
     /**
      * Get real-time quotes for a specific drug from all connected suppliers
      */
-    static async getQuotes(ndc: string, _quantity: number): Promise<SupplierQuote[]> {
-        // Simulate API latency
-        await new Promise(resolve => setTimeout(resolve, 800));
+    static async getQuotes(ndc: string, quantity: number): Promise<SupplierQuote[]> {
+        // 1. Fetch FDA Metadata (Parallel)
+        const fdaPromise = FdaService.getDrugDetails(ndc);
 
-        const basePrice = this.getBasePrice(ndc);
+        // 2. Fetch Real Quotes (Parallel)
+        const realQuotesPromises = [
+            McKessonService.getQuote(ndc, quantity),
+            CardinalService.getQuote(ndc, quantity),
+            GoodRxService.getQuote(ndc, quantity),
+            ExpressScriptsService.getQuote(ndc, quantity)
+        ];
 
-        return SUPPLIERS.map(supplier => {
-            // Price variation +/- 5%
-            const variance = (Math.random() * 0.1) - 0.05;
-            const price = basePrice * (1 + variance);
+        const [fdaData, ...quotesResults] = await Promise.all([fdaPromise, ...realQuotesPromises]);
+        const realQuotes = quotesResults.filter((q): q is SupplierQuote => q !== null);
 
-            // Delivery simulation
-            const deliveryDate = new Date();
-            deliveryDate.setHours(deliveryDate.getHours() + supplier.averageDeliveryTimeHours + (Math.random() * 4));
+        // 3. If we have real distributor quotes, use them. 
+        // If we are missing specific distributors (e.g. Amerisource doesn't have an API adapter yet), mocking is fine alongside real.
+        // For this implementation: Mix Real + Mock.
 
-            return {
-                supplierId: supplier.id,
-                ndc,
-                price: parseFloat(price.toFixed(2)),
-                priceTrend: Math.random() > 0.7 ? 'down' : Math.random() > 0.7 ? 'up' : 'stable',
-                availableQuantity: Math.floor(Math.random() * 5000) + 100,
-                deliveryDate: deliveryDate.toISOString(),
-                moq: 10
-            };
-        });
+        let allQuotes = [...realQuotes];
+
+        // 4. Generate Mocks for any missing Distributors (McKesson/Cardinal if API failed, Amerisource always)
+        // We only mock "Distributor" types. GoodRx/ExpressScripts are additive.
+        const coveredSuppliers = new Set(realQuotes.map(q => q.supplierId));
+
+        for (const supplier of SUPPLIERS) {
+            if (!coveredSuppliers.has(supplier.id)) {
+                // Generate Mock
+                const basePrice = this.getBasePrice(ndc);
+                const variance = (Math.random() * 0.1) - 0.05; // +/- 5%
+                const price = basePrice * (1 + variance);
+
+                allQuotes.push({
+                    supplierId: supplier.id,
+                    ndc,
+                    price: parseFloat(price.toFixed(2)),
+                    priceTrend: Math.random() > 0.5 ? 'stable' : 'down',
+                    availableQuantity: Math.floor(Math.random() * 5000),
+                    deliveryDate: new Date(Date.now() + supplier.averageDeliveryTimeHours * 3600000).toISOString(),
+                    moq: 1,
+                    isRealTime: false,
+                    quoteType: 'Distributor'
+                });
+            }
+        }
+
+        // 5. Enrich with FDA Data (Manufacturer)
+        if (fdaData) {
+            allQuotes = allQuotes.map(q => ({
+                ...q,
+                manufacturer: fdaData.labeler_name || q.manufacturer
+            }));
+        }
+
+        return allQuotes;
     }
 
     /**
