@@ -54,8 +54,12 @@ export function NetworkConfig() {
                 is340B,
                 dscsaCompliant,
                 deaLicense,
-                stateLicense: `PENDING-${Date.now()}`
-            }
+                stateLicense: `PENDING-${Date.now()}`,
+                orphanDrugExclusion: true, // Default safe
+                gpoProhibition: false
+            },
+            regulatoryAvatar: 'DSH', // Default to DSH, TODO: Add UI selector
+            classOfTrade: 'acute'    // Default to acute, TODO: Add UI selector
         };
 
         addSite(newSite);

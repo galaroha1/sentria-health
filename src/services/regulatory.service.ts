@@ -1,6 +1,6 @@
 
 import type { Site } from '../types/location';
-import type { DrugChannel, RegulatoryAvatar, ClassOfTrade } from '../types/procurement';
+import type { DrugChannel } from '../types/procurement';
 
 export class RegulatoryService {
 
