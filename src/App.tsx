@@ -7,6 +7,7 @@ import { Cart } from './pages/Cart';
 import { Marketplace } from './pages/Marketplace';
 
 import { Profile } from './pages/Profile';
+import { Compliance } from './pages/Compliance';
 import { Login } from './pages/Login';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { UserManagement } from './pages/UserManagement';
@@ -118,6 +119,7 @@ function App() {
                     <Route path="cpo-overview" element={<CPODashboard />} />
                     <Route path="network" element={<NetworkHub />} />
                     <Route path="command-center" element={<CommandCenter />} />
+                    <Route path="compliance" element={<Compliance />} />
 
                     <Route
                       path="admin"

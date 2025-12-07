@@ -2,80 +2,9 @@ import { useState } from 'react';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { ProductCard } from '../components/marketplace/ProductCard';
 
-const products = [
-    {
-        id: 1,
-        name: 'Keytruda (Pembrolizumab)',
-        manufacturer: 'Merck & Co.',
-        ndc: '0006-3026-02',
-        expiryDate: '2025-08-15',
-        quantity: 15,
-        price: 3100,
-        originalPrice: 4200,
-        seller: 'Mercy General Hospital',
-        verified: true,
-    },
-    {
-        id: 2,
-        name: 'Opdivo (Nivolumab)',
-        manufacturer: 'Bristol Myers Squibb',
-        ndc: '0003-3772-11',
-        expiryDate: '2025-06-20',
-        quantity: 8,
-        price: 2450,
-        originalPrice: 3100,
-        seller: 'St. Mary\'s Medical Center',
-        verified: true,
-    },
-    {
-        id: 3,
-        name: 'Rituxan (Rituximab)',
-        manufacturer: 'Genentech',
-        ndc: '50242-051-21',
-        expiryDate: '2025-05-10',
-        quantity: 20,
-        price: 850,
-        originalPrice: 1200,
-        seller: 'Northwest Oncology',
-        verified: true,
-    },
-    {
-        id: 4,
-        name: 'Herceptin (Trastuzumab)',
-        manufacturer: 'Genentech',
-        ndc: '50242-132-01',
-        expiryDate: '2025-07-01',
-        quantity: 12,
-        price: 1100,
-        originalPrice: 1500,
-        seller: 'City Hope Hospital',
-        verified: true,
-    },
-    {
-        id: 5,
-        name: 'Avastin (Bevacizumab)',
-        manufacturer: 'Amgen',
-        ndc: '55513-207-01',
-        expiryDate: '2025-09-30',
-        quantity: 25,
-        price: 680,
-        originalPrice: 950,
-        seller: 'Regional Cancer Center',
-        verified: true,
-    },
-    {
-        id: 6,
-        name: 'Remicade (Infliximab)',
-        manufacturer: 'Janssen',
-        ndc: '57894-030-01',
-        expiryDate: '2025-04-15',
-        quantity: 10,
-        price: 550,
-        originalPrice: 800,
-        seller: 'Community Health Network',
-        verified: true,
-    },
-];
+import { DrugGenerator } from '../services/mock/drug-generator';
+
+const products = DrugGenerator.generateMarketplaceListings(250);
 
 export function Marketplace() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -84,7 +13,8 @@ export function Marketplace() {
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.ndc.includes(searchTerm) ||
-        p.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())
+        p.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()))
     ).sort((a, b) => {
         return sortOrder === 'asc' ? a.price - b.price : b.price - a.price;
     });

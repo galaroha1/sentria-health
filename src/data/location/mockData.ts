@@ -369,49 +369,48 @@ export const sites: Site[] = [
     },
 ];
 
+import { DrugGenerator } from '../../services/mock/drug-generator';
+
+// Generate a master catalog for the simulation to ensure consistency across sites
+const MASTER_CATALOG = DrugGenerator.generateCatalog(50); // Small subset for sites to hold common items
+
 // Helper to generate random inventory for sites
 const generateInventory = (siteId: string): SiteInventory => {
-    const drugs = [
-        { name: 'Keytruda (Pembrolizumab)', ndc: '0006-3026-02', min: 20, max: 80 },
-        { name: 'Remicade (Infliximab)', ndc: '57894-030-01', min: 15, max: 50 },
-        { name: 'Humira (Adalimumab)', ndc: '0074-3799-02', min: 50, max: 150 },
-        { name: 'Opdivo (Nivolumab)', ndc: '0003-3772-11', min: 10, max: 40 },
-        { name: 'Herceptin (Trastuzumab)', ndc: '63020-052-01', min: 5, max: 25 },
-    ];
-
-    // Randomly select 2-4 drugs for this site
-    const numDrugs = Math.floor(Math.random() * 3) + 2;
-    const selectedDrugs = drugs.sort(() => 0.5 - Math.random()).slice(0, numDrugs);
+    // Pick 8-15 random drugs from the master catalog for each site
+    const numDrugs = Math.floor(Math.random() * 8) + 8;
+    const selectedDrugs = [...MASTER_CATALOG].sort(() => 0.5 - Math.random()).slice(0, numDrugs);
 
     return {
         siteId,
         lastUpdated: new Date().toISOString(),
         drugs: selectedDrugs.map(d => {
             // Randomize quantity to create different statuses
+            const min = 20;
+            const max = 100; // Simulated limits
             const rand = Math.random();
             let quantity;
             let status: 'well_stocked' | 'low' | 'critical' | 'overstocked';
 
             if (rand < 0.1) { // 10% chance of critical
-                quantity = Math.floor(Math.random() * (d.min / 2));
+                quantity = Math.floor(Math.random() * (min / 2));
                 status = 'critical';
             } else if (rand < 0.25) { // 15% chance of low
-                quantity = Math.floor(d.min + Math.random() * (d.min * 0.5));
+                quantity = Math.floor(min + Math.random() * (min * 0.5));
                 status = 'low';
             } else if (rand > 0.9) { // 10% chance of overstocked
-                quantity = Math.floor(d.max * 1.2);
+                quantity = Math.floor(max * 1.2);
                 status = 'overstocked';
             } else { // 65% chance of well stocked
-                quantity = Math.floor(d.min + Math.random() * (d.max - d.min));
+                quantity = Math.floor(min + Math.random() * (max - min));
                 status = 'well_stocked';
             }
 
             return {
-                drugName: d.name,
+                drugName: d.name, // Use generated name
                 ndc: d.ndc,
                 quantity,
-                minLevel: d.min,
-                maxLevel: d.max,
+                minLevel: min,
+                maxLevel: max,
                 status,
                 expirationWarnings: Math.random() < 0.1 ? Math.floor(Math.random() * 3) + 1 : 0,
             };
@@ -430,8 +429,8 @@ export const networkRequests: NetworkRequest[] = [
         requestedBySite: sites[1], // Penn Presbyterian
         targetSite: sites[0], // HUP
         drug: {
-            name: 'Keytruda (Pembrolizumab)',
-            ndc: '0006-3026-02',
+            name: 'Keytruda 100mg Vial',
+            ndc: MASTER_CATALOG[0]?.ndc || '0006-3026-02',
             quantity: 10,
         },
         reason: 'Critical patient need - current stock at 3 units',
@@ -443,10 +442,10 @@ export const networkRequests: NetworkRequest[] = [
         id: 'NR-002',
         requestedBy: 'Dr. James Park',
         requestedBySite: sites[3], // Chester County
-        targetSite: sites[11], // Distribution Center
+        targetSite: sites[11], // Distribution Center (approximated index)
         drug: {
-            name: 'Remicade (Infliximab)',
-            ndc: '57894-030-01',
+            name: 'Remicade 100mg Vial',
+            ndc: MASTER_CATALOG[1]?.ndc || '57894-030-01',
             quantity: 20,
         },
         reason: 'Scheduled treatment protocols next week',
