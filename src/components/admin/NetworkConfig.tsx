@@ -56,10 +56,12 @@ export function NetworkConfig() {
                 deaLicense,
                 stateLicense: `PENDING-${Date.now()}`,
                 orphanDrugExclusion: true, // Default safe
-                gpoProhibition: false
+                gpoProhibition: false,
+                totalDispensingStats: { transfersYTD: 0, totalDispensing: 0 }
             },
             regulatoryAvatar: 'DSH', // Default to DSH, TODO: Add UI selector
-            classOfTrade: 'acute'    // Default to acute, TODO: Add UI selector
+            classOfTrade: 'acute',    // Default to acute, TODO: Add UI selector
+            parentEntity: 'Penn Medicine System' // Default for all sites in this demo
         };
 
         addSite(newSite);
