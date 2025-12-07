@@ -8,13 +8,12 @@ import { OptimizationApprovals } from './OptimizationApprovals';
 import toast from 'react-hot-toast';
 
 export function DecisionsTab() {
-    const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory } = useApp();
+    const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory, currentProposals, setCurrentProposals } = useApp();
     const { simulationResults, fetchSimulations } = useSimulation();
     const [activeSection, setActiveSection] = useState<'approvals' | 'optimization' | 'alerts'>('approvals');
 
     // Optimization State
     const [isOptimizing, setIsOptimizing] = useState(false);
-    const [proposals, setProposals] = useState<ProcurementProposal[]>([]);
 
     // Execution Roadmap State
     const [executionStep, setExecutionStep] = useState<'idle' | 'fetching' | 'analyzing' | 'compliance' | 'complete'>('idle');
@@ -33,7 +32,7 @@ export function DecisionsTab() {
         try {
             setIsOptimizing(true);
             setExecutionStep('fetching');
-            setProposals([]); // Clear existing to show refresh
+            setCurrentProposals([]); // Clear existing to show refresh
 
             // Step 1: Data Pull
             await new Promise(resolve => setTimeout(resolve, 1500));
@@ -49,7 +48,7 @@ export function DecisionsTab() {
             // Step 4: Generate Results
             // Pass active requests to filter out already addressed demand
             const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
-            setProposals(newProposals);
+            setCurrentProposals(newProposals);
 
             setExecutionStep('complete');
             // Reset to idle after a moment so the modal/view can close or persist?
@@ -121,7 +120,7 @@ export function DecisionsTab() {
             }
         }
         // Remove from local list
-        setProposals(prev => prev.filter(p => p.id !== proposal.id));
+        setCurrentProposals(prev => prev.filter(p => p.id !== proposal.id));
     };
 
     return (
@@ -239,7 +238,7 @@ export function DecisionsTab() {
                         <div className="rounded-full bg-purple-100 p-3 text-purple-600">
                             <Zap className="h-6 w-6" />
                         </div>
-                        <span className="text-2xl font-black text-slate-900">{proposals.length}</span>
+                        <span className="text-2xl font-black text-slate-900">{currentProposals.length}</span>
                     </div>
                     <p className="mt-4 font-bold text-slate-900">Optimization Opportunities</p>
                     <p className="text-xs text-slate-500">AI-driven recommendations</p>
@@ -316,7 +315,7 @@ export function DecisionsTab() {
                             <h3 className="text-lg font-bold text-slate-900">AI Optimization Opportunities</h3>
                         </div>
                         <OptimizationApprovals
-                            proposals={proposals}
+                            proposals={currentProposals}
                             onApprove={(p) => handleOptimizationAction(p, 'approve')}
                             onReject={(p) => handleOptimizationAction(p, 'reject')}
                         />

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { NetworkRequest, Site, SiteInventory } from '../types/location';
 import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
+import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { mockNotifications as initialNotifications } from '../data/notifications/mockData';
 import { FirestoreService } from '../services/firebase.service';
@@ -37,6 +38,10 @@ interface AppContextType {
         activeTransfers: number;
     };
 
+    // Optimization State (Persisted)
+    currentProposals: ProcurementProposal[];
+    setCurrentProposals: React.Dispatch<React.SetStateAction<ProcurementProposal[]>>;
+
     // Loading State
     isLoading: boolean;
 }
@@ -47,6 +52,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Initialize with localStorage or mock data
     const [requests, setRequests] = useState<NetworkRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Persisted Optimization State
+    const [currentProposals, setCurrentProposals] = useState<ProcurementProposal[]>([]);
 
     const [notifications, setNotifications] = useState<Notification[]>(() => {
         const saved = localStorage.getItem('sentria_notifications');
@@ -375,6 +383,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             markAllNotificationsAsRead,
             auditLogs,
             metrics,
+            currentProposals,
+            setCurrentProposals,
             isLoading
         }}>
             {children}
