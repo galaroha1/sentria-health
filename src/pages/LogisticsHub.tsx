@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Search, Building2, LayoutList, Map } from 'lucide-react';
+import { MapPin, Plus, Search, Building2, LayoutList, Map as MapIcon, BrainCircuit } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LocationActivity } from '../components/logistics/LocationActivity';
 import { TransferRequestForm } from '../components/transfers/TransferRequestForm';
@@ -15,6 +15,7 @@ export function LogisticsHub() {
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
     const [suggestions, setSuggestions] = useState<TransferSuggestion[]>([]);
+    const [lastScan, setLastScan] = useState<number>(0); // Timestamp for forcing refreshes
 
     const selectedSite = sites.find(s => s.id === selectedSiteId);
     const selectedInventory = inventories.find(inv => inv.siteId === selectedSiteId);
@@ -23,12 +24,22 @@ export function LogisticsHub() {
     useEffect(() => {
         if (!selectedSite || !selectedInventory) return;
 
-        // 1. Identify Shortages
-        const shortages = selectedInventory.drugs.filter(d => d.quantity < d.minLevel || d.status === 'critical' || d.status === 'low');
+        // 1. Identify Candidates
+        // If triggered manually (lastScan > 0), check ALL items for "Balancing" opportunities
+        // Otherwise, only check "Shortages"
+        const isManualScan = lastScan > 0;
+
+        let candidates = selectedInventory.drugs.filter(d => d.quantity < d.minLevel || d.status === 'critical' || d.status === 'low');
+
+        if (isManualScan) {
+            // Check top 20 items to prevent performance hit, prioritizing those with low stock relative to max
+            // OR just check all if list is small. Let's check all for demo.
+            candidates = selectedInventory.drugs;
+        }
 
         // 2. Generate Suggestions
         let newSuggestions: TransferSuggestion[] = [];
-        shortages.forEach(shortageItem => {
+        candidates.forEach(shortageItem => {
             const itemSuggestions = autoLogisticsService.generateSuggestions(
                 selectedSite,
                 shortageItem,
@@ -39,8 +50,13 @@ export function LogisticsHub() {
         });
 
         // 3. Sort/Limit
-        setSuggestions(newSuggestions.slice(0, 3)); // Top 3
-    }, [selectedSite, selectedInventory, sites, inventories]);
+        // Deduplicate by ID
+        const uniqueMap = new Map<string, TransferSuggestion>();
+        newSuggestions.forEach(s => uniqueMap.set(s.id, s));
+        const uniqueSuggestions = Array.from(uniqueMap.values());
+
+        setSuggestions(uniqueSuggestions.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3));
+    }, [selectedSite, selectedInventory, sites, inventories, lastScan]);
 
     const handleApproveSuggestion = (suggestion: TransferSuggestion) => {
         // Convert suggestion to request
@@ -144,7 +160,7 @@ export function LogisticsHub() {
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                     >
-                        <Map className="h-4 w-4" />
+                        <MapIcon className="h-4 w-4" />
                         Map View
                     </button>
                 </div>
@@ -263,6 +279,17 @@ export function LogisticsHub() {
                                 )}
 
                                 <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+                                    {/* Activity Header with AI Controls */}
+                                    <div className="mb-6 flex items-center justify-between">
+                                        <h3 className="font-semibold text-slate-900">Recent Activity</h3>
+                                        <button
+                                            onClick={() => setLastScan(Date.now())}
+                                            className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+                                        >
+                                            <BrainCircuit className="h-3 w-3" />
+                                            Re-scan Network
+                                        </button>
+                                    </div>
                                     <LocationActivity site={selectedSite} requests={requests} />
                                 </div>
                             </>

@@ -94,10 +94,12 @@ export class AutoLogisticsService {
     ): TransferSuggestion[] {
         const suggestions: TransferSuggestion[] = [];
 
-        // 1. Find potential sources (sites with surplus)
+        // 1. Find potential sources (sites with ANY surplus)
+        // Relaxed Rule: Old was +10, New is simply > minLevel (we can refine "Surplus" later)
         const potentialSources = allInventories.filter(inv => {
             const hasItem = inv.drugs.find(d => d.ndc === shortageItem.ndc);
-            return inv.siteId !== targetSite.id && hasItem && hasItem.quantity > hasItem.minLevel + 10; // Must have buffer
+            // Must be different site, have item, and have at least 1 unit above minLevel
+            return inv.siteId !== targetSite.id && hasItem && hasItem.quantity > hasItem.minLevel;
         });
 
         for (const sourceInv of potentialSources) {
@@ -117,32 +119,53 @@ export class AutoLogisticsService {
             const time = (distance / this.getSpeed(transportMethod)) * 60; // Minutes
 
             // NEW RULE: Patient Compliance / Specific Population Logic
-            // If target site is Pediatric, prioritize Liquid/Chewable or specific concentrations (Mocked by checking name/FDA data)
-            // Ideally we'd have this data in DrugInventoryItem, but we'll simulate "Specific Matching".
             const isPediatricSite = targetSite.type === 'clinic' && targetSite.name.toLowerCase().includes('pediatric');
             let complianceScore = 0;
             if (isPediatricSite) {
-                // Mock: Prefer "Oral" or "Suspension" for Peds
                 if (shortageItem.drugName.toLowerCase().includes('suspension') || shortageItem.drugName.toLowerCase().includes('liquid')) {
                     complianceScore = 20; // Bonus
                 }
             }
 
-            // NEW RULE: Predictive Stocking
-            // If we are already sending a truck, can we fit other items that *will* be needed soon?
-            // (Simplified: Boost score if source has HUGE surplus, implying we can batch more)
-            const predictiveBonus = sourceItem.quantity > sourceItem.maxLevel * 1.5 ? 10 : 0;
+            // NEW RULE: Predictive Stocking & Load Balancing
+            // If source has massive overstock (> maxLevel), we should aggressively move it to balance the network
+            let balancingBonus = 0;
+            const sourceSurplus = sourceItem.quantity - sourceItem.minLevel;
+            if (sourceItem.quantity > sourceItem.maxLevel) {
+                balancingBonus = 30; // High priority to clear overstock
+            } else if (sourceSurplus > 20) {
+                balancingBonus = 10; // Moderate priority
+            }
 
             // Scoring Logic
-            // Higher score = better candidate
-            // Factors: Distance (lower is better), Stock Health (higher is better), Cost (lower is better)
             let score = 100;
-            score -= (distance * 2); // -2 points per mile
-            score -= (cost * 0.5); // -0.5 points per dollar
-            if (urgency === 'emergency' && time < 60) score += 50; // Big bonus for speed in emergency
+            score -= (distance * 1.5); // lower penalty for distance to encourage implementation
+            score -= (cost * 0.2); // lower penalty for cost
+            if (urgency === 'emergency' && time < 60) score += 50;
+            if (urgency === 'urgent') score += 20;
 
             score += complianceScore;
-            score += predictiveBonus;
+            score += balancingBonus;
+
+            // Generate "Smart" Reasoning
+            const reasons: string[] = [];
+            if (balancingBonus > 20) reasons.push(`Network Balancing: Clearing excess stock from ${sourceSite.name}`);
+            else if (sourceSurplus > 50) reasons.push(`Source has high surplus (${sourceItem.quantity} units)`);
+
+            if (distance < 5) reasons.push(`Hyper-local transfer (${distance.toFixed(1)} miles)`);
+            else reasons.push(`Optimal Route: ${distance.toFixed(1)} miles`);
+
+            if (complianceScore > 0) reasons.push('Patient Compliance: Formulation match for pediatric site');
+            if (urgency === 'emergency') reasons.push('Critical: Immediate stock restoration required');
+
+            // Calculate optimal quantity to transfer
+            // Don't drain source below minLevel
+            // Don't overfill target above maxLevel
+            const maxAcceptable = shortageItem.maxLevel - shortageItem.quantity;
+            const maxAvailable = sourceItem.quantity - sourceItem.minLevel;
+            const transferQty = Math.min(maxAcceptable, maxAvailable);
+
+            if (transferQty <= 0) continue;
 
             suggestions.push({
                 id: `sugg-${Date.now()}-${sourceSite.id}`,
@@ -150,23 +173,17 @@ export class AutoLogisticsService {
                 sourceSiteId: sourceSite.id,
                 drugName: shortageItem.drugName,
                 ndc: shortageItem.ndc,
-                quantity: shortageItem.maxLevel - shortageItem.quantity, // Suggest filling to max
+                quantity: transferQty,
                 urgency,
                 priorityScore: Math.round(score),
-                reason: [
-                    `Distance: ${distance.toFixed(1)} miles`,
-                    `Source Stock: ${sourceItem.quantity} units (Surplus)`,
-                    `Transport: ${transportMethod.replace('_', ' ')}`,
-                    ...(complianceScore > 0 ? ['Patient Match: Pediatric/Formulation Preferred'] : []),
-                    ...(predictiveBonus > 0 ? ['Predictive: Optimization Opportunity (Batching)'] : [])
-                ],
+                reason: reasons.slice(0, 3), // Top 3 reasons
                 transportMethod,
                 estimatedCost: Math.round(cost),
                 estimatedTimeMinutes: Math.round(time)
             });
         }
 
-        // Return top 3 suggestions sorted by score
+        // Return top suggestions
         return suggestions.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3);
     }
 }

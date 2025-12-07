@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { InventoryHub } from './pages/InventoryHub';
 import { LogisticsHub } from './pages/LogisticsHub';
 import { Cart } from './pages/Cart';
+import { Marketplace } from './pages/Marketplace';
 
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
@@ -108,6 +109,7 @@ function App() {
                       }
                     />
                     <Route path="cart" element={<Cart />} />
+                    <Route path="marketplace" element={<Marketplace />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="decisions" element={<Decisions />} />
                     <Route path="analytics" element={<Analytics />} />
@@ -135,7 +137,6 @@ function App() {
                     />
 
                     {/* Legacy Redirects */}
-                    <Route path="marketplace" element={<Navigate to="/inventory" replace />} />
                     <Route path="vendors" element={<Navigate to="/inventory" replace />} />
                     <Route path="transfers" element={<Navigate to="/logistics" replace />} />
                     <Route path="locations" element={<Navigate to="/logistics" replace />} />

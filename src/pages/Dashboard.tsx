@@ -33,12 +33,26 @@ export function Dashboard() {
                     <p className="text-sm text-slate-500">Intelligent insights and real-time metrics for your hospital network.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <button
+                        onClick={() => {
+                            // Mock export functionality
+                            const blob = new Blob(['Report Data'], { type: 'text/csv' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `sentria-report-${new Date().toISOString().split('T')[0]}.csv`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                        }}
+                        className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                    >
                         Export Report
                     </button>
                     <button
                         onClick={() => navigate('/marketplace')}
-                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 active:bg-primary-800 transition-colors"
                     >
                         New Order
                     </button>

@@ -5,7 +5,6 @@ import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
 import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
-import { mockNotifications as initialNotifications } from '../data/notifications/mockData';
 import { FirestoreService } from '../services/firebase.service';
 import { OptimizationService } from '../services/optimization.service';
 
@@ -56,49 +55,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Persisted Optimization State
     const [currentProposals, setCurrentProposals] = useState<ProcurementProposal[]>([]);
 
-    const [notifications, setNotifications] = useState<Notification[]>(() => {
-        const saved = localStorage.getItem('sentria_notifications');
-        return saved ? JSON.parse(saved) : initialNotifications;
-    });
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    const [sites, setSites] = useState<Site[]>(initialSites);
+    const [sites, setSites] = useState<Site[]>([]);
     const [inventories, setInventories] = useState<SiteInventory[]>([]);
 
-    const addSite = (site: Site) => {
+    const addSite = async (site: Site) => {
+        // Optimistic update
         setSites(prev => [...prev, site]);
+
+        // Persist Site
+        await FirestoreService.set('sites', site.id, site);
+
         // Also initialize empty inventory for the new site
         const newInventory: SiteInventory = {
             siteId: site.id,
             lastUpdated: new Date().toISOString(),
             drugs: []
         };
-        setInventories(prev => [...prev, newInventory]);
-        FirestoreService.set('inventoryItems', site.id, newInventory);
+        // Persist Inventory
+        await FirestoreService.set('inventoryItems', site.id, newInventory);
     };
 
-    const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => {
-        const saved = localStorage.getItem('sentria_audit_logs');
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // Persist to localStorage whenever state changes (only for notifications and audit logs)
-    useEffect(() => {
-        localStorage.setItem('sentria_notifications', JSON.stringify(notifications));
-    }, [notifications]);
-
-    useEffect(() => {
-        localStorage.setItem('sentria_audit_logs', JSON.stringify(auditLogs));
-    }, [auditLogs]);
+    const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
 
     // Subscribe to Firestore collections
     useEffect(() => {
+        // 1. SITES Subscription
+        const unsubscribeSites = FirestoreService.subscribe<Site>('sites', (data) => {
+            if (data.length === 0 && initialSites.length > 0) {
+                // Seed Sites if Firestore is empty
+                console.log('Seeding sites...');
+                initialSites.forEach(s => {
+                    FirestoreService.set('sites', s.id, s);
+                });
+            } else {
+                setSites(data);
+            }
+        });
+
+        // 2. REQUESTS Subscription
         const unsubscribeRequests = FirestoreService.subscribe<NetworkRequest>('transfers', (data) => {
             setRequests(data);
         });
 
+        // 3. INVENTORY Subscription
         const unsubscribeInventories = FirestoreService.subscribe<SiteInventory>('inventoryItems', (data) => {
             if (data.length === 0 && initialInventories.length > 0) {
-                // Seed data if Firestore is empty
+                // Seed inventory if Firestore is empty
                 console.log('Seeding inventory data...');
                 initialInventories.forEach(inv => {
                     FirestoreService.set('inventoryItems', inv.siteId, inv);
@@ -109,15 +113,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setIsLoading(false); // Data loaded
         });
 
+        // 4. NOTIFICATIONS Subscription
         const unsubscribeNotifications = FirestoreService.subscribe<Notification>('notifications', (data) => {
             setNotifications(data);
         });
 
+        // 5. AUDIT LOGS Subscription
         const unsubscribeAuditLogs = FirestoreService.subscribe<AuditLogEntry>('auditLogs', (data) => {
             setAuditLogs(data);
         });
 
         return () => {
+            unsubscribeSites();
             unsubscribeRequests();
             unsubscribeInventories();
             unsubscribeNotifications();

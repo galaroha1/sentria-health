@@ -18,7 +18,7 @@ import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal
 type TabType = 'operations' | 'stock' | 'admin' | 'compliance' | 'advanced' | 'patients';
 
 export function Inventory() {
-    const { inventories, sites, addRequest } = useApp();
+    const { inventories, sites, addRequest, addNotification } = useApp();
     const { selectedPatient, setSelectedPatient } = useSimulation();
     const [activeTab, setActiveTab] = useState<TabType>('operations');
 
@@ -43,7 +43,18 @@ export function Inventory() {
     const handleScan = (decodedText: string) => {
         console.log('Scanned:', decodedText);
         setShowScanner(false);
-        // In a real app, this would route to the specific item or action based on the scan
+
+        // Simulate finding an item
+        addNotification({
+            id: `scan-${Date.now()}`,
+            type: 'success',
+            category: 'system',
+            title: 'Item Scanned',
+            message: `Successfully identified item: ${decodedText || 'Keytruda (NDC: 0006-3026-02)'}`,
+            timestamp: new Date().toISOString(),
+            read: false,
+            link: '/inventory'
+        });
     };
 
     const tabs = [
