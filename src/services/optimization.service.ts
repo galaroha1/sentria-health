@@ -94,16 +94,41 @@ export class OptimizationService {
     }
 
     /**
+     * Analyze patient population at a site to predict future demand
+     */
+    static analyzePopulationDemand(_siteId: string, patients: any[]): { [condition: string]: number } {
+        const sitePatients = patients.filter(_p =>
+            // Mock logic: Assign patients to sites based on location name matching
+            true
+        );
+
+        const conditionCounts: { [key: string]: number } = {};
+        sitePatients.forEach(p => {
+            const condition = p.condition || 'General';
+            conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
+        });
+
+        const total = sitePatients.length || 1;
+        const prevalence: { [key: string]: number } = {};
+
+        Object.keys(conditionCounts).forEach(cond => {
+            prevalence[cond] = conditionCounts[cond] / total;
+        });
+
+        return prevalence;
+    }
+
+    /**
      * Run the optimization algorithm
      */
     static generateProposals(
         sites: Site[],
         inventories: SiteInventory[],
-        simulationResults: any[] = [],
+        simulationResults: any[] = [], // Patient Data
         activeRequests: any[] = [] // Added active requests
     ): ProcurementProposal[] {
         const proposals: ProcurementProposal[] = [];
-        const demandMap = new Map<string, { siteId: string, drugName: string, ndc: string, quantity: number, reason: string }>();
+        const demandMap = new Map<string, { siteId: string, drugName: string, ndc: string, quantity: number, reason: string, priority?: string }>();
 
         // Helper to get incoming stock for a site/drug
         const getIncomingStock = (siteId: string, ndc: string) => {
@@ -112,28 +137,59 @@ export class OptimizationService {
                 .reduce((sum, r) => sum + r.drug.quantity, 0);
         };
 
-        // 1. Identify Demand from Inventory (Low/Critical Stock)
+        // 0. Pre-Analysis: Population Health Trends
+        const sitePrevalenceMap = new Map<string, { [condition: string]: number }>();
+        sites.forEach(s => {
+            // Filter patients by site location name (mock linkage)
+            const sitePatients = simulationResults.filter(p => p.location === s.name);
+            const prevalence = this.analyzePopulationDemand(s.id, sitePatients);
+            sitePrevalenceMap.set(s.id, prevalence);
+        });
+
+        // 1. Identify Demand from Inventory (Low/Critical Stock + Strategic Buys)
         inventories.forEach(inv => {
+            const prevalence = sitePrevalenceMap.get(inv.siteId) || {};
+
+            // Check for High Prevalence Categories (Mock: Oncology -> Chemotherapy)
+            const isOncologyCenter = (prevalence['Lung Cancer'] || 0) > 0.3; // >30% Oncology
+
             inv.drugs.forEach(d => {
-                if (d.status === 'low' || d.status === 'critical') {
-                    const incoming = getIncomingStock(inv.siteId, d.ndc);
+                const incoming = getIncomingStock(inv.siteId, d.ndc);
+
+                // Strategic Adjustment: Increase Safety Stock for Key Conditions
+                let effectiveMinLevel = d.minLevel;
+                let strategicReason = '';
+
+                // Mock Drug Classification Check
+                if (isOncologyCenter && (d.drugName.includes('Cisplatin') || d.drugName.includes('Keytruda'))) {
+                    effectiveMinLevel = d.minLevel * 1.5; // 50% Buffer
+                    strategicReason = ` (Strategic: High Oncology Volume ${(prevalence['Lung Cancer'] * 100).toFixed(0)}%)`;
+                }
+
+                if (d.status === 'low' || d.status === 'critical' || d.quantity < effectiveMinLevel) {
                     const deficit = (d.maxLevel - d.quantity) - incoming;
 
                     if (deficit > 0) {
                         const key = `${inv.siteId}-${d.ndc}`;
+                        // If strategic, mark as such
+                        const reason = strategicReason
+                            ? `Strategic Stocking: Buffer for Patient Demand${strategicReason}`
+                            : `Low stock alert: ${d.quantity} remaining. Incoming: ${incoming}`;
+
                         demandMap.set(key, {
                             siteId: inv.siteId,
                             drugName: d.drugName,
                             ndc: d.ndc,
                             quantity: deficit,
-                            reason: `Low stock alert: ${d.quantity} remaining (Min: ${d.minLevel}). Incoming: ${incoming}`
+                            reason: reason,
+                            priority: strategicReason ? 'strategic' : 'routine'
                         });
                     }
                 }
             });
         });
 
-        // 2. Identify Demand from Patients (Simulation)
+        // 2. Identify Demand from Patients (Simulation) - Unchanged/Simulated
         simulationResults.forEach(patient => {
             if (patient.status === 'Scheduled' || patient.status === 'Transport Needed') {
                 const site = sites.find(s => s.name === patient.location) || sites[0];
@@ -141,14 +197,12 @@ export class OptimizationService {
                     const inventory = inventories.find(inv => inv.siteId === site.id);
                     const drug = inventory?.drugs.find(d => d.drugName === patient.drug);
 
-                    // Simplistic demand aggregation
                     if (drug && drug.quantity < 100) {
                         const key = `${site.id}-${drug.ndc}`;
-                        // ... (same accumulation logic)
                         const existing = demandMap.get(key);
                         if (existing) {
                             existing.quantity += 1;
-                            existing.reason = `${existing.reason} + Patient Demand`;
+                            // existing.reason = `${existing.reason} + Patient Demand`; // Keep concise
                         } else {
                             demandMap.set(key, {
                                 siteId: site.id,
@@ -170,12 +224,10 @@ export class OptimizationService {
 
             const neededQty = demand.quantity;
             const mockBasePrice = 100;
-            // BENCHMARK: Baseline WAC Purchase Landed Cost
-            // Assumed Vendor Distance = 500km
             const benchmarkCosts = this.calculateTotalCost(500, neededQty, mockBasePrice, 'routine');
             const benchmarkTotal = benchmarkCosts.total;
 
-            const isOrphan = false; // Mock; real app checks master data
+            const isOrphan = false;
 
             // ----------------------------------------------------
             // A. EVALUATE PROCUREMENT CHANNELS (WAC / GPO / 340B)
@@ -184,21 +236,19 @@ export class OptimizationService {
             const channelOptions: ProcurementProposal[] = [];
 
             channels.forEach(channel => {
-                // Regulatory Filter
                 const check = RegulatoryService.checkChannelEligibility(
                     targetSite,
                     channel,
                     isOrphan,
-                    'outpatient' // Assuming outpatient mostly for this demo
+                    'outpatient'
                 );
 
                 if (check.allowed) {
-                    // Pricing Logic
                     let unitPrice = mockBasePrice;
-                    if (channel === 'GPO') unitPrice = mockBasePrice * 0.75; // 25% off
-                    if (channel === '340B') unitPrice = mockBasePrice * 0.50; // 50% off
+                    if (channel === 'GPO') unitPrice = mockBasePrice * 0.75;
+                    if (channel === '340B') unitPrice = mockBasePrice * 0.50;
 
-                    const distance = 500; // Vendor
+                    const distance = 500;
                     const costs = this.calculateTotalCost(distance, neededQty, unitPrice, 'routine');
 
                     channelOptions.push({
@@ -225,7 +275,7 @@ export class OptimizationService {
                             riskScore: 0
                         },
                         reason: `${demand.reason}. Best configured ${channel} option.`,
-                        score: 0 // Calculated below
+                        score: 0
                     });
                 }
             });
@@ -239,32 +289,27 @@ export class OptimizationService {
                 if (sourceInv.siteId === demand.siteId) continue;
                 const sourceItem = sourceInv.drugs.find(d => d.ndc === demand.ndc);
 
-                // Only consider if stock sufficient
                 if (sourceItem && (sourceItem.status === 'well_stocked' || sourceItem.status === 'overstocked') && sourceItem.quantity > neededQty) {
                     const sourceSite = sites.find(s => s.id === sourceInv.siteId);
                     if (sourceSite) {
-                        // LOGIC GATES (3-Layer Check)
-                        // Assume source stock might be 340B if source is 340B (Strict Case for Demo)
                         const assumedChannel: DrugChannel = sourceSite.regulatoryProfile.is340B ? '340B' : 'WAC';
 
                         const compliance = RegulatoryService.checkTransferCompliance(
                             sourceSite,
                             targetSite,
-                            assumedChannel, // Testing the Hardest Path
+                            assumedChannel,
                             demand.reason
                         );
 
-                        // If HARD BLOCK (Wholesale or Diversion), skip.
                         if (!compliance.valid) continue;
 
                         const distance = this.calculateDistance(sourceSite, targetSite);
-                        const costs = this.calculateTotalCost(distance, neededQty, 0, 'routine'); // 0 item cost internal
+                        const costs = this.calculateTotalCost(distance, neededQty, 0, 'routine');
 
-                        // Compare logic...
                         const proposal: ProcurementProposal = {
                             id: `trans-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                             type: 'transfer',
-                            channel: assumedChannel, // Internal movement 
+                            channel: assumedChannel,
                             targetSiteId: targetSite.id,
                             targetSiteName: targetSite.name,
                             sourceSiteId: sourceSite.id,
@@ -277,18 +322,17 @@ export class OptimizationService {
                                 transportCost: costs.transport,
                                 itemCost: 0,
                                 totalCost: costs.total,
-                                savings: benchmarkTotal - costs.total // This will be HUGE savings
+                                savings: benchmarkTotal - costs.total
                             },
                             fulfillmentNode: 'DirectDrop',
                             regulatoryJustification: {
                                 passed: true,
-                                // Show the Gate Trace!
                                 details: [
                                     `Wholesale Gate: ${compliance.gates?.wholesale}`,
                                     `DSCSA Gate: ${compliance.gates?.dscsa}`,
                                     `Diversion Gate: ${compliance.gates?.diversion}`
                                 ],
-                                riskScore: compliance.riskScore // Metric for T3 complexity
+                                riskScore: compliance.riskScore
                             },
                             reason: `Transfer from ${sourceSite.name} (${compliance.notes?.join(', ')})`,
                             score: 95
@@ -306,37 +350,31 @@ export class OptimizationService {
             // ----------------------------------------------------
             const allOptions = [...channelOptions];
             if (bestTransfer) {
-                // Generally transfer is cheapest if closer
                 allOptions.push(bestTransfer);
             }
 
-            // Assign Scores based on COST EFFICIENCY mostly
             allOptions.forEach(opt => {
-                // Linear Scoring: 100 * (1 - TotalCost / Benchmark)
-                // If TotalCost > Benchmark (e.g. emergency shipping), score drops.
-                // If TotalCost = 0 (impossible), score = 100.
-
-                // Base score on savings percentage
                 const ratio = opt.costAnalysis.totalCost / benchmarkTotal;
-                let calculatedScore = Math.round(100 - (ratio * 50)); // Baseline 50 points if cost = benchmark. 
-                // Using simple heuristic for now:
+                let calculatedScore = Math.round(100 - (ratio * 50));
 
                 if (opt.type === 'transfer') {
-                    // Prioritize transfers strongly if cost effective
                     calculatedScore = 95 - (opt.costAnalysis.distanceKm / 100);
                 } else {
-                    // Procurement ranking
                     if (opt.channel === '340B') calculatedScore = 90;
                     else if (opt.channel === 'GPO') calculatedScore = 80;
                     else calculatedScore = 60;
                 }
+
+                // Boost for Strategic Priorities
+                if (demand.priority === 'strategic') {
+                    calculatedScore += 5; // Slight nudge to ensure it's surfaced
+                }
+
                 opt.score = Math.min(Math.max(Math.round(calculatedScore), 0), 100);
             });
 
-            // Sort by score
             allOptions.sort((a, b) => b.score - a.score);
 
-            // Pick TOP choice
             if (allOptions.length > 0) {
                 proposals.push(allOptions[0]);
             }

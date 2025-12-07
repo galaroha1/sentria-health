@@ -63,6 +63,38 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Supplier Intelligence */}
+                                {proposal.alternativeQuotes && proposal.alternativeQuotes.length > 0 && (
+                                    <div className="mt-4 rounded-lg bg-indigo-50 p-3 border border-indigo-100">
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Live Supplier Intelligence</p>
+                                            <span className="flex items-center gap-1 text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-100 shadow-sm animate-pulse">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span> Live Feed
+                                            </span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {proposal.alternativeQuotes.map((quote) => (
+                                                <div key={quote.supplierId} className="flex items-center justify-between text-sm bg-white p-2 rounded border border-indigo-100 shadow-sm hover:border-indigo-300 transition-colors">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-slate-700 capitalize">{quote.supplierId}</span>
+                                                        {quote.priceTrend === 'down' && (
+                                                            <span className="flex items-center text-xs text-green-600 bg-green-50 px-1 rounded">
+                                                                <TrendingDown className="h-3 w-3 mr-0.5" /> Price Drop
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="font-mono font-bold text-slate-900">${quote.price.toFixed(2)}</div>
+                                                        <div className="text-xs text-slate-500">
+                                                            {new Date(quote.deliveryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric' })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Cost Analysis */}
@@ -104,6 +136,6 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                     </div>
                 ))}
             </div>
-        </div>
+        </div >
     );
 }

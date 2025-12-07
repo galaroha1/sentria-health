@@ -1,4 +1,5 @@
 import type { OptimizationProposal } from '../services/optimization.service';
+import type { SupplierQuote } from './supplier';
 
 export type DrugChannel = 'WAC' | 'GPO' | '340B' | 'WhiteBag' | 'BrownBag' | 'ClearBag';
 
@@ -21,4 +22,5 @@ export interface ProcurementProposal extends OptimizationProposal {
         riskScore: number; // 0-100 (100 = High Risk)
     };
     fulfillmentNode: 'CentralPharmacy' | 'DirectDrop';
+    alternativeQuotes?: SupplierQuote[];
 }

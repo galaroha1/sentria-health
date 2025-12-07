@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Zap, Clock } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useSimulation } from '../../context/SimulationContext';
 import { OptimizationService } from '../../services/optimization.service';
+import { SupplierService } from '../../services/supplier.service';
 import type { ProcurementProposal } from '../../types/procurement';
 import { OptimizationApprovals } from './OptimizationApprovals';
 import toast from 'react-hot-toast';
@@ -16,7 +17,7 @@ export function DecisionsTab() {
     const [isOptimizing, setIsOptimizing] = useState(false);
 
     // Execution Roadmap State
-    const [executionStep, setExecutionStep] = useState<'idle' | 'fetching' | 'analyzing' | 'compliance' | 'complete'>('idle');
+    const [executionStep, setExecutionStep] = useState<'idle' | 'fetching' | 'analyzing' | 'market-analysis' | 'compliance' | 'complete'>('idle');
 
     // Derived State
     const pendingRequests = requests.filter(r => r.status === 'pending');
@@ -35,25 +36,36 @@ export function DecisionsTab() {
             setCurrentProposals([]); // Clear existing to show refresh
 
             // Step 1: Data Pull
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             setExecutionStep('analyzing');
 
-            // Step 2: Analysis
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            setExecutionStep('compliance');
-
-            // Step 3: Compliance Checks
+            // Step 2: Patient Demand Analysis
+            // (Already handled inside generateProposals, just visualizing time)
             await new Promise(resolve => setTimeout(resolve, 1000));
+            setExecutionStep('market-analysis'); // New Step
+
+            // Step 3: Compliance Checks & Market Intelligence
+            await new Promise(resolve => setTimeout(resolve, 800));
 
             // Step 4: Generate Results
-            // Pass active requests to filter out already addressed demand
-            const newProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
-            setCurrentProposals(newProposals);
+            const initialProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
+
+            // Enrich with Real-time Supplier Data
+            const enrichedProposals = await Promise.all(initialProposals.map(async (p) => {
+                if (p.type === 'procurement') {
+                    const quotes = await SupplierService.getQuotes(p.ndc, p.quantity);
+                    return { ...p, alternativeQuotes: quotes };
+                }
+                return p;
+            }));
+
+            setExecutionStep('compliance');
+            await new Promise(resolve => setTimeout(resolve, 500)); // Just for visuals
+
+            setCurrentProposals(enrichedProposals);
 
             setExecutionStep('complete');
-            // Reset to idle after a moment so the modal/view can close or persist?
-            // User likely wants to see the "Done" state before viewing results.
-            setTimeout(() => setExecutionStep('idle'), 2000);
+            setTimeout(() => setExecutionStep('idle'), 2500);
 
         } catch (error) {
             console.error("Optimization failed:", error);
@@ -146,9 +158,9 @@ export function DecisionsTab() {
                             <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
                                 <div className="flex items-center gap-3">
                                     <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'fetching' ? 'bg-blue-100 text-blue-600 animate-pulse' :
-                                        ['analyzing', 'compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
+                                        ['analyzing', 'market-analysis', 'compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
                                         }`}>
-                                        {['analyzing', 'compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">1</span>}
+                                        {['analyzing', 'market-analysis', 'compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">1</span>}
                                     </div>
                                     <div>
                                         <p className={`font-medium ${executionStep === 'fetching' ? 'text-blue-600' : 'text-slate-900'}`}>Data Ingestion</p>
@@ -158,29 +170,45 @@ export function DecisionsTab() {
                                 {executionStep === 'fetching' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />}
                             </div>
 
-                            {/* Step 2: Analysis */}
+                            {/* Step 2: Patient Trends */}
                             <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
                                 <div className="flex items-center gap-3">
                                     <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'analyzing' ? 'bg-purple-100 text-purple-600 animate-pulse' :
-                                        ['compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
+                                        ['market-analysis', 'compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
                                         }`}>
-                                        {['compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">2</span>}
+                                        {['market-analysis', 'compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">2</span>}
                                     </div>
                                     <div>
-                                        <p className={`font-medium ${executionStep === 'analyzing' ? 'text-purple-600' : 'text-slate-900'}`}>Smart Analysis</p>
-                                        <p className="text-xs text-slate-500">Calculating deficits & routes</p>
+                                        <p className={`font-medium ${executionStep === 'analyzing' ? 'text-purple-600' : 'text-slate-900'}`}>Population Analysis</p>
+                                        <p className="text-xs text-slate-500">Forecasting patient demand</p>
                                     </div>
                                 </div>
                                 {executionStep === 'analyzing' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-600 border-t-transparent" />}
                             </div>
 
-                            {/* Step 3: Compliance */}
+                            {/* Step 3: Market Intelligence */}
+                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'market-analysis' ? 'bg-indigo-100 text-indigo-600 animate-pulse' :
+                                        ['compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
+                                        }`}>
+                                        {['compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">3</span>}
+                                    </div>
+                                    <div>
+                                        <p className={`font-medium ${executionStep === 'market-analysis' ? 'text-indigo-600' : 'text-slate-900'}`}>Market Intelligence</p>
+                                        <p className="text-xs text-slate-500">Querying Supplier APIs (Live)</p>
+                                    </div>
+                                </div>
+                                {executionStep === 'market-analysis' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />}
+                            </div>
+
+                            {/* Step 4: Compliance */}
                             <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
                                 <div className="flex items-center gap-3">
                                     <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'compliance' ? 'bg-amber-100 text-amber-600 animate-pulse' :
                                         executionStep === 'complete' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
                                         }`}>
-                                        {executionStep === 'complete' ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">3</span>}
+                                        {executionStep === 'complete' ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">4</span>}
                                     </div>
                                     <div>
                                         <p className={`font-medium ${executionStep === 'compliance' ? 'text-amber-600' : 'text-slate-900'}`}>Compliance Check</p>
