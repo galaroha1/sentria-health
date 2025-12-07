@@ -37,7 +37,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             createdAt: new Date().toISOString(),
             lastLogin: undefined,
             createdBy: 'admin',
-            status: 'pending' as UserStatus // Set initial status to pending
+            status: UserStatus.PENDING
         };
 
         await FirestoreService.set('users', newUser.id, newUser);
@@ -54,8 +54,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const toggleUserStatus = async (id: string) => {
         const user = users.find(u => u.id === id);
         if (user) {
-            const newStatus = user.status === 'active' ? 'suspended' : 'active';
-            await FirestoreService.update('users', id, { status: newStatus as UserStatus });
+            const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
+            await FirestoreService.update('users', id, { status: newStatus });
         }
     };
 
