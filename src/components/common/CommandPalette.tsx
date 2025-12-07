@@ -112,6 +112,13 @@ export function CommandPalette() {
                                     <ArrowRight className="h-4 w-4 text-slate-400" />
                                     <span className="flex-1 font-medium text-slate-900">Order Supplies</span>
                                 </button>
+                                <button
+                                    onClick={() => handleNavigate('/command-center')}
+                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-slate-100"
+                                >
+                                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                                    <span className="flex-1 font-medium text-slate-900">Open AI Command Center</span>
+                                </button>
                             </div>
                         </div>
                     )}

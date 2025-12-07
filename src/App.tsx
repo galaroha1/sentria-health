@@ -12,6 +12,7 @@ import { Admin } from './pages/Admin';
 import { Decisions } from './pages/Decisions';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
+import { CommandCenter } from './components/simulation/CommandCenter';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -106,6 +107,7 @@ function App() {
                     <Route path="decisions" element={<Decisions />} />
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
+                    <Route path="command-center" element={<CommandCenter />} />
 
                     <Route
                       path="admin"

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import type { Site, SiteInventory } from '../../types/location';
@@ -10,6 +10,43 @@ interface InteractiveMapProps {
     sites: Site[];
     inventories: SiteInventory[];
     onSiteClick?: (site: Site, departmentId?: string) => void;
+}
+
+// Helper to animate marker along a path
+function MovingTruck({ start, end }: { start: [number, number], end: [number, number] }) {
+    const [position, setPosition] = useState(start);
+
+    useEffect(() => {
+        let startTime: number;
+        const duration = 5000; // 5 seconds to travel
+
+        const animate = (time: number) => {
+            if (!startTime) startTime = time;
+            const progress = (time - startTime) / duration;
+
+            if (progress < 1) {
+                const lat = start[0] + (end[0] - start[0]) * progress;
+                const lng = start[1] + (end[1] - start[1]) * progress;
+                setPosition([lat, lng]);
+                requestAnimationFrame(animate);
+            } else {
+                // Loop animation
+                startTime = time;
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }, [start, end]);
+
+    const icon = L.divIcon({
+        html: `<div class="truck-marker"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5"/><path d="M14 17h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>`,
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
+
+    return <Marker position={position} icon={icon} zIndexOffset={1000} />;
 }
 
 function SitePopup({ site, summary, onAction }: { site: Site, summary: { criticalCount: number; lowCount: number; totalDrugs: number; } | null, onAction: (site: Site, deptId?: string) => void }) {
@@ -121,18 +158,16 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
     const activeRoutes = requests
         .filter(r => r.status === 'in_transit')
         .map(r => {
-            const source = r.targetSite;
-            const target = r.requestedBySite;
+            const source = r.targetSite; // From (Source)
+            const target = r.requestedBySite; // To (Requester)
             if (!source || !target) return null;
             return {
                 id: r.id,
-                positions: [
-                    [source.coordinates.lat, source.coordinates.lng],
-                    [target.coordinates.lat, target.coordinates.lng]
-                ] as [number, number][]
+                start: [source.coordinates.lat, source.coordinates.lng] as [number, number],
+                end: [target.coordinates.lat, target.coordinates.lng] as [number, number]
             };
         })
-        .filter((r): r is { id: string; positions: [number, number][] } => r !== null);
+        .filter((r): r is { id: string; start: [number, number]; end: [number, number] } => r !== null);
 
     return (
         <MapContainer
@@ -146,11 +181,13 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
             />
 
             {activeRoutes.map(route => (
-                <Polyline
-                    key={route.id}
-                    positions={route.positions}
-                    pathOptions={{ color: '#6366f1', weight: 3, dashArray: '10, 10', opacity: 0.6 }}
-                />
+                <div key={route.id}>
+                    <Polyline
+                        positions={[route.start, route.end]}
+                        pathOptions={{ color: '#6366f1', weight: 3, dashArray: '10, 10', opacity: 0.6 }}
+                    />
+                    <MovingTruck start={route.start} end={route.end} />
+                </div>
             ))}
 
             {sites.map((site) => {
