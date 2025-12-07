@@ -15,6 +15,7 @@ interface CartContextType {
     addToCart: (item: CartItem) => void;
     removeFromCart: (id: number) => void;
     clearCart: () => void;
+    checkout: () => Promise<string>;
     total: number;
     itemCount: number;
 }
@@ -62,11 +63,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await Promise.all(batch);
     };
 
+    const checkout = async (): Promise<string> => {
+        if (!user) throw new Error('User not authenticated');
+        if (items.length === 0) throw new Error('Cart is empty');
+
+        const orderId = `ORD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const orderData = {
+            id: orderId,
+            items: items,
+            total: total + 150, // Including shipping
+            status: 'processing',
+            createdAt: new Date().toISOString(),
+            shipping: {
+                method: 'Cold Chain Express',
+                cost: 150
+            }
+        };
+
+        // Save order to history
+        await FirestoreService.set(`users/${user.id}/orders`, orderId, orderData);
+
+        // Clear cart
+        await clearCart();
+
+        return orderId;
+    };
+
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
-        <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total, itemCount }}>
+        <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, checkout, total, itemCount }}>
             {children}
         </CartContext.Provider>
     );

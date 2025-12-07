@@ -4,8 +4,10 @@ import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 
 export function Cart() {
-    const { items, removeFromCart, total } = useCart();
+    const { items, removeFromCart, checkout, total } = useCart();
     const [orderComplete, setOrderComplete] = useState(false);
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [orderId, setOrderId] = useState('');
 
     if (items.length === 0 && !orderComplete) {
         return (
@@ -32,7 +34,7 @@ export function Cart() {
                     <CheckCircle className="h-12 w-12 text-emerald-600" />
                 </div>
                 <h2 className="mt-4 text-xl font-bold text-slate-900">Order Placed Successfully</h2>
-                <p className="mt-2 text-slate-500">Order #ORD-2024-8892 has been confirmed.</p>
+                <p className="mt-2 text-slate-500">Order #{orderId} has been confirmed.</p>
                 <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                     <h3 className="font-medium text-slate-900">Logistics Status</h3>
                     <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
@@ -133,11 +135,29 @@ export function Cart() {
                         </div>
 
                         <button
-                            onClick={() => setOrderComplete(true)}
-                            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+                            onClick={async () => {
+                                setIsCheckingOut(true);
+                                try {
+                                    const id = await checkout();
+                                    setOrderId(id);
+                                    setOrderComplete(true);
+                                } catch (err) {
+                                    console.error("Checkout failed:", err);
+                                } finally {
+                                    setIsCheckingOut(false);
+                                }
+                            }}
+                            disabled={isCheckingOut}
+                            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            <CreditCard className="h-4 w-4" />
-                            Place Order
+                            {isCheckingOut ? (
+                                <>Processing...</>
+                            ) : (
+                                <>
+                                    <CreditCard className="h-4 w-4" />
+                                    Place Order
+                                </>
+                            )}
                         </button>
 
                         <p className="mt-4 text-center text-xs text-slate-500">

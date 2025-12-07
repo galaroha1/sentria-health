@@ -8,17 +8,29 @@ export function ReorderingTab() {
     const { addNotification } = useApp();
     const navigate = useNavigate();
 
-    const reorderItems = [
-        { id: 1, name: 'Keytruda (Pembrolizumab)', current: 12, min: 20, supplier: 'McKesson', cost: '$4,800' },
-        { id: 2, name: 'Opdivo (Nivolumab)', current: 5, min: 10, supplier: 'Cardinal Health', cost: '$2,100' },
-    ];
+    const { inventories, sites } = useApp();
+
+    // Derive reorder items from real inventory
+    const reorderItems = inventories.flatMap(inv =>
+        inv.drugs
+            .filter(d => d.quantity <= d.minLevel)
+            .map(d => ({
+                id: d.ndc,
+                name: d.drugName,
+                current: d.quantity,
+                min: d.minLevel,
+                supplier: 'McKesson', // Default or derived from metadata if available
+                cost: 4500, // Placeholder or fetch real price
+                siteName: sites.find(s => s.id === inv.siteId)?.name
+            }))
+    );
 
     const handleCreatePO = (item: typeof reorderItems[0]) => {
         addToCart({
-            id: item.id,
+            id: parseInt(item.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000), // Hack for number ID
             name: item.name,
-            price: parseInt(item.cost.replace('$', '').replace(',', '')),
-            quantity: item.min, // Reorder up to min or a fixed amount
+            price: item.cost,
+            quantity: Math.max(item.min - item.current, 10), // Reorder difference or min 10
             seller: item.supplier
         });
 
@@ -44,7 +56,7 @@ export function ReorderingTab() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-slate-500">Below Threshold</p>
-                            <p className="text-2xl font-bold text-slate-900">2 Items</p>
+                            <p className="text-2xl font-bold text-slate-900">{reorderItems.length} Items</p>
                         </div>
                     </div>
                 </div>
@@ -87,7 +99,9 @@ export function ReorderingTab() {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-slate-900">{item.name}</h4>
-                                    <p className="text-sm text-slate-500">Supplier: {item.supplier} • Est. Cost: {item.cost}</p>
+                                    <p className="text-sm text-slate-500">
+                                        {item.siteName} • Supplier: {item.supplier} • Est. Cost: ${item.cost.toLocaleString()}
+                                    </p>
                                 </div>
                             </div>
 

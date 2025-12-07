@@ -3,8 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { ApiManager } from '../components/admin/ApiManager';
 import { UserRole } from '../types';
 
+import { useNavigate } from 'react-router-dom';
+
 export function Settings() {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     return (
         <div className="max-w-4xl space-y-6">
@@ -37,7 +40,17 @@ export function Settings() {
                                 <h3 className="font-medium text-slate-900">{item.title}</h3>
                                 <p className="text-sm text-slate-500">{item.description}</p>
                             </div>
-                            <button className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900">
+                            <button
+                                onClick={() => {
+                                    if (item.title === 'Profile Information') {
+                                        navigate('/profile');
+                                    } else {
+                                        // Placeholder feedback
+                                        alert(`${item.title} management coming in next release.`);
+                                    }
+                                }}
+                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900 active:bg-slate-50 transition-colors"
+                            >
                                 Manage
                             </button>
                         </div>

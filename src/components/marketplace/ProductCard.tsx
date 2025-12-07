@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { pricingService } from '../../services/pricingService';
 
 interface ProductCardProps {
+    id: number;
     name: string;
     manufacturer: string;
     ndc: string;
@@ -16,17 +17,20 @@ interface ProductCardProps {
     verified: boolean;
 }
 
-export function ProductCard({
-    name,
-    manufacturer,
-    ndc,
-    expiryDate,
-    quantity,
-    price,
-    originalPrice,
-    seller,
-    verified,
-}: ProductCardProps) {
+export function ProductCard(props: ProductCardProps) {
+    const {
+        id,
+        name,
+        manufacturer,
+        ndc,
+        expiryDate,
+        quantity,
+        price,
+        originalPrice,
+        seller,
+        verified,
+    } = props;
+    const product = { id }; // Helper for handleAddToCart
     const { addToCart } = useCart();
     const [isAnimating, setIsAnimating] = useState(false);
     const [analysis, setAnalysis] = useState<any>(null);
@@ -53,7 +57,7 @@ export function ProductCard({
         setIsAnimating(true);
         setTimeout(() => {
             addToCart({
-                id: Math.random(),
+                id: product.id, // Use the actual product ID
                 name,
                 price,
                 quantity: 1,

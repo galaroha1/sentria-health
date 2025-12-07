@@ -341,20 +341,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await FirestoreService.set('notifications', newNotification.id, newNotification);
 
         if (status === 'completed') {
+            // 1. Add to Requesting Site (Receiver)
             await updateInventory(
                 request.requestedBySite.id,
                 request.drug.ndc,
-                -request.drug.quantity,
-                `Transfer to ${request.targetSite.name}`,
+                request.drug.quantity, // ADD
+                `Transfer received from ${request.targetSite.name}`,
                 'System',
                 'System'
             );
 
+            // 2. Remove from Target Site (Sender)
             await updateInventory(
                 request.targetSite.id,
                 request.drug.ndc,
-                request.drug.quantity,
-                `Transfer received from ${request.requestedBySite.name}`,
+                -request.drug.quantity, // REMOVE
+                `Transfer sent to ${request.requestedBySite.name}`,
                 'System',
                 'System'
             );

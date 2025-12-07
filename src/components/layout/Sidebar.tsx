@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2, Brain } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2, Brain, ShoppingCart } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -22,6 +22,7 @@ export function Sidebar() {
         { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
         { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
         { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
+        { name: 'Cart', href: '/cart', icon: ShoppingCart, permission: 'inventory' },
     ];
 
     // Filter navigation based on user permissions
