@@ -4,7 +4,8 @@ import {
     Truck,
     BarChart3,
     Settings,
-    Scan
+    Scan,
+    Stethoscope
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +24,7 @@ export function MobileNav() {
     const navigation: NavigationItem[] = [
         { name: 'Home', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
         { name: 'Stock', href: '/inventory', icon: Package, permission: 'inventory' },
+        { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
         { name: 'Scan', href: '/scan', icon: Scan, permission: 'inventory', isFab: true }, // Add Scan as an item
         { name: 'Map', href: '/logistics', icon: Truck, permission: 'transfers' },
         { name: 'Data', href: '/analytics', icon: BarChart3, permission: 'reports' },

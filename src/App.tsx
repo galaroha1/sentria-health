@@ -12,6 +12,7 @@ import { Admin } from './pages/Admin';
 import { Decisions } from './pages/Decisions';
 import { Analytics } from './pages/AnalyticsPage';
 import { Settings } from './pages/SettingsPage';
+import { ClinicalHub } from './pages/ClinicalHub';
 import { CommandCenter } from './components/simulation/CommandCenter';
 
 import { CartProvider } from './context/CartContext';
@@ -107,6 +108,7 @@ function App() {
                     <Route path="decisions" element={<Decisions />} />
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
+                    <Route path="clinical" element={<ClinicalHub />} />
                     <Route path="command-center" element={<CommandCenter />} />
 
                     <Route

@@ -1,6 +1,44 @@
-import { FileText, ShieldCheck, Download, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, ShieldCheck, Download, AlertTriangle, CheckCircle2, Search, Loader2 } from 'lucide-react';
+import { fdaService } from '../../services/fdaService';
+import type { FdaRecallResult } from '../../services/fdaService';
 
 export function ComplianceTab() {
+    const [verificationTerm, setVerificationTerm] = useState('');
+    const [verificationType, setVerificationType] = useState<'device' | 'drug'>('device');
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verificationResult, setVerificationResult] = useState<any>(null);
+    const [recalls, setRecalls] = useState<FdaRecallResult[]>([]);
+
+    const handleVerify = async () => {
+        if (!verificationTerm) return;
+        setIsVerifying(true);
+        setVerificationResult(null);
+        setRecalls([]);
+
+        try {
+            // 1. Verify Existence
+            let result;
+            if (verificationType === 'device') {
+                result = await fdaService.verifyDeviceByUDI(verificationTerm);
+            } else {
+                result = await fdaService.searchDrugLabel(verificationTerm);
+            }
+            setVerificationResult(result || { error: 'Not found in FDA database' });
+
+            // 2. Check Recalls
+            if (result) {
+                const recallData = await fdaService.checkRecalls(verificationTerm, verificationType);
+                setRecalls(recallData);
+            }
+        } catch (error) {
+            console.error(error);
+            setVerificationResult({ error: 'Verification failed' });
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
     const audits = [
         { id: 1, type: 'DEA Check', status: 'Passed', date: '2024-03-15', auditor: 'System' },
         { id: 2, type: 'Temp Log Review', status: 'Warning', date: '2024-03-14', auditor: 'Dr. Rodriguez' },
@@ -9,6 +47,103 @@ export function ComplianceTab() {
 
     return (
         <div className="space-y-6">
+            {/* FDA Verification Section */}
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900">FDA Product Verification</h3>
+                        <p className="text-sm text-slate-500">Verify UDIs and Drug Labels against openFDA database.</p>
+                    </div>
+                    <div className="flex rounded-lg bg-slate-100 p-1">
+                        <button
+                            onClick={() => setVerificationType('device')}
+                            className={`rounded-md px-3 py-1 text-sm font-medium transition-all ${verificationType === 'device' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                        >
+                            Device (UDI)
+                        </button>
+                        <button
+                            onClick={() => setVerificationType('drug')}
+                            className={`rounded-md px-3 py-1 text-sm font-medium transition-all ${verificationType === 'drug' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                        >
+                            Drug (Name)
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex gap-3">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder={verificationType === 'device' ? "Enter UDI (Device Identifier)..." : "Enter Drug Brand Name..."}
+                            value={verificationTerm}
+                            onChange={(e) => setVerificationTerm(e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+                        />
+                    </div>
+                    <button
+                        onClick={handleVerify}
+                        disabled={isVerifying || !verificationTerm}
+                        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                        Verify
+                    </button>
+                </div>
+
+                {/* Verification Results */}
+                {verificationResult && (
+                    <div className={`mt-4 rounded-lg border p-4 ${verificationResult.error ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`}>
+                        {verificationResult.error ? (
+                            <div className="flex items-center gap-3 text-red-800">
+                                <AlertTriangle className="h-5 w-5" />
+                                <span className="font-medium">{verificationResult.error}</span>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex items-center gap-3 text-emerald-800 mb-2">
+                                    <CheckCircle2 className="h-5 w-5" />
+                                    <span className="font-medium">Verified in FDA Database</span>
+                                </div>
+                                <div className="text-sm text-slate-600">
+                                    {verificationType === 'device' ? (
+                                        <>
+                                            <p><span className="font-medium">Device:</span> {verificationResult.gudid?.brand_name}</p>
+                                            <p><span className="font-medium">Company:</span> {verificationResult.gudid?.company_name}</p>
+                                            <p><span className="font-medium">Model:</span> {verificationResult.gudid?.version_model_number}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p><span className="font-medium">Drug:</span> {verificationResult.openfda?.brand_name?.[0]}</p>
+                                            <p><span className="font-medium">Manufacturer:</span> {verificationResult.openfda?.manufacturer_name?.[0]}</p>
+                                            <p><span className="font-medium">NDC:</span> {verificationResult.openfda?.product_ndc?.[0]}</p>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Recall Alerts */}
+                {recalls.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                        <div className="mb-2 flex items-center gap-2 text-amber-800">
+                            <AlertTriangle className="h-5 w-5" />
+                            <span className="font-bold">Active Recalls Found</span>
+                        </div>
+                        <ul className="space-y-2">
+                            {recalls.map((recall, i) => (
+                                <li key={i} className="text-sm text-amber-900">
+                                    <span className="font-medium">{recall.recall_number}:</span> {recall.reason_for_recall}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2">
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 className="mb-4 text-lg font-bold text-slate-900">Compliance Status</h3>
@@ -111,5 +246,3 @@ export function ComplianceTab() {
         </div>
     );
 }
-
-import { CheckCircle2 } from 'lucide-react';

@@ -92,3 +92,39 @@ export const MOCK_USERS: Record<string, { password: string; user: User }> = {
         },
     },
 };
+
+export interface PricingTier {
+    type: '340B' | 'GPO' | 'WAC';
+    price: number;
+    contract_id?: string;
+}
+
+export interface InventoryItem {
+    id: string;
+    name: string;
+    sku: string;
+    category: string;
+    quantity: number;
+    minLevel: number;
+    maxLevel: number;
+    location: string;
+    unit: string;
+    expiryDate: string;
+    lotNumber: string;
+
+    // Regulatory Fields
+    udi_di?: string;             // Device Identifier
+    fda_k_number?: string;       // Premarket Notification
+    fda_ndc_number?: string;     // National Drug Code
+    last_verified_at?: string;
+    verification_status?: 'verified' | 'pending' | 'failed' | 'warning';
+    recall_status?: 'clear' | 'active_recall' | 'terminated_recall';
+
+    // Financial Fields
+    pricing_tiers?: PricingTier[];
+    nadac_benchmark?: number;
+
+    // Operational Fields
+    standardization_status?: 'standard' | 'alternative' | 'non-standard';
+    preference_card_link?: string[]; // IDs of preference cards using this item
+}
