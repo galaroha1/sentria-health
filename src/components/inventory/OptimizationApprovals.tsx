@@ -64,6 +64,33 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                     </div>
                                 )}
 
+
+
+                                {/* FDA Regulatory Verification */}
+                                {proposal.alternativeQuotes && proposal.alternativeQuotes[0]?.fdaDetails && (
+                                    <div className="mt-3 rounded-lg bg-blue-50 p-2.5 border border-blue-100">
+                                        <div className="flex items-start gap-2">
+                                            <div className="mt-0.5 rounded bg-blue-100 p-1 text-blue-600">
+                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-blue-900">FDA Verified Data</p>
+                                                <p className="text-xs text-blue-700">
+                                                    <span className="font-semibold">{proposal.alternativeQuotes[0].fdaDetails.brand_name}</span>
+                                                    <span className="text-blue-500"> ({proposal.alternativeQuotes[0].fdaDetails.generic_name})</span>
+                                                </p>
+                                                {proposal.alternativeQuotes[0].fdaDetails.pharm_class?.slice(0, 1).map((pc, i) => (
+                                                    <span key={i} className="mt-1 inline-block rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 shadow-sm border border-blue-100">
+                                                        {pc}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Supplier Intelligence */}
                                 {proposal.alternativeQuotes && proposal.alternativeQuotes.length > 0 && (
                                     <div className="mt-4 rounded-lg bg-indigo-50 p-3 border border-indigo-100">

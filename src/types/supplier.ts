@@ -19,6 +19,12 @@ export interface SupplierQuote {
     manufacturer?: string; // From FDA
     isRealTime: boolean; // True if from API, False if simulated
     quoteType?: 'Distributor' | 'Retail' | 'PBM';
+    fdaDetails?: {
+        brand_name: string;
+        generic_name: string;
+        pharm_class?: string[];
+        labeler_name?: string;
+    };
 }
 
 export interface MarketSignal {

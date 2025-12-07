@@ -4,6 +4,8 @@ export interface FdaDrugLabel {
     generic_name: string;
     brand_name: string;
     labeler_name: string;
+    pharm_class?: string[];
+    active_ingredient?: string[];
     packaging: { package_ndc: string; description: string }[];
 }
 

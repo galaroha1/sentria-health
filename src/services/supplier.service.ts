@@ -62,11 +62,17 @@ export class SupplierService {
             }
         }
 
-        // 5. Enrich with FDA Data (Manufacturer)
+        // 5. Enrich with FDA Data (Manufacturer & Regulatory)
         if (fdaData) {
             allQuotes = allQuotes.map(q => ({
                 ...q,
-                manufacturer: fdaData.labeler_name || q.manufacturer
+                manufacturer: fdaData.labeler_name || q.manufacturer,
+                fdaDetails: {
+                    brand_name: fdaData.brand_name,
+                    generic_name: fdaData.generic_name,
+                    pharm_class: fdaData.pharm_class,
+                    labeler_name: fdaData.labeler_name
+                }
             }));
         }
 
