@@ -9,10 +9,18 @@ import {
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+interface NavigationItem {
+    name: string;
+    href: string;
+    icon: typeof LayoutDashboard;
+    permission: string;
+    isFab?: boolean;
+}
+
 export function MobileNav() {
     const { user, hasPermission } = useAuth();
 
-    const navigation = [
+    const navigation: NavigationItem[] = [
         { name: 'Home', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
         { name: 'Stock', href: '/inventory', icon: Package, permission: 'inventory' },
         { name: 'Scan', href: '/scan', icon: Scan, permission: 'inventory', isFab: true }, // Add Scan as an item
@@ -50,7 +58,7 @@ export function MobileNav() {
                         <NavLink
                             key={item.name}
                             to={item.href}
-                            className={({ isActive }) =>
+                            className={({ isActive }: { isActive: boolean }) =>
                                 `flex flex-col items-center gap-1 p-2 text-[10px] font-medium transition-colors ${isActive
                                     ? 'text-indigo-600'
                                     : 'text-slate-500'

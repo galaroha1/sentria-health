@@ -1,27 +1,24 @@
 import { LayoutDashboard, Package, Settings, Truck, BarChart3 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-export function Sidebar() {
-    const { user, logout, hasPermission } = useAuth();
-    const navigate = useNavigate();
+interface NavigationItem {
+    name: string;
+    href: string;
+    icon: typeof LayoutDashboard;
+    permission: string;
+}
 
-    const navigation = [
+export function Sidebar() {
+    const { user, hasPermission } = useAuth();
+
+    const navigation: NavigationItem[] = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
         { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
         { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
         { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
         { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
     ];
-
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate('/login');
-        } catch (error) {
-            console.error('Failed to log out', error);
-        }
-    };
 
     // Filter navigation based on user permissions
     const filteredNavigation = navigation.filter(item => {
@@ -48,7 +45,7 @@ export function Sidebar() {
                             <NavLink
                                 key={item.name}
                                 to={item.href}
-                                className={({ isActive }) =>
+                                className={({ isActive }: { isActive: boolean }) =>
                                     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive
                                         ? 'bg-indigo-50 text-indigo-600'
                                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
