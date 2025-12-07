@@ -13,6 +13,7 @@ import { Decisions } from './pages/Decisions';
 import { Analytics } from './pages/AnalyticsPage';
 import { Settings } from './pages/SettingsPage';
 import { ClinicalHub } from './pages/ClinicalHub';
+import { CPODashboard } from './pages/CPODashboard';
 import { CommandCenter } from './components/simulation/CommandCenter';
 
 import { CartProvider } from './context/CartContext';
@@ -109,6 +110,7 @@ function App() {
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="clinical" element={<ClinicalHub />} />
+                    <Route path="cpo-overview" element={<CPODashboard />} />
                     <Route path="command-center" element={<CommandCenter />} />
 
                     <Route
