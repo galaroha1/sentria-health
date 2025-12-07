@@ -121,8 +121,8 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
     const activeRoutes = requests
         .filter(r => r.status === 'in_transit')
         .map(r => {
-            const source = sites.find(s => s.id === r.sourceSiteId);
-            const target = sites.find(s => s.id === r.targetSiteId);
+            const source = r.targetSite;
+            const target = r.requestedBySite;
             if (!source || !target) return null;
             return {
                 id: r.id,

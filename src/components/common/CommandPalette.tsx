@@ -26,10 +26,9 @@ export function CommandPalette() {
     const filteredDrugs = inventories
         .flatMap(inv => inv.drugs)
         .filter((d, i, self) =>
-            d.name.toLowerCase().includes(query.toLowerCase()) &&
-            self.findIndex(t => t.name === d.name) === i
-        )
-        .slice(0, 3);
+            d.drugName.toLowerCase().includes(query.toLowerCase()) &&
+            self.findIndex(t => t.drugName === d.drugName) === i
+        ).slice(0, 5);
 
     const handleNavigate = (path: string) => {
         navigate(path);
@@ -73,7 +72,7 @@ export function CommandPalette() {
                                             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-slate-100"
                                         >
                                             <Package className="h-4 w-4 text-slate-400" />
-                                            <span className="flex-1 font-medium text-slate-900">{drug.name}</span>
+                                            <span className="flex-1 font-medium text-slate-900">{drug.drugName}</span>
                                             <span className="text-xs text-slate-500">View Stock</span>
                                         </button>
                                     ))}
