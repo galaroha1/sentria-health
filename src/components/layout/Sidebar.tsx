@@ -1,5 +1,5 @@
 import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2, Brain, Shield } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface NavigationItem {
@@ -16,6 +16,7 @@ interface NavigationGroup {
 
 export function Sidebar() {
     const { user, hasPermission } = useAuth();
+    const location = useLocation();
 
     const navigationGroups: NavigationGroup[] = [
         {
@@ -51,7 +52,7 @@ export function Sidebar() {
     ];
 
     return (
-        <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl fixed h-full">
+        <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-slate-50 transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl fixed h-full">
             <div className="flex h-16 items-center border-b border-slate-200 px-6 overflow-hidden whitespace-nowrap shrink-0">
                 <div className="flex items-center gap-3 transition-all duration-300">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">
@@ -62,7 +63,7 @@ export function Sidebar() {
             </div>
 
             <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-                <nav className="flex-1 space-y-6 p-4">
+                <nav className="flex-1 space-y-4 p-3">
                     {navigationGroups.map((group) => {
                         const filteredItems = group.items.filter(item => !user || hasPermission(item.permission));
                         if (filteredItems.length === 0) return null;
@@ -79,13 +80,13 @@ export function Sidebar() {
                                             key={item.name}
                                             to={item.href}
                                             className={({ isActive }: { isActive: boolean }) =>
-                                                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap ${isActive
-                                                    ? 'bg-indigo-50 text-indigo-600'
-                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap group/item ${isActive
+                                                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+                                                    : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-slate-900'
                                                 }`
                                             }
                                         >
-                                            <Icon className="h-5 w-5 shrink-0" />
+                                            <Icon className={`h-5 w-5 shrink-0 transition-colors ${item.href === location.pathname ? 'text-indigo-600' : 'text-slate-500 group-hover/item:text-slate-700'}`} />
                                             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.name}</span>
                                         </NavLink>
                                     );
@@ -95,8 +96,8 @@ export function Sidebar() {
                     })}
                 </nav>
 
-                <div className="border-t border-slate-200 p-4 whitespace-nowrap bg-white shrink-0 mt-auto">
-                    <div className="flex items-center gap-3 px-2 py-2">
+                <div className="border-t border-slate-200 p-4 whitespace-nowrap bg-slate-50/50 backdrop-blur-sm shrink-0 mt-auto">
+                    <div className="flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-white/60">
                         <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
                             {user?.avatar ? (
                                 <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
