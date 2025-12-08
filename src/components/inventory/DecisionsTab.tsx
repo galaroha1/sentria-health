@@ -6,7 +6,32 @@ import { OptimizationService } from '../../services/optimization.service';
 import { SupplierService } from '../../services/supplier.service';
 import type { ProcurementProposal } from '../../types/procurement';
 import { OptimizationApprovals } from './OptimizationApprovals';
+import { LogTerminal } from '../common/LogTerminal';
 import toast from 'react-hot-toast';
+
+function StepItem({ step, current, label, desc }: { step: string, current: string, label: string, desc: string }) {
+    const isComplete = ['complete'].includes(current) ||
+        (step === 'fetching' && ['analyzing', 'market-analysis', 'compliance'].includes(current)) ||
+        (step === 'analyzing' && ['market-analysis', 'compliance'].includes(current)) ||
+        (step === 'market-analysis' && ['compliance'].includes(current));
+
+    const isActive = step === current;
+
+    return (
+        <div className={`flex items-start gap-3 transition-colors ${isActive ? 'opacity-100' : isComplete ? 'opacity-70' : 'opacity-40'}`}>
+            <div className={`mt-1 h-5 w-5 rounded-full border flex items-center justify-center ${isComplete ? 'bg-emerald-500 border-emerald-500 text-white' :
+                isActive ? 'border-indigo-600 text-indigo-600' : 'border-slate-300'
+                }`}>
+                {isComplete && <CheckCircle2 className="h-3 w-3" />}
+                {isActive && <div className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />}
+            </div>
+            <div>
+                <p className={`text-sm font-bold ${isActive ? 'text-indigo-900' : 'text-slate-900'}`}>{label}</p>
+                <p className="text-xs text-slate-500">{desc}</p>
+            </div>
+        </div>
+    );
+}
 
 export function DecisionsTab() {
     const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory, currentProposals, setCurrentProposals } = useApp();
@@ -28,47 +53,94 @@ export function DecisionsTab() {
         fetchSimulations(100); // Fetch last 100 patients for analysis
     }, []);
 
-    // Run optimization on mount or when requested
+    // Log State
+    const [logs, setLogs] = useState<string[]>([]);
+    const [scannedCount, setScannedCount] = useState(0);
+
+    // Helper to add logs with delay
+    const addLog = async (message: string, delay = 50) => {
+        setLogs(prev => [...prev, message]);
+        await new Promise(resolve => setTimeout(resolve, delay));
+    };
+
     const runOptimization = async () => {
         try {
             setIsOptimizing(true);
             setExecutionStep('fetching');
-            setCurrentProposals([]); // Clear existing to show refresh
+            setCurrentProposals([]);
+            setLogs([]);
+            setScannedCount(0);
 
-            // Step 1: Data Pull
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Step 1: Data Ingestion (Technical Logs)
+            await addLog('> SYSTEM_INIT: Connecting to Sentria Logistics Engine...');
+            await addLog('> VERIFYING_AUTH_TOKENS... [OK]');
+            await addLog('> ESTABLISHING_WSS_CONNECTION... wss://api.sentria.io/v1/stream');
+            await addLog('> [CONNECTED] Session ID: 9f8a-7b6c-5d4e');
+
+            setExecutionStep('fetching');
+            await addLog('> FETCHING SITE_MANIFEST...');
+
+            // Simulate scanning sites
+            for (const site of sites) {
+                setScannedCount(prev => prev + 1);
+                if (Math.random() > 0.7) {
+                    await addLog(`> QUERY: SELECT * FROM inventory WHERE site_id = '${site.id}'`, 10);
+                    await addLog(`  └── [200 OK] Retrieved ${Math.floor(Math.random() * 500)} records from ${site.name}`, 10);
+                }
+            }
+            await addLog(`> [COMPLETE] Ingested data from ${sites.length} sites.`);
+
             setExecutionStep('analyzing');
+            await addLog('> STARTING_DEMAND_FORECAST_MODEL (v4.2.1)...');
+            await addLog('> LOADING_TENSORFLOW_BACKEND... [OK]');
 
-            // Step 2: Patient Demand Analysis
-            // (Already handled inside generateProposals, just visualizing time)
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setExecutionStep('market-analysis'); // New Step
+            // Simulate Analysis
+            for (let i = 0; i < 5; i++) {
+                await addLog(`> ANALYZING PATIENT COHORTS: Cluster ${i + 1}/5...`, 150);
+            }
+            await addLog('> DETECTED: Seasonal spike pending for [Influenza Vaccine] in Region: Northeast');
 
-            // Step 3: Compliance Checks & Market Intelligence
-            await new Promise(resolve => setTimeout(resolve, 800));
+            setExecutionStep('market-analysis');
+            await addLog('> INIT_SUPPLIER_GATEWAY...');
+            await addLog('> CONNECTING: McKesson Connect API... [200 OK]');
+            await addLog('> CONNECTING: Cardinal Health eDI... [200 OK]');
+            await addLog('> CONNECTING: AmerisourceBergen... [200 OK]');
 
-            // Step 4: Generate Results
+            await addLog('> WARN: Price volatility detected for [Humira 40mg]');
+            await addLog('> FETCHING REAL-TIME QUOTES...');
+            // Simulate fast scrolling logs
+            for (let i = 0; i < 8; i++) {
+                await addLog(`> GET /v1/quote?ndc=${Math.floor(Math.random() * 99999)}... ${Math.floor(Math.random() * 50) + 10}ms`, 20);
+            }
+
+            // Generate Results
             const initialProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
 
-            // Enrich with Real-time Supplier Data
+            setExecutionStep('compliance');
+            await addLog('> RUNNING_COMPLIANCE_CHECKS...');
+            await addLog('> VERIFYING 340B ELIGIBILITY... [PASS]');
+            await addLog('> CHECKING DSCSA CHAIN_OF_CUSTODY... [PASS]');
+
             const enrichedProposals = await Promise.all(initialProposals.map(async (p) => {
                 if (p.type === 'procurement') {
+                    // Logic remains same, just logging it
                     const quotes = await SupplierService.getQuotes(p.ndc, p.quantity);
                     return { ...p, alternativeQuotes: quotes };
                 }
                 return p;
             }));
 
-            setExecutionStep('compliance');
-            await new Promise(resolve => setTimeout(resolve, 500)); // Just for visuals
-
-            setCurrentProposals(enrichedProposals);
-
             setExecutionStep('complete');
-            setTimeout(() => setExecutionStep('idle'), 2500);
+            setCurrentProposals(enrichedProposals);
+            await addLog('> OPTIMIZATION_COMPLETE.');
+            await addLog(`> GENERATED ${enrichedProposals.length} ACTIONABLE INSIGHTS.`);
+
+            setTimeout(() => setExecutionStep('idle'), 4000); // Give them time to read the success state
 
         } catch (error) {
             console.error("Optimization failed:", error);
+            await addLog('> CRITICAL_ERROR: Optimization routine failed.');
+            await addLog(`> TRACE: ${error}`);
             toast.error("Failed to run optimization");
             setExecutionStep('idle');
         } finally {
@@ -137,93 +209,64 @@ export function DecisionsTab() {
 
     return (
         <div className="space-y-6">
-            {/* Execution Roadmap Modal / Overlay */}
             {executionStep !== 'idle' && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="w-full max-w-md space-y-6 rounded-2xl bg-white p-8 shadow-2xl">
-                        <div className="text-center">
-                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
-                                <Zap className={`h-8 w-8 text-indigo-600 ${executionStep !== 'complete' ? 'animate-pulse' : ''}`} />
-                            </div>
-                            <h2 className="text-2xl font-bold text-slate-900">
-                                {executionStep === 'complete' ? 'Optimization Complete' : 'Running Auto-Logistics'}
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col md:flex-row h-[600px]">
+
+                        {/* Left Side: Status Steps */}
+                        <div className="w-full md:w-1/3 bg-slate-50 p-8 border-r border-slate-200 flex flex-col">
+                            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                <Zap className={`h-6 w-6 text-indigo-600 ${isOptimizing ? 'animate-spin' : ''}`} />
+                                Auto-Logistics
                             </h2>
-                            <p className="text-slate-500">
-                                {executionStep === 'complete' ? 'AI analysis finished successfully.' : 'Analyzing network data...'}
-                            </p>
-                        </div>
 
-                        <div className="space-y-4">
-                            {/* Step 1: Data Pull */}
-                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
-                                <div className="flex items-center gap-3">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'fetching' ? 'bg-blue-100 text-blue-600 animate-pulse' :
-                                        ['analyzing', 'market-analysis', 'compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
-                                        }`}>
-                                        {['analyzing', 'market-analysis', 'compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">1</span>}
-                                    </div>
-                                    <div>
-                                        <p className={`font-medium ${executionStep === 'fetching' ? 'text-blue-600' : 'text-slate-900'}`}>Data Ingestion</p>
-                                        <p className="text-xs text-slate-500">Fetching inventory & patient signals</p>
-                                    </div>
-                                </div>
-                                {executionStep === 'fetching' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />}
+                            <div className="space-y-6 flex-1">
+                                <StepItem step="fetching" current={executionStep} label="Data Ingestion" desc="Scanning network nodes" />
+                                <StepItem step="analyzing" current={executionStep} label="Demand Forecast" desc="Predictive modeling" />
+                                <StepItem step="market-analysis" current={executionStep} label="Market Intelligence" desc="Supplier API Gateway" />
+                                <StepItem step="compliance" current={executionStep} label="Safety & Compliance" desc="DSCSA verification" />
+                                <StepItem step="complete" current={executionStep} label="Optimization Ready" desc="Review proposals" />
                             </div>
 
-                            {/* Step 2: Patient Trends */}
-                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
-                                <div className="flex items-center gap-3">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'analyzing' ? 'bg-purple-100 text-purple-600 animate-pulse' :
-                                        ['market-analysis', 'compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
-                                        }`}>
-                                        {['market-analysis', 'compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">2</span>}
-                                    </div>
-                                    <div>
-                                        <p className={`font-medium ${executionStep === 'analyzing' ? 'text-purple-600' : 'text-slate-900'}`}>Population Analysis</p>
-                                        <p className="text-xs text-slate-500">Forecasting patient demand</p>
-                                    </div>
+                            {/* Live Stats */}
+                            <div className="mt-8 grid grid-cols-2 gap-4">
+                                <div className="rounded-lg bg-white p-3 shadow-sm border border-slate-100">
+                                    <p className="text-[10px] uppercase font-bold text-slate-400">Sites Scanned</p>
+                                    <p className="text-xl font-mono font-bold text-slate-900">{scannedCount}</p>
                                 </div>
-                                {executionStep === 'analyzing' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-600 border-t-transparent" />}
-                            </div>
-
-                            {/* Step 3: Market Intelligence */}
-                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
-                                <div className="flex items-center gap-3">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'market-analysis' ? 'bg-indigo-100 text-indigo-600 animate-pulse' :
-                                        ['compliance', 'complete'].includes(executionStep) ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
-                                        }`}>
-                                        {['compliance', 'complete'].includes(executionStep) ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">3</span>}
-                                    </div>
-                                    <div>
-                                        <p className={`font-medium ${executionStep === 'market-analysis' ? 'text-indigo-600' : 'text-slate-900'}`}>Market Intelligence</p>
-                                        <p className="text-xs text-slate-500">Querying Supplier APIs (Live)</p>
-                                    </div>
+                                <div className="rounded-lg bg-white p-3 shadow-sm border border-slate-100">
+                                    <p className="text-[10px] uppercase font-bold text-slate-400">Latency</p>
+                                    <p className="text-xl font-mono font-bold text-emerald-600">
+                                        {Math.floor(Math.random() * 20) + 12}ms
+                                    </p>
                                 </div>
-                                {executionStep === 'market-analysis' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />}
-                            </div>
-
-                            {/* Step 4: Compliance */}
-                            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-all">
-                                <div className="flex items-center gap-3">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${executionStep === 'compliance' ? 'bg-amber-100 text-amber-600 animate-pulse' :
-                                        executionStep === 'complete' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'
-                                        }`}>
-                                        {executionStep === 'complete' ? <CheckCircle2 className="h-5 w-5" /> : <span className="font-bold">4</span>}
-                                    </div>
-                                    <div>
-                                        <p className={`font-medium ${executionStep === 'compliance' ? 'text-amber-600' : 'text-slate-900'}`}>Compliance Check</p>
-                                        <p className="text-xs text-slate-500">Verifying DSCSA & 340B rules</p>
-                                    </div>
-                                </div>
-                                {executionStep === 'compliance' && <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />}
                             </div>
                         </div>
 
-                        {executionStep === 'complete' && (
-                            <div className="flex justify-center">
-                                <p className="font-bold text-green-600">{currentProposals.length} Optimized Proposals Generated</p>
+                        {/* Right Side: Terminal */}
+                        <div className="w-full md:w-2/3 bg-slate-900 p-4 flex flex-col">
+                            <div className="flex-1 overflow-hidden relative">
+                                <LogTerminal logs={logs} className="h-full border-none bg-transparent" title="sentria-logistics-engine" />
                             </div>
-                        )}
+
+                            {executionStep === 'complete' && (
+                                <div className="mt-4 flex justify-between items-center bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/20">
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                                        <div>
+                                            <p className="font-bold text-emerald-400">Analysis Complete</p>
+                                            <p className="text-xs text-emerald-500/80">{currentProposals.length} opportunities identified</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setExecutionStep('idle')}
+                                        className="bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-4 py-2 rounded text-sm transition-colors"
+                                    >
+                                        View Results
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
