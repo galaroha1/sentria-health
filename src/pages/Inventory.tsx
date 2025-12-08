@@ -11,11 +11,9 @@ import { OperationsTab } from '../components/inventory/OperationsTab';
 import { StockTab } from '../components/inventory/StockTab';
 import { AdministrationTab } from '../components/inventory/AdministrationTab';
 import { ComplianceTab } from '../components/inventory/ComplianceTab';
-import { AdvancedTab } from '../components/inventory/AdvancedTab';
-import { PatientDataTab } from '../components/inventory/PatientDataTab';
 import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
 
-type TabType = 'operations' | 'stock' | 'admin' | 'compliance' | 'advanced' | 'patients';
+type TabType = 'operations' | 'stock' | 'admin' | 'compliance';
 
 export function Inventory() {
     const { inventories, sites, addRequest, addNotification } = useApp();
@@ -60,8 +58,8 @@ export function Inventory() {
     const tabs = [
         { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
-        { id: 'patients' as TabType, label: 'Patient Data', icon: Users, desc: 'Comprehensive Records' },
-        { id: 'advanced' as TabType, label: 'Advanced', icon: Zap, desc: 'AI & Analytics' },
+        { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
+        { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
         { id: 'compliance' as TabType, label: 'Compliance', icon: FileText, desc: 'Audits & Reports' },
         { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
     ];
@@ -146,10 +144,6 @@ export function Inventory() {
                     {activeTab === 'admin' && <AdministrationTab />}
 
                     {activeTab === 'compliance' && <ComplianceTab />}
-
-                    {activeTab === 'advanced' && <AdvancedTab />}
-
-                    {activeTab === 'patients' && <PatientDataTab />}
                 </div>
             </div>
 

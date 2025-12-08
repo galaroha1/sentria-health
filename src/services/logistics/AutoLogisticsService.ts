@@ -120,10 +120,28 @@ export class AutoLogisticsService {
     ): Promise<TransferSuggestion[]> {
         const suggestions: TransferSuggestion[] = [];
 
-        // --- OPTION A: INTERNAL TRANSFERS ---
+        // --- OPTION A: INTERNAL & NETWORK TRANSFERS ---
         const potentialSources = allInventories.filter(inv => {
             const hasItem = inv.drugs.find(d => d.ndc === shortageItem.ndc);
-            return inv.siteId !== targetSite.id && hasItem && hasItem.quantity > hasItem.minLevel;
+            // Allow if:
+            // 1. Different Site
+            // 2. SAME Site but Different Department (Internal Transfer) 
+            // Simplified: If siteIds match, we need to ensure we aren't transferring from the EXACT same inventory source.
+            // Since `generateSuggestions` is usually called for a site (and implicitly a department context isn't passed yet), 
+            // valid transfers are any OTHER inventory pool that has the item.
+            // Assumption: The `shortageItem` comes from a specific inventory pool (targetSite + targetDept). 
+            // But currently the signature is `targetSite`. We'll assume any OTHER inventory ID is valid.
+
+            // Better Logic:
+            // We don't have the "Target Inventory ID" passed in, just Target Site.
+            // But we know the shortage exists at 'targetSite'. 
+            // We should ideally filter out the inventory that represents the shortage? 
+            // Actually, `allInventories` contains ALL. 
+            // If we are looking for sources, ANY inventory that has > minLevel is a source. 
+            // We just need to handle the "Self" case if we knew exactly which dept was requesting.
+
+            // For now, allow ALL valid sources. We will score 0 distance for same-site.
+            return hasItem && hasItem.quantity > hasItem.minLevel;
         });
 
         for (const sourceInv of potentialSources) {
@@ -131,7 +149,20 @@ export class AutoLogisticsService {
             if (!sourceSite) continue;
 
             const sourceItem = sourceInv.drugs.find(d => d.ndc === shortageItem.ndc)!;
-            const distance = this.calculateDistance(targetSite, sourceSite);
+
+            // Calculate Distance
+            let distance = 0;
+            let isInternal = false;
+
+            if (sourceSite.id === targetSite.id) {
+                // INTERNAL TRANSFER
+                isInternal = true;
+                distance = 0.5; // negligible distance (e.g. across campus)
+                // If same site, we must assume different department purely by the fact we are looking for a SOURCE
+                // and the "Target" implies the one having the shortage.
+            } else {
+                distance = this.calculateDistance(targetSite, sourceSite);
+            }
 
             // Urgency Logic
             let urgency: 'routine' | 'urgent' | 'emergency' = 'routine';
@@ -141,13 +172,19 @@ export class AutoLogisticsService {
             // Patient Override
             if (patientContext?.condition === 'critical') urgency = 'emergency';
 
-            const transportMethod = this.determineTransportMethod(distance, shortageItem.drugName, shortageItem.maxLevel - shortageItem.quantity, urgency);
+            // Transport Method
+            let transportMethod = this.determineTransportMethod(distance, shortageItem.drugName, shortageItem.maxLevel - shortageItem.quantity, urgency);
+
+            // Override for Internal
+            if (isInternal) transportMethod = 'courier_bike'; // Or 'technician_runner'
+
             const cost = this.getPricing(transportMethod, distance);
 
             const speed = this.getSpeed(transportMethod);
             const traffic = this.getTrafficMultiplier(transportMethod);
-            const handling = this.getHandlingTime(transportMethod);
-            const weatherDelay = Math.random() > 0.8 ? 10 : 0;
+            // Internal transfers are faster/easier
+            const handling = isInternal ? 15 : this.getHandlingTime(transportMethod);
+            const weatherDelay = isInternal ? 0 : (Math.random() > 0.8 ? 10 : 0);
 
             // ----------------------------------------------------------------
             // AUTO LOGISTICS EQUATION
@@ -168,20 +205,34 @@ export class AutoLogisticsService {
             score -= (totalTime * 0.1);
             if (urgency === 'emergency' && totalTime < 60) score += 50;
 
+            // Internal Transfer Bonus (Huge preference)
+            if (isInternal) {
+                score += 40;
+            }
+
             const maxAcceptable = shortageItem.maxLevel - shortageItem.quantity;
             const maxAvailable = sourceItem.quantity - sourceItem.minLevel;
             const transferQty = Math.min(maxAcceptable, maxAvailable);
 
             if (transferQty <= 0) continue;
 
+            // Identify Source Department
+            let sourceLabel = sourceSite.name;
+            if (sourceInv.departmentId) {
+                const dept = sourceSite.departments.find(d => d.id === sourceInv.departmentId);
+                if (dept) sourceLabel = `${dept.name} @ ${sourceSite.name}`;
+            }
+
             const reasons: string[] = [`${transportMethod.replace('_', ' ')} (${Math.round(totalTime)} min)`];
+            if (isInternal) reasons.push('Internal Transfer (Fastest)');
+
             if (sourceItem.quantity > sourceItem.maxLevel) {
                 score += 20;
                 reasons.push('Clearing excess stock');
             }
 
             suggestions.push({
-                id: `transfer-${Date.now()}-${sourceSite.id}`,
+                id: `transfer-${Date.now()}-${sourceInv.siteId}-${sourceInv.departmentId || 'main'}`,
                 targetSiteId: targetSite.id,
                 sourceSiteId: sourceSite.id,
                 action: 'transfer',
@@ -193,7 +244,8 @@ export class AutoLogisticsService {
                 reason: reasons,
                 transportMethod,
                 estimatedCost: Math.round(cost),
-                estimatedTimeMinutes: Math.round(totalTime)
+                estimatedTimeMinutes: Math.round(totalTime),
+                sourceDepartmentName: sourceLabel
             });
         }
 

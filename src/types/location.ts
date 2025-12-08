@@ -42,6 +42,7 @@ export interface Site {
 
 export interface SiteInventory {
     siteId: string;
+    departmentId?: string; // New: Inventory is now granular to department level
     drugs: DrugInventoryItem[];
     lastUpdated: string;
 }
@@ -129,5 +130,8 @@ export interface TransferSuggestion {
     // Time Analysis
     estimatedTimeMinutes: number;
     timeSavedMinutes?: number;
+
+    // UI Display Helpers
+    sourceDepartmentName?: string; // e.g. "Oncology @ HUP"
 }
 

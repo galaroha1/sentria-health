@@ -16,8 +16,8 @@ import { Decisions } from './pages/Decisions';
 import { Analytics } from './pages/AnalyticsPage';
 import { Settings } from './pages/SettingsPage';
 import { ClinicalHub } from './pages/ClinicalHub';
-import { CPODashboard } from './pages/CPODashboard';
 import { NetworkHub } from './pages/NetworkHub';
+import { DataGeneration } from './pages/DataGeneration';
 import { CommandCenter } from './components/simulation/CommandCenter';
 
 import { CartProvider } from './context/CartContext';
@@ -124,10 +124,19 @@ function App() {
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="clinical" element={<ClinicalHub />} />
-                    <Route path="cpo-overview" element={<CPODashboard />} />
+
                     <Route path="network" element={<NetworkHub />} />
                     <Route path="command-center" element={<CommandCenter />} />
+                    <Route path="command-center" element={<CommandCenter />} />
                     <Route path="compliance" element={<Compliance />} />
+                    <Route
+                      path="data-generation"
+                      element={
+                        <ProtectedRoute requirePermission="inventory">
+                          <DataGeneration />
+                        </ProtectedRoute>
+                      }
+                    />
 
                     <Route
                       path="admin"

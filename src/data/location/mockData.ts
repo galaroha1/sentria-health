@@ -386,14 +386,15 @@ const MASTER_CATALOG = realDrugCatalog.slice(0, 100).map(d => ({
     // Add other fields if useful for simulation logic, but name/ndc are core
 }));
 
-// Helper to generate random inventory for sites
-const generateInventory = (siteId: string): SiteInventory => {
-    // Pick 8-15 random drugs from the master catalog for each site
+// Helper to generate random inventory for a specific department
+const generateInventory = (siteId: string, departmentId?: string): SiteInventory => {
+    // Pick 8-15 random drugs from the master catalog for each site/department
     const numDrugs = Math.floor(Math.random() * 8) + 8;
     const selectedDrugs = [...MASTER_CATALOG].sort(() => 0.5 - Math.random()).slice(0, numDrugs);
 
     return {
         siteId,
+        departmentId,
         lastUpdated: new Date().toISOString(),
         drugs: selectedDrugs.map(d => {
             // Randomize quantity to create different statuses
@@ -430,8 +431,15 @@ const generateInventory = (siteId: string): SiteInventory => {
     };
 };
 
-// Generate inventories for all sites (UPenn + Regional)
-export const siteInventories: SiteInventory[] = allSites.map(site => generateInventory(site.id));
+// Generate inventories for all sites AND their departments
+export const siteInventories: SiteInventory[] = allSites.flatMap(site => {
+    // If site has departments, generate inventory for each
+    if (site.departments && site.departments.length > 0) {
+        return site.departments.map(dept => generateInventory(site.id, dept.id));
+    }
+    // Fallback for sites without departments (though all our mocks have them)
+    return [generateInventory(site.id)];
+});
 
 // Network transfer requests
 export const networkRequests: NetworkRequest[] = [

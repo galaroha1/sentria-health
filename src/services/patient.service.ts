@@ -35,10 +35,14 @@ export class PatientService {
         // Generate appointments for next 3 months, strictly in the future
         for (let i = 1; i <= 90; i += 14) { // Start from 1 (tomorrow) to ensure future dates
             const date = new Date(today);
-            date.setDate(today.getDate() + i + (Math.random() * 3)); // Add future offset + variance
+            // Ensure strictly future: today + i days (where i >= 1) + random variance
+            // We use setDate to safely handle month rollovers
+            date.setDate(today.getDate() + i + Math.floor(Math.random() * 3));
 
-            // Ensure no past/today dates leak through if variance is weird (though +1 covers it)
-            if (date <= today) date.setDate(today.getDate() + 1);
+            // Double check to be absolutely sure it's future (redundant but safe)
+            if (date <= today) {
+                date.setDate(today.getDate() + 1);
+            }
 
             schedule.push({
                 id: `tx-${Date.now()}-${i}`,

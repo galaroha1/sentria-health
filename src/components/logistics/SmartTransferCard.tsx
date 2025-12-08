@@ -65,7 +65,14 @@ export function SmartTransferCard({ suggestion, sourceSite, targetSite, onApprov
                     </span>
                     <span className="font-mono font-medium text-slate-900">{suggestion.quantity} units</span>
                 </div>
-
+                <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
+                    {suggestion.action === 'buy' ? (
+                        <span className="text-emerald-700">{suggestion.externalSourceId}</span>
+                    ) : (
+                        // Priority: Explicit Dept Name > Site Name Lookup > ID
+                        <span>{suggestion.sourceDepartmentName || sourceSite?.name || suggestion.sourceSiteId}</span>
+                    )}
+                </div>
                 {suggestion.reason.map((reason, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-slate-600 bg-slate-50/50 p-1.5 rounded">
                         <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />

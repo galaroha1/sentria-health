@@ -1,4 +1,5 @@
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Brain, Shield } from 'lucide-react';
+```typescript
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, Brain, Shield } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -23,7 +24,6 @@ export function Sidebar() {
             title: 'Overview',
             items: [
                 { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
-                { name: 'CPO View', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
             ]
         },
         {
@@ -46,6 +46,7 @@ export function Sidebar() {
         {
             title: 'System',
             items: [
+                { name: 'Data Generation', href: '/data-generation', icon: Brain, permission: 'inventory' },
                 { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
             ]
         }
@@ -80,13 +81,14 @@ export function Sidebar() {
                                             key={item.name}
                                             to={item.href}
                                             className={({ isActive }: { isActive: boolean }) =>
-                                                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap group/item ${isActive
-                                                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
-                                                    : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-slate-900'
-                                                }`
+                                                `flex items - center gap - 3 rounded - lg px - 3 py - 2 text - sm font - medium transition - all duration - 200 whitespace - nowrap group / item ${
+    isActive
+        ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+        : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-slate-900'
+} `
                                             }
                                         >
-                                            <Icon className={`h-5 w-5 shrink-0 transition-colors ${item.href === location.pathname ? 'text-indigo-600' : 'text-slate-500 group-hover/item:text-slate-700'}`} />
+                                            <Icon className={`h - 5 w - 5 shrink - 0 transition - colors ${ item.href === location.pathname ? 'text-indigo-600' : 'text-slate-500 group-hover/item:text-slate-700' } `} />
                                             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.name}</span>
                                         </NavLink>
                                     );
