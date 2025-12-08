@@ -1,4 +1,4 @@
-import { Check, X, ArrowRight, TrendingDown } from 'lucide-react';
+import { Check, X, ArrowRight, TrendingDown, AlertTriangle } from 'lucide-react';
 import type { ProcurementProposal } from '../../types/procurement';
 
 interface OptimizationApprovalsProps {
@@ -23,7 +23,9 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                 {proposals.map((proposal) => (
                     <div key={proposal.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md">
                         {/* Score Indicator */}
-                        <div className={`absolute right-0 top-0 rounded-bl-xl px-3 py-1 text-xs font-bold border-b border-l ${proposal.regulatoryJustification.riskScore > 0 ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-500 border-slate-100'
+                        <div className={`absolute right-0 top-0 rounded-bl-xl px-3 py-1 text-xs font-bold border-b border-l ${(proposal.regulatoryJustification?.riskScore || 0) > 0
+                                ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                : 'bg-slate-50 text-slate-500 border-slate-100'
                             }`}>
                             Match Score: {proposal.score}
                         </div>
@@ -33,8 +35,8 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.channel === '340B' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
-                                        proposal.channel === 'GPO' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                            'bg-slate-50 text-slate-700 ring-slate-600/20'
+                                            proposal.channel === 'GPO' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                                'bg-slate-50 text-slate-700 ring-slate-600/20'
                                         }`}>
                                         {proposal.channel}
                                     </span>
@@ -61,47 +63,30 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                                 <span className="font-medium">{detail}</span>
                                             </div>
                                         ))}
+                                        {(proposal.regulatoryJustification.riskScore || 0) > 0 && (
+                                            <div className="flex items-center text-xs text-yellow-500 mt-1">
+                                                <AlertTriangle className="w-3 h-3 mr-1.5" />
+                                                Risk Score: {proposal.regulatoryJustification.riskScore}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
-
-
-                                {/* FDA Regulatory Verification */}
-                                {proposal.alternativeQuotes && proposal.alternativeQuotes[0]?.fdaDetails && (
-                                    <div className="mt-3 rounded-lg bg-blue-50 p-2.5 border border-blue-100">
-                                        <div className="flex items-start gap-2">
-                                            <div className="mt-0.5 rounded bg-blue-100 p-1 text-blue-600">
-                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-blue-900">FDA Verified Data</p>
-                                                <p className="text-xs text-blue-700">
-                                                    <span className="font-semibold">{proposal.alternativeQuotes[0].fdaDetails.brand_name}</span>
-                                                    <span className="text-blue-500"> ({proposal.alternativeQuotes[0].fdaDetails.generic_name})</span>
-                                                </p>
-                                                {proposal.alternativeQuotes[0].fdaDetails.pharm_class?.slice(0, 1).map((pc, i) => (
-                                                    <span key={i} className="mt-1 inline-block rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 shadow-sm border border-blue-100">
-                                                        {pc}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Supplier Intelligence */}
+                                {/* FDA Verification & Alternative Quotes */}
                                 {proposal.alternativeQuotes && proposal.alternativeQuotes.length > 0 && (
                                     <div className="mt-4 rounded-lg bg-indigo-50 p-3 border border-indigo-100">
+
+                                        {/* Header */}
                                         <div className="mb-2 flex items-center justify-between">
                                             <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Live Supplier Intelligence</p>
                                             <span className="flex items-center gap-1 text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-100 shadow-sm animate-pulse">
                                                 <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span> Live Feed
                                             </span>
                                         </div>
+
+                                        {/* Quotes List */}
                                         <div className="space-y-2">
-                                            {proposal.alternativeQuotes.map((quote) => (
+                                            {proposal.alternativeQuotes.map((quote: any) => (
                                                 <div key={quote.supplierId} className="flex items-center justify-between text-sm bg-white p-2 rounded border border-indigo-100 shadow-sm hover:border-indigo-300 transition-colors">
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-slate-700 capitalize">{quote.supplierId}</span>
@@ -124,45 +109,42 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                 )}
                             </div>
 
-                            {/* Cost Analysis */}
-                            <div className="flex flex-col gap-2 min-w-[200px] rounded-lg bg-slate-50 p-3 text-sm">
-                                <div className="flex justify-between text-slate-600">
-                                    <span>Distance:</span>
-                                    <span className="font-mono">{proposal.costAnalysis.distanceKm} km</span>
-                                </div>
-                                <div className="flex justify-between text-slate-600">
-                                    <span>Est. Cost:</span>
-                                    <span className="font-mono font-medium">${proposal.costAnalysis.totalCost}</span>
-                                </div>
-                                {proposal.costAnalysis.savings && proposal.costAnalysis.savings > 0 && (
-                                    <div className="flex justify-between text-emerald-600 font-bold border-t border-slate-200 pt-1 mt-1">
-                                        <span className="flex items-center gap-1"><TrendingDown className="h-3 w-3" /> Savings:</span>
-                                        <span className="font-mono">${proposal.costAnalysis.savings}</span>
+                            {/* Cost Analysis & Actions */}
+                            <div className="flex flex-col gap-4 sm:items-end">
+                                <div className="flex flex-col gap-2 min-w-[200px] rounded-lg bg-slate-50 p-3 text-sm">
+                                    <div className="flex justify-between text-slate-600">
+                                        <span>Est. Cost:</span>
+                                        <span className="font-mono font-medium">${proposal.costAnalysis.totalCost.toLocaleString()}</span>
                                     </div>
-                                )}
-                            </div>
+                                    {proposal.costAnalysis.savings && proposal.costAnalysis.savings > 0 && (
+                                        <div className="flex justify-between text-emerald-600 font-bold border-t border-slate-200 pt-1 mt-1">
+                                            <span className="flex items-center gap-1"><TrendingDown className="h-3 w-3" /> Savings:</span>
+                                            <span className="font-mono">${proposal.costAnalysis.savings.toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                </div>
 
-                            {/* Actions */}
-                            <div className="flex gap-2 sm:flex-col">
-                                <button
-                                    onClick={() => onApprove(proposal)}
-                                    className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 shadow-sm"
-                                >
-                                    <Check className="h-4 w-4" />
-                                    Approve
-                                </button>
-                                <button
-                                    onClick={() => onReject(proposal)}
-                                    className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                                >
-                                    <X className="h-4 w-4" />
-                                    Reject
-                                </button>
+                                <div className="flex gap-2 sm:flex-col">
+                                    <button
+                                        onClick={() => onApprove(proposal)}
+                                        className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 shadow-sm transition-colors"
+                                    >
+                                        <Check className="h-4 w-4" />
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => onReject(proposal)}
+                                        className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Reject
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
-        </div >
+        </div>
     );
 }

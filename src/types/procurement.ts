@@ -1,26 +1,115 @@
-import type { OptimizationProposal } from '../services/optimization.service';
-import type { SupplierQuote } from './supplier';
+// --- LEGACY TYPES (Keep for Compatibility) ---
+export type DrugChannel = 'WAC' | 'GPO' | '340B' | 'PrimeVendor' | 'WhiteBag';
+export type RegulatoryAvatar = 'hospital_340b' | 'clinic_rural' | 'pharmacy_retail' | 'DSH' | 'Clinic' | 'Pharmacy' | 'RRC' | 'FreeStandingCancer' | 'CAH';
+export type ClassOfTrade = 'acute' | 'retail' | 'specialty' | 'non_acute';
 
-export type DrugChannel = 'WAC' | 'GPO' | '340B' | 'WhiteBag' | 'BrownBag' | 'ClearBag';
-
-export type RegulatoryAvatar =
-    | 'DSH'    // Disproportionate Share Hospital
-    | 'CAH'    // Critical Access Hospital
-    | 'RRC'    // Rural Referral Center
-    | 'SCH'    // Sole Community Hospital
-    | 'FreeStandingCancer'
-    | 'Clinic' // Standard Clinic
-    | 'Pharmacy';
-
-export type ClassOfTrade = 'acute' | 'non_acute' | 'retail';
-
-export interface ProcurementProposal extends OptimizationProposal {
-    channel: DrugChannel;
+export interface ProcurementProposal {
+    id: string;
+    type: 'procurement' | 'transfer';
+    targetSiteId: string;
+    targetSiteName: string;
+    sourceSiteId?: string;
+    sourceSiteName?: string;
+    vendorName?: string;
+    drugName: string;
+    ndc: string;
+    quantity: number;
+    channel?: DrugChannel;
+    costAnalysis: {
+        distanceKm: number;
+        transportCost: number;
+        itemCost: number;
+        totalCost: number;
+        savings?: number;
+    };
+    fulfillmentNode: string;
     regulatoryJustification: {
         passed: boolean;
-        details: string[]; // List of rules passed/failed
-        riskScore: number; // 0-100 (100 = High Risk)
+        details: string[];
+        riskScore?: number;
     };
-    fulfillmentNode: 'CentralPharmacy' | 'DirectDrop';
-    alternativeQuotes?: SupplierQuote[];
+    reason: string;
+    score: number;
+    alternativeQuotes?: any[]; // Legacy support
+}
+
+// --- NEW ENGINE TYPES ---
+
+export type DemandDistribution = 'normal' | 'poisson' | 'negative_binomial';
+
+export interface DemandForecast {
+    drugName: string;
+    ndc: string;
+    locationId: string;
+    period: string; // '2025-01'
+    mean: number; // µ
+    variance: number; // σ²
+    distribution: DemandDistribution;
+    confidenceInterval: [number, number]; // [Low, High] 95%
+}
+
+export interface SupplierCostFunction {
+    minQty: number;
+    maxQty: number; // Infinity for top tier
+    unitPrice: number;
+}
+
+export interface SupplierProfile {
+    id: string;
+    name: string;
+    reliability: number; // 0.0 - 1.0 (Probability of on-time fulfillment)
+    leadTimeDays: number;
+    leadTimeVariance: number; // σ_LT²
+    qualityScore: number; // 0-100
+    riskScore: number; // 0-100 (Higher is riskier)
+    contractTerms: {
+        minOrderQty: number;
+        costFunctions: SupplierCostFunction[];
+        rebateThresholds?: { qty: number; rebatePercent: number }[];
+    };
+}
+
+export interface OptimizationParams {
+    serviceLevelTarget: number; // e.g., 0.95 (95%)
+    holdingCostRate: number; // % of unit price per year
+    stockoutCostPerUnit: number; // $ penalty
+    riskAversionLambda: number; // Risk weight
+    planningHorizonDays: number;
+}
+
+export interface OptimizationResult {
+    planId: string;
+    timestamp: string;
+    items: OrderPlanItem[];
+    summary: {
+        totalCost: number;
+        riskAdjustedCost: number;
+        serviceLevelPredicted: number;
+    };
+}
+
+export interface OrderPlanItem {
+    sku: string;
+    drugName: string;
+    supplierId: string;
+    supplierName: string;
+    targetSiteId: string;
+    quantity: number;
+    type: 'contract' | 'spot' | 'consignment';
+
+    // Justification / Analysis
+    analysis: {
+        forecastMean: number;
+        safetyStock: number;
+        projectedStockoutRisk: number;
+        costBreakdown: {
+            purchase: number;
+            holding: number;
+            stockoutPenalty: number;
+            logistics: number;
+            riskPenalty: number;
+        };
+        supplierScore: number;
+        alternativeSavings: number; // Savings vs next best option
+    };
 }
