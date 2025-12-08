@@ -8,7 +8,9 @@ import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { FirestoreService } from '../services/firebase.service';
 import { OptimizationService } from '../services/optimization.service';
-import { PatientService } from '../services/patient.service';
+import { OptimizationService } from '../services/optimization.service';
+// PatientService import removed to prevent CI build issues
+import type { Treatment } from '../types/patient';
 
 interface AppContextType {
     // Location & Requests
@@ -50,6 +52,33 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Helper function inlined to avoid import issues in CI
+function generatePatientSchedule(diagnosis: string, drugOverride?: string): Treatment[] {
+    const schedule: Treatment[] = [];
+    const today = new Date();
+    const drugs = diagnosis.includes('Leukemia') ? ['Methotrexate', 'Vincristine'] :
+        diagnosis.includes('Cancer') ? ['Keytruda', 'Paclitaxel'] :
+            diagnosis.includes('Crohn') ? ['Remicade'] : ['Insulin'];
+
+    for (let i = 1; i <= 90; i += 14) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i + Math.floor(Math.random() * 3));
+        if (date <= today) date.setDate(today.getDate() + 1);
+
+        schedule.push({
+            id: `tx-${Date.now()}-${i}`,
+            date: date.toISOString(),
+            drugName: drugOverride || drugs[Math.floor(Math.random() * drugs.length)],
+            ndc: '00006-3026-02',
+            status: 'scheduled',
+            dose: '100mg',
+            notes: 'Standard protocol'
+        });
+    }
+    return schedule;
+}
+
 
 export function AppProvider({ children }: { children: ReactNode }) {
     // Initialize with localStorage or mock data
@@ -104,7 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     type: 'adult', // Could infer from age
                     attendingPhysician: 'Dr. Auto',
                     // Generate schedule on the fly based on the prescribed drug
-                    treatmentSchedule: PatientService.generateSchedule(sim.condition, sim.drug)
+                    treatmentSchedule: generatePatientSchedule(sim.condition, sim.drug)
                 };
             });
 
