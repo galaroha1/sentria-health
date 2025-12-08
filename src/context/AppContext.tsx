@@ -61,13 +61,17 @@ function generatePatientSchedule(diagnosis: string, drugOverride?: string): Trea
         diagnosis.includes('Cancer') ? ['Keytruda', 'Paclitaxel'] :
             diagnosis.includes('Crohn') ? ['Remicade'] : ['Insulin'];
 
-    for (let i = 1; i <= 90; i += 14) {
+    // Randomize start date within the next 30 days to spread out the schedule
+    // This prevents "clumping" where all 100 generated patients have appointments on the same day.
+    const startOffset = Math.floor(Math.random() * 30) + 1;
+
+    // Extend to full year (365 days) as requested
+    for (let i = startOffset; i <= startOffset + 365; i += 21) {
         const date = new Date(today);
-        date.setDate(today.getDate() + i + Math.floor(Math.random() * 3));
-        if (date <= today) date.setDate(today.getDate() + 1);
+        date.setDate(today.getDate() + i);
 
         schedule.push({
-            id: `tx-${Date.now()}-${i}`,
+            id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             date: date.toISOString(),
             drugName: drugOverride || drugs[Math.floor(Math.random() * drugs.length)],
             ndc: '00006-3026-02',

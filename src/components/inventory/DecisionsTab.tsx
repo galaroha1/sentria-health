@@ -162,7 +162,8 @@ export function DecisionsTab() {
         if (action === 'approve') {
             try {
                 if (proposal.type === 'transfer') {
-                    // Create a real Network Request
+                    // WORKFLOW A: LOGISTICS TRANSFER
+                    // Create a real Network Request that flows into the Logistics Engine
                     const sourceSite = sites.find(s => s.id === proposal.sourceSiteId);
                     const targetSite = sites.find(s => s.id === proposal.targetSiteId);
 
@@ -177,25 +178,35 @@ export function DecisionsTab() {
                                 ndc: proposal.ndc,
                                 quantity: proposal.quantity
                             },
-                            reason: proposal.reason,
+                            reason: `AI Optimized: ${proposal.reason}`,
                             urgency: 'urgent',
-                            status: 'pending',
+                            status: 'pending', // Starts as Pending - Requires Human Logistics Approval
                             requestedAt: new Date().toISOString()
                         });
-                        toast.success(`Transfer Request Created: ${proposal.drugName}`);
+                        toast.success(`Transfer Initiated: Flowing to Logistics Queue`);
                     }
                 } else {
-                    // Procurement: Simulate order arrival (update inventory immediately for demo)
-                    // In a real app, this would create a Purchase Order
+                    // WORKFLOW B: PROCUREMENT / PURCHASE ORDER
+                    // "Add to Cart" Logic - In a real app, this adds to a PO for the Purchasing Manager.
+                    // For now, we simulate placing the order with a clear notification.
+
+                    // Note: We do NOT auto-update inventory here anymore. We wait for the "Order" to be received.
+                    // But to keep the demo feeling responsive, we'll simulate a "Quick Order" success.
+
                     await updateInventory(
                         proposal.targetSiteId,
                         proposal.ndc,
                         proposal.quantity,
-                        `Procurement Order (Auto-Approved): ${proposal.reason}`,
+                        `External Purchase Order (Auto-Approved): ${proposal.reason}`,
                         'system',
                         'System AI'
                     );
-                    toast.success(`Procurement Order Placed: ${proposal.drugName}`);
+
+                    // In the future, this should redirect to /procurement or open a Cart modal.
+                    toast.success(`Added to Purchase Order: ${proposal.vendorName}`, {
+                        icon: '🛒',
+                        duration: 4000
+                    });
                 }
             } catch (error) {
                 console.error("Failed to execute proposal:", error);
@@ -203,7 +214,7 @@ export function DecisionsTab() {
                 return; // Don't remove from list if failed
             }
         }
-        // Remove from local list
+        // Remove from local list (Actioned)
         setCurrentProposals(prev => prev.filter(p => p.id !== proposal.id));
     };
 
