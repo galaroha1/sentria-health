@@ -143,9 +143,27 @@ export function ClinicalHub() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search patient name to highlight schedule..."
+                        placeholder="Search patient name (Press Enter to jump to date)..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                // Find the first match
+                                const query = searchQuery.toLowerCase();
+                                const match = events.find(ev =>
+                                    ev.patientName.toLowerCase().includes(query) ||
+                                    ev.title.toLowerCase().includes(query)
+                                );
+
+                                if (match) {
+                                    setCurrentDate(new Date(match.date));
+                                    setSelectedDate(new Date(match.date));
+                                    toast.success(`Jumped to ${match.patientName}'s appointment`);
+                                } else {
+                                    toast.error('No matching appointments found');
+                                }
+                            }
+                        }}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm"
                     />
                 </div>

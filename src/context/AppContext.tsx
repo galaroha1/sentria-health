@@ -61,25 +61,22 @@ function generatePatientSchedule(diagnosis: string, drugOverride?: string): Trea
         diagnosis.includes('Cancer') ? ['Keytruda', 'Paclitaxel'] :
             diagnosis.includes('Crohn') ? ['Remicade'] : ['Insulin'];
 
-    // Randomize start date within the next 30 days to spread out the schedule
-    // This prevents "clumping" where all 100 generated patients have appointments on the same day.
-    const startOffset = Math.floor(Math.random() * 30) + 1;
+    // Generate only ONE appointment per patient as requested
+    // Randomize date within the next year (365 days)
+    const daysOffset = Math.floor(Math.random() * 365) + 1;
+    const date = new Date(today);
+    date.setDate(today.getDate() + daysOffset);
 
-    // Extend to full year (365 days) as requested
-    for (let i = startOffset; i <= startOffset + 365; i += 21) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
+    schedule.push({
+        id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        date: date.toISOString(),
+        drugName: drugOverride || drugs[Math.floor(Math.random() * drugs.length)],
+        ndc: '00006-3026-02',
+        status: 'scheduled',
+        dose: '100mg',
+        notes: 'Standard protocol'
+    });
 
-        schedule.push({
-            id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            date: date.toISOString(),
-            drugName: drugOverride || drugs[Math.floor(Math.random() * drugs.length)],
-            ndc: '00006-3026-02',
-            status: 'scheduled',
-            dose: '100mg',
-            notes: 'Standard protocol'
-        });
-    }
     return schedule;
 }
 
