@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2, Brain, ShoppingCart, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2, Brain, Shield } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,32 +9,50 @@ interface NavigationItem {
     permission: string;
 }
 
+interface NavigationGroup {
+    title: string;
+    items: NavigationItem[];
+}
+
 export function Sidebar() {
     const { user, hasPermission } = useAuth();
 
-    const navigation: NavigationItem[] = [
-        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
-        { name: 'CPO View', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
-        { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
-        { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
-        { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
-        { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
-        { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
-        { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
-        { name: 'Compliance', href: '/compliance', icon: Shield, permission: 'inventory' },
-        { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
-        { name: 'Cart', href: '/cart', icon: ShoppingCart, permission: 'inventory' },
+    const navigationGroups: NavigationGroup[] = [
+        {
+            title: 'Overview',
+            items: [
+                { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
+                { name: 'CPO View', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
+            ]
+        },
+        {
+            title: 'Operations',
+            items: [
+                { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
+                { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
+                { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
+                { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
+            ]
+        },
+        {
+            title: 'Governance',
+            items: [
+                { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
+                { name: 'Compliance', href: '/compliance', icon: Shield, permission: 'inventory' },
+                { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
+            ]
+        },
+        {
+            title: 'System',
+            items: [
+                { name: 'Settings', href: '/settings', icon: Settings, permission: 'manage_users' },
+            ]
+        }
     ];
 
-    // Filter navigation based on user permissions
-    const filteredNavigation = navigation.filter(item => {
-        if (!user) return false;
-        return hasPermission(item.permission);
-    });
-
     return (
-        <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl">
-            <div className="flex h-16 items-center border-b border-slate-200 px-6 overflow-hidden whitespace-nowrap">
+        <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl fixed h-full">
+            <div className="flex h-16 items-center border-b border-slate-200 px-6 overflow-hidden whitespace-nowrap shrink-0">
                 <div className="flex items-center gap-3 transition-all duration-300">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">
                         S
@@ -43,29 +61,41 @@ export function Sidebar() {
                 </div>
             </div>
 
-            <div className="flex flex-1 flex-col justify-between p-4 overflow-hidden">
-                <nav className="space-y-1">
-                    {filteredNavigation.map((item) => {
-                        const Icon = item.icon;
+            <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+                <nav className="flex-1 space-y-6 p-4">
+                    {navigationGroups.map((group) => {
+                        const filteredItems = group.items.filter(item => !user || hasPermission(item.permission));
+                        if (filteredItems.length === 0) return null;
+
                         return (
-                            <NavLink
-                                key={item.name}
-                                to={item.href}
-                                className={({ isActive }: { isActive: boolean }) =>
-                                    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap ${isActive
-                                        ? 'bg-indigo-50 text-indigo-600'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                    }`
-                                }
-                            >
-                                <Icon className="h-6 w-6 shrink-0" />
-                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.name}</span>
-                            </NavLink>
+                            <div key={group.title} className="space-y-1">
+                                <h3 className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 mb-2">
+                                    {group.title}
+                                </h3>
+                                {filteredItems.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <NavLink
+                                            key={item.name}
+                                            to={item.href}
+                                            className={({ isActive }: { isActive: boolean }) =>
+                                                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap ${isActive
+                                                    ? 'bg-indigo-50 text-indigo-600'
+                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                                }`
+                                            }
+                                        >
+                                            <Icon className="h-5 w-5 shrink-0" />
+                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.name}</span>
+                                        </NavLink>
+                                    );
+                                })}
+                            </div>
                         );
                     })}
                 </nav>
 
-                <div className="border-t border-slate-200 pt-4 whitespace-nowrap">
+                <div className="border-t border-slate-200 p-4 whitespace-nowrap bg-white shrink-0 mt-auto">
                     <div className="flex items-center gap-3 px-2 py-2">
                         <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
                             {user?.avatar ? (
