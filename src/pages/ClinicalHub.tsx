@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Stethoscope, TrendingDown, Calendar, Syringe, User, ChevronRight } from 'lucide-react';
+import { ClipboardList, Stethoscope, TrendingDown, Calendar, Syringe, User, ChevronRight, Search } from 'lucide-react';
 import { clinicalService } from '../services/clinicalService';
 import type { PreferenceCard, UsageReport } from '../services/clinicalService';
 import { CaseCartModal } from '../components/clinical/CaseCartModal';
@@ -14,6 +14,7 @@ export function ClinicalHub() {
     const [selectedCase, setSelectedCase] = useState<{ patient: string; procedure: string; surgeon: string } | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+    const [searchQuery, setSearchQuery] = useState('');
 
     // -- DATA FETCHING --
     // Use global unified patients instead of regenerating
@@ -60,7 +61,20 @@ export function ClinicalHub() {
         return events.filter(e => e.date.toDateString() === selectedDate.toDateString());
     }, [selectedDate, events]);
 
+    // Compute matching dates for search highlight
+    const highlightedDates = useMemo(() => {
+        if (!searchQuery.trim()) return [];
+        const query = searchQuery.toLowerCase();
 
+        // Find events that match patient name
+        const matches = events.filter(e =>
+            e.patientName.toLowerCase().includes(query) ||
+            e.title.toLowerCase().includes(query)
+        );
+
+        // Extract unique dates
+        return matches.map(e => e.date);
+    }, [events, searchQuery]);
     // Mock Data for Demo
     const [card, setCard] = useState<PreferenceCard>({
         id: '1',
@@ -123,6 +137,20 @@ export function ClinicalHub() {
                 </div>
             </div>
 
+            {/* Search Bar for Schedule */}
+            {activeTab === 'schedule' && (
+                <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search patient name to highlight schedule..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm"
+                    />
+                </div>
+            )}
+
             {activeTab === 'schedule' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Calendar Grid */}
@@ -133,6 +161,7 @@ export function ClinicalHub() {
                             onDateChange={setCurrentDate}
                             onSelectDate={setSelectedDate}
                             selectedDate={selectedDate}
+                            highlightedDates={highlightedDates}
                         />
                     </div>
 

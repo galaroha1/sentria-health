@@ -15,9 +15,10 @@ interface CalendarGridProps {
     onDateChange: (date: Date) => void;
     onSelectDate: (date: Date) => void;
     selectedDate: Date | null;
+    highlightedDates?: Date[]; // NEW: Dates matching search query
 }
 
-export function CalendarGrid({ currentDate, events, onDateChange, onSelectDate, selectedDate }: CalendarGridProps) {
+export function CalendarGrid({ currentDate, events, onDateChange, onSelectDate, selectedDate, highlightedDates = [] }: CalendarGridProps) {
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
 
@@ -73,9 +74,13 @@ export function CalendarGrid({ currentDate, events, onDateChange, onSelectDate, 
                 ))}
 
                 {days.map(day => {
+                    const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
                     const dayEvents = getEventsForDay(day);
-                    const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
+                    const isToday = new Date().toDateString() === dateObj.toDateString();
                     const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
+
+                    // Check if this date needs highlighting
+                    const isHighlighted = highlightedDates.some(d => d.toDateString() === dateObj.toDateString());
 
                     const surgeryCount = dayEvents.filter(e => e.type === 'surgery').length;
                     const treatmentCount = dayEvents.filter(e => e.type !== 'surgery').length;
@@ -83,16 +88,29 @@ export function CalendarGrid({ currentDate, events, onDateChange, onSelectDate, 
                     return (
                         <div
                             key={day}
-                            onClick={() => onSelectDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-                            className={`p-2 transition-colors cursor-pointer hover:bg-blue-50/50 flex flex-col justify-between group ${isSelected ? 'bg-blue-50 ring-2 ring-inset ring-blue-500' : ''
-                                } ${isToday ? 'bg-indigo-50/30' : ''}`}
+                            onClick={() => onSelectDate(dateObj)}
+                            className={`p-2 transition-all cursor-pointer flex flex-col justify-between group relative
+                                ${isSelected ? 'bg-blue-50 ring-2 ring-inset ring-blue-500' : ''}
+                                ${isToday ? 'bg-indigo-50/30' : ''}
+                                ${isHighlighted ? 'bg-yellow-50 ring-2 ring-inset ring-yellow-400 z-10' : 'hover:bg-blue-50/50'}
+                            `}
                         >
+                            {/* Highlight Badge */}
+                            {isHighlighted && (
+                                <div className="absolute -top-1 -right-1 z-20">
+                                    <span className="relative flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+                                    </span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-start">
                                 <span className={`text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full ${isToday ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-700'
                                     }`}>
                                     {day}
                                 </span>
-                                {dayEvents.length > 0 && (
+                                {dayEvents.length > 0 && !isHighlighted && (
                                     <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
                                 )}
                             </div>
