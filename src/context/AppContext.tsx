@@ -234,7 +234,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (sites.length === 0 || inventories.length === 0) return;
 
         // 1. Calculate Potential Savings (Optimization Opportunities)
-        const proposals = OptimizationService.generateProposals(sites, inventories, [], requests);
+        const proposals = OptimizationService.generateProposals(sites, inventories, patients, requests);
         const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
 
         // 2. Calculate Realized Savings (Completed/Approved Transfers)
@@ -277,7 +277,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (sites.length === 0 || inventories.length === 0) return;
 
         // Run the optimization algorithm to find solutions for low stock
-        const proposals = OptimizationService.generateProposals(sites, inventories);
+        const proposals = OptimizationService.generateProposals(sites, inventories, patients);
 
         proposals.forEach(proposal => {
             setNotifications(prevNotifications => {

@@ -95,7 +95,7 @@ export interface OrderPlanItem {
     supplierName: string;
     targetSiteId: string;
     quantity: number;
-    type: 'contract' | 'spot' | 'consignment';
+    type: 'contract' | 'spot' | 'consignment' | 'transfer';
 
     // Justification / Analysis
     analysis: {

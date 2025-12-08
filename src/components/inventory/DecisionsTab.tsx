@@ -34,8 +34,8 @@ function StepItem({ step, current, label, desc }: { step: string, current: strin
 }
 
 export function DecisionsTab() {
-    const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory, currentProposals, setCurrentProposals } = useApp();
-    const { simulationResults, fetchSimulations } = useSimulation();
+    const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory, currentProposals, setCurrentProposals, patients } = useApp();
+    const { fetchSimulations } = useSimulation();
     const [activeSection, setActiveSection] = useState<'approvals' | 'optimization' | 'alerts'>('approvals');
 
     // Optimization State
@@ -114,7 +114,7 @@ export function DecisionsTab() {
             }
 
             // Generate Results
-            const initialProposals = OptimizationService.generateProposals(sites, inventories, simulationResults, requests);
+            const initialProposals = OptimizationService.generateProposals(sites, inventories, patients, requests);
 
             setExecutionStep('compliance');
             await addLog('> RUNNING_COMPLIANCE_CHECKS...');

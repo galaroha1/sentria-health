@@ -1,43 +1,78 @@
 import type { DemandForecast } from '../types/procurement';
+import type { Patient } from '../types/patient';
 
 export class ForecastingService {
     /**
-     * Generates a probabilistic demand forecast for a given SKU at a location.
-     * Uses a mock Negative Binomial / Normal approximation based on historical "volatility".
+     * Generates a deterministic demand forecast based on REAL Scheduled Patient Treatments.
+     * Incorporates heuristic weights for Seasonality and Acuity.
      */
     static generateForecast(
         ndc: string,
         drugName: string,
-        siteId: string,
-        period: string, // '2025-01'
-        historyFactor: number = 1.0 // 1.0 = stable, >1.0 = volatile
+        siteId: string, // Kept for interface compatibility, though logic is now department-agnostic if patients are passed
+        period: string, // '2025-CURRENT'
+        patients: Patient[] = [], // REAL DATA SOURCE
+        seasonalityFactor: number = 1.0, // e.g. 1.2 for Flu Season
+        acuityWeight: number = 1.0 // e.g. 1.5 for ICU
     ): DemandForecast {
-        // MOCK LOGIC: Base demand on randomness + criticality
-        // Real implementation would use ARIMA or Bayesian State-Space models
 
-        // 1. Determine Base Parameters (µ)
-        // High volume for common drugs, low for specialty
-        const isSpecialty = ['Keytruda', 'Biologic', 'Oncology'].some(k => drugName.includes(k));
-        const baseMean = isSpecialty ? 15 : 150;
+        // 1. Calculate Base Demand from Scheduled Treatments (Future 30 Days)
+        const today = new Date();
+        const thirtyDaysOut = new Date();
+        thirtyDaysOut.setDate(today.getDate() + 30);
 
-        // 2. Introduce Variability (σ²)
-        // High variance for specialty drugs (sporadic demand)
-        const cv = isSpecialty ? 0.8 : 0.2; // Coefficient of Variation (σ / µ)
-        const mean = Math.round(baseMean * historyFactor);
-        const stdDev = mean * cv;
-        const variance = stdDev * stdDev;
+        let totalScheduledDoses = 0;
+        let treatmentsFound = 0;
+
+        // Iterate through all patients to find matching, future scheduled treatments
+        patients.forEach(patient => {
+            patient.treatmentSchedule.forEach(treatment => {
+                const txDate = new Date(treatment.date);
+
+                // Check if treatment matches Drug AND is within the horizon AND is scheduled
+                if (
+                    (treatment.ndc === ndc || treatment.drugName === drugName) &&
+                    treatment.status === 'scheduled' &&
+                    txDate >= today &&
+                    txDate <= thirtyDaysOut
+                ) {
+                    // Start with raw dose count (parsing "2 units" -> 2)
+                    const doseQty = parseInt(treatment.dose) || 1;
+                    totalScheduledDoses += doseQty;
+                    treatmentsFound++;
+                }
+            });
+        });
+
+        // 2. Apply Predictive Features (Acuity & Seasonality)
+        // D_hat = (Sum(Scheduled) * Seasonality * Acuity)
+
+        // Fallback for "Walk-in" demand if no scheduled treatments found but history implies use
+        // note: User wanted pure "Forward Looking", so we bias heavily to schedule.
+        // We add a small "Safety Buffer" based on Acuity if count is low but drug is critical.
+        let predictedDemand = totalScheduledDoses * seasonalityFactor * acuityWeight;
+
+        // If explicitly 0, we trust it (Forward looking only!)
+        // Unless it's a very critical drug with NO schedule, typically we might want a minimum, 
+        // but for this specific "Just-In-Time" model request, we respect the 0.
+
+        // 3. Calculate Variance (Heuristic based on Acuity)
+        // Higher acuity = Higher variance (unpredictable complications)
+        // Variance = Mean * (Coefficient of Variation)^2
+        const cv = acuityWeight > 1.2 ? 0.5 : 0.2; // High acuity -> 50% variability, Low -> 20%
+        const variance = Math.pow(predictedDemand * cv, 2);
 
         return {
             drugName,
             ndc,
             locationId: siteId,
             period,
-            mean,
-            variance,
-            distribution: isSpecialty ? 'negative_binomial' : 'normal',
+            mean: Math.ceil(predictedDemand),
+            variance: variance,
+            distribution: 'poisson', // Count data is best modeled as Poisson/NegBin
             confidenceInterval: [
-                Math.max(0, mean - (1.96 * stdDev)), // 95% Lower
-                mean + (1.96 * stdDev)               // 95% Upper
+                Math.max(0, predictedDemand - (1.96 * Math.sqrt(variance))),
+                predictedDemand + (1.96 * Math.sqrt(variance))
             ]
         };
     }

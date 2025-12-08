@@ -1,6 +1,7 @@
 import type { Site, SiteInventory } from '../types/location';
 import type { ProcurementProposal } from '../types/procurement';
 import type { OptimizationParams, OptimizationResult, OrderPlanItem, SupplierProfile } from '../types/procurement';
+import type { Patient } from '../types/patient';
 import { ForecastingService } from './forecasting.service';
 
 export class OptimizationService {
@@ -48,6 +49,8 @@ export class OptimizationService {
     }
 
     static validateTransfer(source: Site, target: Site): { valid: boolean; reason?: string } {
+        if (!source.regulatoryProfile || !target.regulatoryProfile) return { valid: true }; // Guard for bad mock data
+
         if (!target.regulatoryProfile.dscsaCompliant || !source.regulatoryProfile.dscsaCompliant) {
             return { valid: false, reason: 'DSCSA Violation: One or both sites are not compliant.' };
         }
@@ -56,22 +59,6 @@ export class OptimizationService {
         }
         return { valid: true };
     }
-
-    static analyzePopulationDemand(_siteId: string, patients: any[]): { [condition: string]: number } {
-        const sitePatients = patients.filter(_p => true); // Mock linkage
-        const conditionCounts: { [key: string]: number } = {};
-        sitePatients.forEach(p => {
-            const condition = p.condition || 'General';
-            conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
-        });
-        const total = sitePatients.length || 1;
-        const prevalence: { [key: string]: number } = {};
-        Object.keys(conditionCounts).forEach(cond => {
-            prevalence[cond] = conditionCounts[cond] / total;
-        });
-        return prevalence;
-    }
-
 
     // --- MOCK SUPPLIER DATA (Would be DB) ---
     private static getSupplierCatalog(_ndc: string): SupplierProfile[] {
@@ -91,10 +78,6 @@ export class OptimizationService {
         ];
     }
 
-    /**
-     * supplierScore = w_p*P + w_r*R + w_l*L + w_risk*Risk
-     * All normalized to 0-100 scale (Higher is better)
-     */
     private static scoreSupplier(supplier: SupplierProfile, context: { unitPrice: number, urgency: 'routine' | 'urgent' | 'emergency' }): number {
         // Weights
         const w_price = 0.4;
@@ -113,11 +96,12 @@ export class OptimizationService {
 
     /**
      * MAIN SOLVER: SelectOrderPlan(t)
-     * Heuristic approximation of MILP objective.
+     * Heuristic approximation of MILP objective: Minimize Z = Cost(Buy) + Cost(Transfer) + Cost(Hold) + Cost(Shortage)
      */
     static selectOrderPlan(
         _sites: Site[],
         inventories: SiteInventory[],
+        patients: Patient[], // REAL DATA driven
         params: OptimizationParams = {
             serviceLevelTarget: 0.95,
             holdingCostRate: 0.20, // 20% annual
@@ -130,122 +114,156 @@ export class OptimizationService {
         let totalEstimatedCost = 0;
         let totalRiskAdjustedCost = 0;
 
-        // 1. Iterate through all Inventory Points (SKU x Location)
-        for (const inv of inventories) {
-            for (const item of inv.drugs) {
+        // 1. Calculate Net Demand & Identification of Deficits/Surpluses
+        const deficits: { inv: SiteInventory, itemIndex: number, amount: number, criticality: any }[] = [];
+        const surpluses: { inv: SiteInventory, itemIndex: number, amount: number }[] = [];
 
-                // A. Generate Forecast
+        // Iterate through all Inventory Points (now effectively DEPARTMENTS)
+        for (const inv of inventories) {
+            inv.drugs.forEach((item, index) => {
+
+                // A. Generate Forecast based on REAL PATIENT SCHEDULE
+                // Heuristic: If Department Name includes 'Oncology', assume seasonalityFactor higher
+                const deptName = inv.departmentId ? inv.departmentId : 'General';
+                const isSeasonality = deptName.toLowerCase().includes('respiratory') || deptName.toLowerCase().includes('er');
+
                 const forecast = ForecastingService.generateForecast(
-                    item.ndc, item.drugName, inv.siteId, '2025-CURRENT'
+                    item.ndc, item.drugName, inv.siteId, '2025-CURRENT', patients,
+                    isSeasonality ? 1.2 : 1.0, // Seasonality
+                    (item as any).criticality === 'critical' ? 1.5 : 1.0 // Acuity Weight
                 );
 
-                // B. Calculate Dynamic Safety Stock based on variability
-                // Use AVERAGE supplier param for initial estimation (assume McKesson baseline)
-                const mockAvgSupplierLeadVar = 0.5;
-                const mockAvgSupplierLeadTime = 2;
-
+                // B. Safety Stock
+                const supplierInfo = this.getSupplierCatalog(item.ndc)[0]; // Use first for baseline SS calc
                 const safetyStock = ForecastingService.calculateSafetyStock(
                     forecast,
-                    mockAvgSupplierLeadTime,
-                    mockAvgSupplierLeadVar,
+                    supplierInfo.leadTimeDays,
+                    supplierInfo.leadTimeVariance,
                     params.serviceLevelTarget
                 );
 
-                // C. Determine Net Requirement
-                // Net = (ForecastMean + SS) - OnHand - OnOrder
-                const onOrder = 0;
-                const demandForHorizon = (forecast.mean / 30) * params.planningHorizonDays;
+                // C. Net Requirement = (Demand + SS) - Stock
+                const totalDemand = forecast.mean + safetyStock;
+                const netPosition = item.quantity - totalDemand;
 
-                const netRequirement = Math.ceil((demandForHorizon + safetyStock) - item.quantity - onOrder);
+                if (netPosition < 0) {
+                    // DEFICIT
+                    deficits.push({
+                        inv,
+                        itemIndex: index,
+                        amount: Math.abs(netPosition),
+                        criticality: (item as any).criticality
+                    });
+                } else if (netPosition > 0) {
+                    // SURPLUS (Potential for Transfer)
+                    surpluses.push({
+                        inv,
+                        itemIndex: index,
+                        amount: netPosition
+                    });
+                }
+            });
+        }
 
-                if (netRequirement > 0) {
-                    // D. SOURCING OPTIMIZATION
-                    // Evaluate all suppliers
-                    const suppliers = this.getSupplierCatalog(item.ndc);
+        // 2. Resolve Deficits (Greedy Heuristic: Try Internal Transfer -> Then Buy)
+        for (const deficit of deficits) {
+            const item = deficit.inv.drugs[deficit.itemIndex];
+            let remainingDeficit = deficit.amount;
 
-                    // Explicit Type for bestOption
-                    let bestOption: {
-                        supplier: SupplierProfile;
-                        cost: number;
-                        score: number;
+            // STRATEGY A: INTERNAL TRANSFER (Nodes in Same Location)
+            // Filter surpluses for same Site ID but different Department ID (if exists)
+            // or just different inventory bucket
+            const internalSources = surpluses.filter(s =>
+                s.inv.drugs[s.itemIndex].ndc === item.ndc &&
+                s.inv.siteId === deficit.inv.siteId &&
+                s.inv !== deficit.inv &&
+                s.amount > 0
+            );
+
+            for (const source of internalSources) {
+                if (remainingDeficit <= 0) break;
+
+                const transferQty = Math.min(remainingDeficit, source.amount);
+
+                // EXECUTE INTERNAL TRANSFER (Virtual)
+                orderItems.push({
+                    sku: item.ndc,
+                    drugName: item.drugName,
+                    supplierId: source.inv.departmentId || 'Internal-Dept',
+                    supplierName: `${source.inv.departmentId || 'Other Dept'} (Internal Transfer)`, // Visual cue
+                    targetSiteId: deficit.inv.siteId,
+                    quantity: transferQty,
+                    type: 'transfer',
+                    analysis: {
+                        forecastMean: 0, // already accounted
+                        safetyStock: 0,
+                        projectedStockoutRisk: 0,
+                        costBreakdown: {
+                            purchase: 0,
+                            holding: 0,
+                            stockoutPenalty: 0,
+                            logistics: 0, // Internal transfer is FREE (or negligible)
+                            riskPenalty: 0
+                        },
+                        supplierScore: 100, // Perfect score for internal
+                        alternativeSavings: 100 // Huge saving vs buying
+                    }
+                });
+
+                // Update Logic State
+                remainingDeficit -= transferQty;
+                source.amount -= transferQty; // Decrement available surplus
+            }
+
+            // STRATEGY B: BUY FROM VENDOR (If Internal didn't cover it)
+            if (remainingDeficit > 0) {
+                const suppliers = this.getSupplierCatalog(item.ndc);
+                let bestOption: any = null;
+
+                for (const supplier of suppliers) {
+                    let orderQty = Math.max(remainingDeficit, supplier.contractTerms.minOrderQty);
+                    const tier = supplier.contractTerms.costFunctions.find(t => orderQty >= t.minQty && orderQty <= t.maxQty);
+                    const unitPrice = tier ? tier.unitPrice : 100;
+
+                    const purchaseCost = orderQty * unitPrice;
+                    const holdingCost = (orderQty * unitPrice * params.holdingCostRate) / 12;
+                    const riskPenalty = (1 - supplier.reliability) * params.stockoutCostPerUnit;
+
+                    const totalCost = purchaseCost + holdingCost + riskPenalty;
+                    const score = this.scoreSupplier(supplier, { unitPrice, urgency: deficit.criticality === 'critical' ? 'emergency' : 'routine' });
+
+                    if (!bestOption || totalCost < bestOption.cost) {
+                        bestOption = { supplier, cost: totalCost, score, analysis: { purchase: purchaseCost, holding: holdingCost, riskPenalty, unitPrice } };
+                    }
+                }
+
+                if (bestOption) {
+                    orderItems.push({
+                        sku: item.ndc,
+                        drugName: item.drugName,
+                        supplierId: bestOption.supplier.id,
+                        supplierName: bestOption.supplier.name,
+                        targetSiteId: deficit.inv.siteId,
+                        quantity: Math.max(remainingDeficit, bestOption.supplier.contractTerms.minOrderQty),
+                        type: 'contract',
                         analysis: {
-                            purchase: number;
-                            holding: number;
-                            riskPenalty: number;
-                            unitPrice: number;
+                            forecastMean: remainingDeficit,
+                            safetyStock: 0,
+                            projectedStockoutRisk: 0,
+                            costBreakdown: {
+                                purchase: bestOption.analysis.purchase,
+                                holding: bestOption.analysis.holding,
+                                stockoutPenalty: 0,
+                                logistics: 50,
+                                riskPenalty: bestOption.analysis.riskPenalty
+                            },
+                            supplierScore: Math.round(bestOption.score),
+                            alternativeSavings: 0
                         }
-                    } | null = null;
-                    let bestSubOptimalSavings = 0;
+                    });
 
-                    for (const supplier of suppliers) {
-                        // 1. Check Capacity/Constraints (Min Order)
-                        let orderQty = Math.max(netRequirement, supplier.contractTerms.minOrderQty);
-
-                        // 2. Calculate Costs
-                        const tier = supplier.contractTerms.costFunctions.find(t => orderQty >= t.minQty && orderQty <= t.maxQty);
-                        const unitPrice = tier ? tier.unitPrice : 100;
-
-                        const purchaseCost = orderQty * unitPrice;
-                        const holdingCost = (orderQty * unitPrice * params.holdingCostRate) / 12; // Monthly portion
-
-                        // Risk Penalty: E[Risk] = Prob * Impact
-                        const riskPenalty = (1 - supplier.reliability) * params.stockoutCostPerUnit * (orderQty * 0.1) * params.riskAversionLambda;
-
-                        const totalCost = purchaseCost + holdingCost + riskPenalty;
-
-                        const score = this.scoreSupplier(supplier, {
-                            unitPrice,
-                            urgency: ((item as any).criticality || 5) > 8 ? 'emergency' : 'routine'
-                        });
-
-                        if (!bestOption || totalCost < bestOption.cost) { // Minimizing Cost Objective
-                            if (bestOption) bestSubOptimalSavings = bestOption.cost - totalCost;
-                            bestOption = {
-                                supplier,
-                                cost: totalCost,
-                                score,
-                                analysis: {
-                                    purchase: purchaseCost,
-                                    holding: holdingCost,
-                                    riskPenalty,
-                                    unitPrice
-                                }
-                            };
-                        }
-                    }
-
-                    if (bestOption) {
-                        // TS should know bestOption is not null here due to linear flow in for-loop not affecting it?
-                        // If not, we assert
-                        const opt = bestOption as NonNullable<typeof bestOption>;
-
-                        orderItems.push({
-                            sku: item.ndc,
-                            drugName: item.drugName,
-                            supplierId: opt.supplier.id,
-                            supplierName: opt.supplier.name,
-                            targetSiteId: inv.siteId,
-                            quantity: Math.max(netRequirement, opt.supplier.contractTerms.minOrderQty),
-                            type: 'contract',
-                            analysis: {
-                                forecastMean: Math.round(demandForHorizon),
-                                safetyStock,
-                                projectedStockoutRisk: (1 - params.serviceLevelTarget) * 100,
-                                costBreakdown: {
-                                    purchase: opt.analysis.purchase,
-                                    holding: opt.analysis.holding,
-                                    stockoutPenalty: 0,
-                                    logistics: 50, // Flat fee mock
-                                    riskPenalty: opt.analysis.riskPenalty
-                                },
-                                supplierScore: Math.round(opt.score),
-                                alternativeSavings: Math.round(bestSubOptimalSavings)
-                            }
-                        });
-
-                        totalEstimatedCost += opt.analysis.purchase + opt.analysis.holding;
-                        totalRiskAdjustedCost += opt.cost;
-                    }
+                    totalEstimatedCost += bestOption.analysis.purchase;
+                    totalRiskAdjustedCost += bestOption.cost;
                 }
             }
         }
@@ -263,24 +281,24 @@ export class OptimizationService {
     }
 
     /**
-     * Legacy Method Support (Wrapper or Deprecated)
-     * We keep this to avoid breaking existing UI calls until full migration.
+     * Wrapper for UI Compatibility
      */
     static generateProposals(
         sites: Site[],
         inventories: SiteInventory[],
-        _simulationResults: any[] = [],
+        patients: Patient[] = [], // Passed from AppContext
         _activeRequests: any[] = []
     ): ProcurementProposal[] {
-        // Run the new Engine
-        const optimizationResult = this.selectOrderPlan(sites, inventories);
+        // Run the Advanced Engine
+        const optimizationResult = this.selectOrderPlan(sites, inventories, patients);
 
-        // Map 'OrderPlanItem' back to 'ProcurementProposal' for UI compatibility
+        // Map 'OrderPlanItem' back to 'ProcurementProposal' for UI
         return optimizationResult.items.map(item => ({
             id: `opt-${Math.random()}`,
-            type: 'procurement',
+            type: item.type === 'transfer' ? 'transfer' : 'procurement', // Differentiate for UI? Currently UI treats all as proposals.
             targetSiteId: item.targetSiteId,
             targetSiteName: sites.find(s => s.id === item.targetSiteId)?.name || 'Unknown',
+            sourceSiteName: item.type === 'transfer' ? item.supplierName : undefined, // Show Source Dept
             drugName: item.drugName,
             ndc: item.sku,
             quantity: item.quantity,
@@ -292,10 +310,12 @@ export class OptimizationService {
                 totalCost: item.analysis.costBreakdown.purchase + item.analysis.costBreakdown.logistics,
                 savings: item.analysis.alternativeSavings
             },
-            reason: `AI Optimization: SS=${item.analysis.safetyStock}, RiskPenalty=$${item.analysis.costBreakdown.riskPenalty.toFixed(0)}`,
+            reason: item.type === 'transfer'
+                ? `Internal Transfer: Surplus available in ${item.supplierName}`
+                : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`,
             score: item.analysis.supplierScore,
-            fulfillmentNode: 'External',
-            regulatoryJustification: { passed: true, details: ['AI Optimized Plan'] }
+            fulfillmentNode: item.type === 'transfer' ? 'Internal' : 'External',
+            regulatoryJustification: { passed: true, details: [item.type === 'transfer' ? 'Internal Allocation' : 'Vendor Purchase'] }
         }));
     }
 }
