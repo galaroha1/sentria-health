@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Stethoscope, TrendingDown, Calendar, Syringe, Clock, User, FileText, ChevronRight } from 'lucide-react';
+import { ClipboardList, Stethoscope, TrendingDown, Calendar, Syringe, User, ChevronRight } from 'lucide-react';
 import { clinicalService } from '../services/clinicalService';
 import type { PreferenceCard, UsageReport } from '../services/clinicalService';
 import { CaseCartModal } from '../components/clinical/CaseCartModal';
@@ -24,7 +24,7 @@ export function ClinicalHub() {
         const allEvents: any[] = [];
 
         patients.forEach(patient => {
-            patient.treatmentSchedule.forEach(treatment => {
+            patient.treatmentSchedule.forEach((treatment: any) => {
                 allEvents.push({
                     id: treatment.id,
                     date: new Date(treatment.date),

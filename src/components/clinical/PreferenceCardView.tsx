@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Save, AlertTriangle, TrendingDown, Plus, Trash2 } from 'lucide-react';
+import { Save, Trash2, Plus, TrendingDown } from 'lucide-react';
 import type { PreferenceCard, UsageReport } from '../../services/clinicalService';
 
 interface PreferenceCardViewProps {
@@ -9,7 +9,7 @@ interface PreferenceCardViewProps {
     onSave: (card: PreferenceCard) => void;
 }
 
-export function PreferenceCardView({ card, history, onSave }: PreferenceCardViewProps) {
+export function PreferenceCardView({ card, onSave }: PreferenceCardViewProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [items, setItems] = useState(card.items);
 
@@ -83,8 +83,8 @@ export function PreferenceCardView({ card, history, onSave }: PreferenceCardView
                         <div className="w-20 text-center text-slate-600">{item.quantity}</div>
                         <div className="w-24 flex justify-center">
                             <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${item.openStatus === 'open'
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-amber-100 text-amber-700'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-amber-100 text-amber-700'
                                 }`}>
                                 {item.openStatus}
                             </span>

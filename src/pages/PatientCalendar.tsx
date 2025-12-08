@@ -21,7 +21,7 @@ export function PatientCalendar() {
         const month = currentDate.getMonth();
 
         patients.forEach(patient => {
-            patient.treatmentSchedule.forEach(tx => {
+            patient.treatmentSchedule.forEach((tx: Treatment) => {
                 const txDate = new Date(tx.date);
                 if (txDate.getFullYear() === year && txDate.getMonth() === month &&
                     (patient.name.toLowerCase().includes(searchQuery.toLowerCase()) || tx.drugName.toLowerCase().includes(searchQuery.toLowerCase()))) {

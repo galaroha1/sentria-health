@@ -56,17 +56,16 @@ export function NetworkHub() {
         phone: 'N/A',
         email: 'N/A',
         departments: [],
-        regulatoryAvatar: 'https://api.dicebear.com/7.x/initials/svg?seed=' + org.name,
-        classOfTrade: org.type === 'Pharmacy' ? 'retail_pharmacy' : 'hospital',
+        regulatoryAvatar: org.type === 'Pharmacy' ? 'Pharmacy' : org.type === 'Academic' ? 'DSH' : 'Clinic',
+        classOfTrade: org.type === 'Pharmacy' ? 'retail' : 'acute',
         parentEntity: 'Region Network',
         regulatoryProfile: {
-            dea_license: 'PENDING',
-            state_license: 'PENDING',
-            npi: 'PENDING',
-            dea_expiry: '2025-01-01',
-            state_expiry: '2025-01-01',
-            last_audit: '2024-01-01',
-            audit_score: 100
+            is340B: true,
+            deaLicense: ['II', 'III', 'IV'],
+            dscsaCompliant: true,
+            stateLicense: 'PENDING',
+            orphanDrugExclusion: false,
+            gpoProhibition: false
         },
         contact: {
             name: 'N/A',
@@ -77,7 +76,7 @@ export function NetworkHub() {
         shippingAddress: org.address,
         billingAddress: org.address,
         timezone: 'America/New_York',
-        status: 'active',
+        status: 'operational',
         capacity: 1000,
         currentUtilization: 75
     }));

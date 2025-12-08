@@ -1,5 +1,5 @@
 
-import { X, Package, Check, AlertTriangle, Printer, Edit2 } from 'lucide-react';
+import { X, Package, Check, Printer, Edit2 } from 'lucide-react';
 
 interface CaseCartItem {
     id: string;
@@ -71,7 +71,7 @@ export function CaseCartModal({ isOpen, onClose, patientName, procedureName, sur
                             <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-blue-100 transition-colors group">
                                 <div className="flex items-center gap-4">
                                     <div className={`h-10 w-10 flex items-center justify-center rounded-lg ${item.status === 'picked' ? 'bg-emerald-50 text-emerald-600' :
-                                            item.status === 'substitution' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-400'
+                                        item.status === 'substitution' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-400'
                                         }`}>
                                         <Package className="h-5 w-5" />
                                     </div>
@@ -84,7 +84,7 @@ export function CaseCartModal({ isOpen, onClose, patientName, procedureName, sur
                                     <div className="text-right">
                                         <p className="text-sm font-bold text-slate-900">x{item.quantity}</p>
                                         <p className={`text-xs font-medium ${item.status === 'picked' ? 'text-emerald-600' :
-                                                item.status === 'substitution' ? 'text-amber-600' : 'text-slate-400'
+                                            item.status === 'substitution' ? 'text-amber-600' : 'text-slate-400'
                                             }`}>
                                             {item.status.toUpperCase()}
                                         </p>

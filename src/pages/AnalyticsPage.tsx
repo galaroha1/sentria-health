@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, DollarSign, ShieldCheck, Activity, PieChart, TrendingUp, TrendingDown, Package, Truck, AlertCircle } from 'lucide-react';
+import { DollarSign, Activity, Truck, AlertCircle, TrendingUp, TrendingDown, ShieldCheck, Package } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart as RePieChart, Pie, Cell } from 'recharts';
 
 export function Analytics() {
@@ -22,7 +22,6 @@ export function Analytics() {
         const interval = setInterval(() => {
             setData(prev => {
                 const newData = [...prev.slice(1)];
-                const last = prev[prev.length - 1]; // Unused but keeps logic sound if needed later
                 const nextTime = parseInt(prev[prev.length - 1].time) + 1;
 
                 newData.push({
