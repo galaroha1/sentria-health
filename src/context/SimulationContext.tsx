@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { predictTreatment, type PatientProfile, type PredictionResult } from '../utils/aiPrediction';
 import { MEDICAL_DATABASE } from '../data/medicalDatabase';
 import { useAuth } from './AuthContext';
+import { useApp } from './AppContext';
 import { FirestoreService } from '../services/firebase.service';
 import { SyntheaGenerator, type SyntheticBundle } from '../utils/syntheaGenerator';
 import toast from 'react-hot-toast';
@@ -49,6 +50,7 @@ const SimulationContext = createContext<SimulationContextType | undefined>(undef
 
 export function SimulationProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
+    const { addPatient } = useApp();
     const [simulationResults, setSimulationResults] = useState<SimulationResult[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<SimulationResult | null>(null);
 
@@ -339,6 +341,22 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         // Optimistically add to list if it fits sort order? 
         // For now, just re-fetch or prepend
         setSimulationResults(prev => [result, ...prev]);
+
+        // SYNC TO GLOBAL APP CONTEXT (Clinical View)
+        // Convert SimulationResult to Patient
+        // Ideally we use a helper, but doing inline for speed and robustness
+        const newPatient = {
+            id: result.id,
+            mrn: `MRN-${Math.floor(10000 + Math.random() * 90000)}`,
+            name: result.patientName,
+            dateOfBirth: new Date(new Date().getFullYear() - (result.profile?.age || 45), 0, 1).toISOString().split('T')[0],
+            gender: result.profile?.gender.toLowerCase() || 'male',
+            diagnosis: result.condition,
+            type: 'adult',
+            attendingPhysician: 'Dr. Auto',
+            treatmentSchedule: [] // We could generate a schedule based on the drug
+        };
+        addPatient(newPatient);
     };
 
     const viewPatientDetails = (patient: SimulationResult) => {

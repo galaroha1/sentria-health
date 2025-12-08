@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Download, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Search, Filter, Download, ChevronDown, ChevronUp, AlertTriangle, UserPlus } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
+import { AddPatientModal } from './AddPatientModal';
 
 
 export function PatientDataTab() {
@@ -47,6 +48,8 @@ export function PatientDataTab() {
         return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
     };
 
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
     return (
         <div className="space-y-4">
             {/* Toolbar */}
@@ -66,19 +69,23 @@ export function PatientDataTab() {
                     </div>
                     <div className="flex gap-2">
                         <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 shadow-sm"
+                        >
+                            <UserPlus className="h-4 w-4" />
+                            Add Patient
+                        </button>
+                        <button
                             onClick={() => loadData(true)}
                             className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg>
-                            Refresh
                         </button>
                         <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                             <Filter className="h-4 w-4" />
-                            Filter
                         </button>
                         <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                             <Download className="h-4 w-4" />
-                            Export CSV
                         </button>
                     </div>
                 </div>
@@ -190,6 +197,10 @@ export function PatientDataTab() {
                     </div>
                 )}
             </div>
+
+            {isAddModalOpen && (
+                <AddPatientModal onClose={() => setIsAddModalOpen(false)} />
+            )}
         </div>
     );
 }

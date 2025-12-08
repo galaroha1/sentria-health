@@ -59,19 +59,21 @@ export function CommandCenter() {
                 {/* Left Panel: System Stats */}
                 <div className="col-span-3 space-y-4">
                     <div className="border border-green-900/50 bg-green-900/5 p-4 rounded-lg">
-                        <h3 className="text-xs font-bold text-green-700 mb-2 uppercase">System Load</h3>
+                        <h3 className="text-xs font-bold text-green-700 mb-2 uppercase">System Load (Global)</h3>
                         <div className="flex items-end gap-1 h-24 mb-2">
-                            {[40, 65, 30, 80, 55, 90, 45, 70, 35, 60].map((h, i) => (
+                            {[40, 65, 30, 80, 55, 90, 45, 70, 35, 60, 75, 50, 85, 40].map((h, i) => (
                                 <div
                                     key={i}
-                                    className="flex-1 bg-green-900/40 hover:bg-green-500/50 transition-all duration-300"
+                                    className="flex-1 bg-green-900/40 hover:bg-green-500/50 transition-all duration-300 relative group"
                                     style={{ height: `${h}%` }}
-                                ></div>
+                                >
+                                    <div className="absolute bottom-0 left-0 right-0 bg-green-500/20 h-full w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
                             ))}
                         </div>
-                        <div className="flex justify-between text-xs text-green-600">
-                            <span>CPU: 42%</span>
-                            <span>MEM: 1.2GB</span>
+                        <div className="flex justify-between text-xs text-green-600 font-mono">
+                            <span>CPU_0: 42%</span>
+                            <span>MEM_GRID: 12.4TB</span>
                         </div>
                     </div>
 

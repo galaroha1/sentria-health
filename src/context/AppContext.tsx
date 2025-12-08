@@ -12,6 +12,8 @@ interface AppContextType {
     // Location & Requests
     requests: NetworkRequest[];
     sites: Site[];
+    patients: any[]; // Using any to avoid circular deps or complex type imports for now, ideally 'Patient[]'
+    addPatient: (patient: any) => void;
     addSite: (site: Site) => void;
     inventories: SiteInventory[];
     addRequest: (request: NetworkRequest) => void;
@@ -59,6 +61,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const [sites, setSites] = useState<Site[]>([]);
     const [inventories, setInventories] = useState<SiteInventory[]>([]);
+
+    // Global Patient State (Unified Source of Truth)
+    const [patients, setPatients] = useState<any[]>([]);
+
+    const addPatient = (patient: any) => {
+        setPatients(prev => [patient, ...prev]);
+    };
+
+    useEffect(() => {
+        // Seed patients on mount if empty
+        if (patients.length === 0) {
+            import('../services/patient.service').then(({ PatientService }) => {
+                setPatients(PatientService.generateMockPatients(50));
+            });
+        }
+    }, []);
 
     const addSite = async (site: Site) => {
         // Optimistic update
@@ -381,6 +399,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <AppContext.Provider value={{
             requests,
             sites,
+            patients,
+            addPatient,
             addSite,
             inventories,
             addRequest,

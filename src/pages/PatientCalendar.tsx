@@ -1,17 +1,18 @@
 import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Search, Pill, AlertTriangle } from 'lucide-react';
-import { PatientService } from '../services/patient.service';
 import type { Patient, Treatment } from '../types/patient';
+import { useApp } from '../context/AppContext';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function PatientCalendar() {
+    const { patients } = useApp();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
 
     // Generate static mock data (memoized to prevent hydration mismatches in real app, though here it's static)
-    const patients = useMemo(() => PatientService.generateMockPatients(15), []);
+    // const patients = useMemo(() => PatientService.generateMockPatients(15), []);
 
     // Filter appointments for the current month
     const appointments = useMemo(() => {

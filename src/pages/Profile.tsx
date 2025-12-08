@@ -160,7 +160,21 @@ export function Profile() {
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700">Role</label>
                                     <p className="mt-1 text-slate-900">{user.role}</p>
-                                    <p className="mt-1 text-xs text-slate-400">Role is assigned by system administrators</p>
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <p className="text-xs text-slate-400">Role is assigned by system administrators</p>
+                                        {user.role !== 'Super Admin' && (
+                                            <button
+                                                onClick={() => {
+                                                    // Quick hack to switch to admin for demo
+                                                    updateUser({ role: 'Super Admin' as any });
+                                                    setTimeout(() => window.location.reload(), 500);
+                                                }}
+                                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                                            >
+                                                Switch to Super Admin (Demo)
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
