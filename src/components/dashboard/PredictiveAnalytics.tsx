@@ -110,7 +110,7 @@ export function PredictiveAnalytics() {
                 <div className="mb-4 flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-red-500" />
                     <h3 className="text-lg font-bold text-slate-900">Predicted Stockouts</h3>
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
                         {predictions.filter(s => s.severity === 'critical').length} Critical
                     </span>
                 </div>

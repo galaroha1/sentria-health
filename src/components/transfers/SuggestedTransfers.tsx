@@ -11,7 +11,7 @@ export function SuggestedTransfers({ onInitiate }: { onInitiate: (suggestion: Su
                 <div key={suggestion.id} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="mb-4 flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                            <span className={`rounded-full px-2 py-1 text-xs font-medium ${suggestion.priority === 'high' ? 'bg-red-100 text-red-700' :
+                            <span className={`rounded-full px-2 py-1 text-xs font-medium ${suggestion.priority === 'high' ? 'bg-red-50 text-red-700' :
                                 suggestion.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
                                     'bg-blue-100 text-blue-700'
                                 }`}>

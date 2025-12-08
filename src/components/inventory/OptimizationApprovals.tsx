@@ -24,8 +24,8 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                     <div key={proposal.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md">
                         {/* Score Indicator */}
                         <div className={`absolute right-0 top-0 rounded-bl-xl px-3 py-1 text-xs font-bold border-b border-l ${(proposal.regulatoryJustification?.riskScore || 0) > 0
-                                ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                : 'bg-slate-50 text-slate-500 border-slate-100'
+                            ? 'bg-amber-50 text-amber-600 border-amber-100'
+                            : 'bg-slate-50 text-slate-500 border-slate-100'
                             }`}>
                             Match Score: {proposal.score}
                         </div>
@@ -35,8 +35,8 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.channel === '340B' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
-                                            proposal.channel === 'GPO' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                                'bg-slate-50 text-slate-700 ring-slate-600/20'
+                                        proposal.channel === 'GPO' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                            'bg-slate-50 text-slate-700 ring-slate-600/20'
                                         }`}>
                                         {proposal.channel}
                                     </span>
@@ -80,7 +80,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                         <div className="mb-2 flex items-center justify-between">
                                             <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Live Supplier Intelligence</p>
                                             <span className="flex items-center gap-1 text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-100 shadow-sm animate-pulse">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span> Live Feed
+                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Live Feed
                                             </span>
                                         </div>
 
@@ -91,7 +91,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-slate-700 capitalize">{quote.supplierId}</span>
                                                         {quote.priceTrend === 'down' && (
-                                                            <span className="flex items-center text-xs text-green-600 bg-green-50 px-1 rounded">
+                                                            <span className="flex items-center text-xs text-emerald-700 bg-emerald-50 px-1 rounded">
                                                                 <TrendingDown className="h-3 w-3 mr-0.5" /> Price Drop
                                                             </span>
                                                         )}

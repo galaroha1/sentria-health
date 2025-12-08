@@ -102,7 +102,7 @@ export function UserManagement() {
                 );
             case UserStatus.SUSPENDED:
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
                         Suspended
                     </span>
@@ -290,7 +290,7 @@ export function UserManagement() {
                                                 <button
                                                     onClick={() => toggleUserStatus(user.id)}
                                                     title="Deactivate User"
-                                                    className="rounded p-1 text-slate-400 hover:bg-red-100 hover:text-red-600"
+                                                    className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
                                                 >
                                                     <Ban className="h-4 w-4" />
                                                 </button>

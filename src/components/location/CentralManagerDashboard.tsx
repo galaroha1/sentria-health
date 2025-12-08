@@ -12,7 +12,7 @@ export function CentralManagerDashboard({ requests, onApprove, onDeny }: Central
 
     const getUrgencyColor = (urgency: string) => {
         switch (urgency) {
-            case 'emergency': return 'bg-red-100 text-red-700';
+            case 'emergency': return 'bg-red-50 text-red-700';
             case 'urgent': return 'bg-amber-100 text-amber-700';
             default: return 'bg-blue-100 text-blue-700';
         }
@@ -22,7 +22,7 @@ export function CentralManagerDashboard({ requests, onApprove, onDeny }: Central
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-900">Pending Network Requests</h3>
-                <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-bold text-red-700">
+                <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-700">
                     {pendingRequests.length} Pending
                 </span>
             </div>
@@ -83,7 +83,7 @@ export function CentralManagerDashboard({ requests, onApprove, onDeny }: Central
                                 </button>
                                 <button
                                     onClick={() => onDeny(request.id)}
-                                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+                                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
                                 >
                                     <XCircle className="h-4 w-4" />
                                     Deny Request

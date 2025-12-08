@@ -47,10 +47,10 @@ export function InventoryTable({ items }: InventoryTableProps) {
                                 </td>
                                 <td className="px-6 py-4 font-medium text-slate-900">${(item.quantity * 150).toLocaleString()}</td>
                                 <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${item.status === 'well_stocked' ? 'bg-emerald-100 text-emerald-700' :
-                                        item.status === 'low' ? 'bg-amber-100 text-amber-700' :
-                                            item.status === 'critical' ? 'bg-red-100 text-red-700' :
-                                                'bg-orange-100 text-orange-700'
+                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${item.status === 'critical' ? 'bg-red-50 text-red-700 ring-1 ring-red-100' :
+                                        item.status === 'low' ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-100' :
+                                            item.status === 'overstocked' ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100' :
+                                                'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
                                         }`}>
                                         {item.status === 'well_stocked' && <CheckCircle2 className="h-3 w-3" />}
                                         {item.status === 'low' && <AlertCircle className="h-3 w-3" />}

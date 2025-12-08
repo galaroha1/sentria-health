@@ -70,7 +70,7 @@ export function SiteDetailPanel({ site, inventory, onClose, onRequestTransfer }:
                                         </div>
                                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${drug.status === 'well_stocked' ? 'bg-emerald-100 text-emerald-700' :
                                             drug.status === 'low' ? 'bg-amber-100 text-amber-700' :
-                                                drug.status === 'critical' ? 'bg-red-100 text-red-700' :
+                                                drug.status === 'critical' ? 'bg-red-50 text-red-700' :
                                                     'bg-blue-100 text-blue-700'
                                             }`}>
                                             {drug.status.replace('_', ' ').toUpperCase()}

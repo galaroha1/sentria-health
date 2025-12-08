@@ -31,7 +31,7 @@ export function InventoryAlerts() {
                 {alerts.map((alert) => (
                     <div key={alert.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-3">
                         <div className="flex items-center gap-3">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${alert.status === 'critical' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
+                            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${alert.status === 'critical' ? 'bg-red-50 text-red-600' : 'bg-amber-100 text-amber-600'
                                 }`}>
                                 <AlertTriangle className="h-4 w-4" />
                             </div>

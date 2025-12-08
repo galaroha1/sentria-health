@@ -35,7 +35,7 @@ export function PredictiveProcurement() {
                             <p className="text-sm font-medium text-slate-500">Keytruda (Pembrolizumab)</p>
                             <p className="mt-1 text-2xl font-bold text-slate-900">15 Units</p>
                         </div>
-                        <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">High Priority</span>
+                        <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">High Priority</span>
                     </div>
                     <p className="mt-3 text-xs text-slate-500">Recommended order for next 6 weeks</p>
                 </div>

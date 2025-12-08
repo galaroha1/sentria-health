@@ -26,8 +26,8 @@ export function LogTerminal({ logs, className = '', title = 'System Output' }: L
                 </div>
                 <div className="flex gap-1.5">
                     <div className="h-2.5 w-2.5 rounded-full bg-red-500/20" />
-                    <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/20" />
-                    <div className="h-2.5 w-2.5 rounded-full bg-green-500/20" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-amber-500/20" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/20" />
                 </div>
             </div>
 

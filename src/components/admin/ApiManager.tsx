@@ -133,7 +133,7 @@ export function ApiManager() {
                 {/* Cardinal */}
                 <div className="space-y-4">
                     <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                        <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
                         Cardinal Health
                     </h3>
                     <div className="space-y-2">
@@ -155,7 +155,7 @@ export function ApiManager() {
                 </div>
 
                 {message && (
-                    <div className={`p-3 rounded-lg flex items-center gap-2 text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <div className={`p-3 rounded-lg flex items-center gap-2 text-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
                         {message.type === 'success' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
                         {message.text}
                     </div>

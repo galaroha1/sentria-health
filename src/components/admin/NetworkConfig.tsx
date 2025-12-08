@@ -153,7 +153,7 @@ export function NetworkConfig() {
                                     </button>
                                 </div>
                                 {coordinates && (
-                                    <div className="mt-2 p-3 bg-green-50 text-green-700 text-sm rounded-lg flex items-center gap-2">
+                                    <div className="mt-2 p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg flex items-center gap-2">
                                         <Check className="h-4 w-4" />
                                         Found: {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
                                     </div>
@@ -248,11 +248,11 @@ export function NetworkConfig() {
                                             </span>
                                         )}
                                         {site.regulatoryProfile.dscsaCompliant ? (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
                                                 DSCSA OK
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 ring-1 ring-red-100">
                                                 Non-Compliant
                                             </span>
                                         )}
