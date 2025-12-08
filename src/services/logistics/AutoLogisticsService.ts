@@ -1,4 +1,6 @@
 import type { Site, SiteInventory, DrugInventoryItem, TransferSuggestion, TransportMethod } from '../../types/location';
+import { marketplaceService } from '../marketplaceService';
+
 
 export class AutoLogisticsService {
     // Haversine formula to calculate distance between two points in miles
@@ -109,19 +111,18 @@ export class AutoLogisticsService {
         return 'courier_car';
     }
 
-    public generateSuggestions(
+    public async generateSuggestions(
         targetSite: Site,
         shortageItem: DrugInventoryItem,
         allSites: Site[],
-        allInventories: SiteInventory[]
-    ): TransferSuggestion[] {
+        allInventories: SiteInventory[],
+        patientContext?: { condition: 'critical' | 'stable', visitDate?: Date, weight?: number }
+    ): Promise<TransferSuggestion[]> {
         const suggestions: TransferSuggestion[] = [];
 
-        // 1. Find potential sources (sites with ANY surplus)
-        // Relaxed Rule: Old was +10, New is simply > minLevel (we can refine "Surplus" later)
+        // --- OPTION A: INTERNAL TRANSFERS ---
         const potentialSources = allInventories.filter(inv => {
             const hasItem = inv.drugs.find(d => d.ndc === shortageItem.ndc);
-            // Must be different site, have item, and have at least 1 unit above minLevel
             return inv.siteId !== targetSite.id && hasItem && hasItem.quantity > hasItem.minLevel;
         });
 
@@ -137,88 +138,121 @@ export class AutoLogisticsService {
             if (shortageItem.quantity === 0) urgency = 'emergency';
             else if (shortageItem.quantity < shortageItem.minLevel / 2) urgency = 'urgent';
 
+            // Patient Override
+            if (patientContext?.condition === 'critical') urgency = 'emergency';
+
             const transportMethod = this.determineTransportMethod(distance, shortageItem.drugName, shortageItem.maxLevel - shortageItem.quantity, urgency);
             const cost = this.getPricing(transportMethod, distance);
 
-            // NEW LOGISTICS EQUATION
-            // Time = ((Distance / Speed) * Traffic) + Handling + Weather
             const speed = this.getSpeed(transportMethod);
             const traffic = this.getTrafficMultiplier(transportMethod);
             const handling = this.getHandlingTime(transportMethod);
-            const weatherDelay = Math.random() > 0.8 ? 10 : 0; // 20% chance of weather delay
+            const weatherDelay = Math.random() > 0.8 ? 10 : 0;
 
+            // ----------------------------------------------------------------
+            // AUTO LOGISTICS EQUATION
+            // Total Time (min) = (Travel Time * Traffic) + Handling + Weather
+            // ----------------------------------------------------------------
+            // 1. Travel Time = (Distance / Speed in mph) * 60
+            // 2. Traffic Multiplier = 1.0 (Drone) to 1.4 (Car in bad traffic)
+            // 3. Handling Time = Fixed cost per method (e.g., 5 min drone, 45 min freight)
+            // 4. Weather Delay = 20% chance of +10 mins
+            // ----------------------------------------------------------------
             const travelTime = (distance / speed) * 60 * traffic;
             const totalTime = travelTime + handling + weatherDelay;
 
-            // NEW RULE: Patient Compliance / Specific Population Logic
-            const isPediatricSite = targetSite.type === 'clinic' && targetSite.name.toLowerCase().includes('pediatric');
-            let complianceScore = 0;
-            if (isPediatricSite) {
-                if (shortageItem.drugName.toLowerCase().includes('suspension') || shortageItem.drugName.toLowerCase().includes('liquid')) {
-                    complianceScore = 20; // Bonus
-                }
-            }
-
-            // NEW RULE: Predictive Stocking & Load Balancing
-            // If source has massive overstock (> maxLevel), we should aggressively move it to balance the network
-            let balancingBonus = 0;
-            const sourceSurplus = sourceItem.quantity - sourceItem.minLevel;
-            if (sourceItem.quantity > sourceItem.maxLevel) {
-                balancingBonus = 30; // High priority to clear overstock
-            } else if (sourceSurplus > 20) {
-                balancingBonus = 10; // Moderate priority
-            }
-
-            // Scoring Logic
+            // Scoring
             let score = 100;
-            score -= (distance * 1.5); // lower penalty for distance to encourage implementation
-            score -= (cost * 0.2); // lower penalty for cost
-            score -= (totalTime * 0.1); // Time penalty
-
+            score -= (distance * 1.5);
+            score -= (cost * 0.2);
+            score -= (totalTime * 0.1);
             if (urgency === 'emergency' && totalTime < 60) score += 50;
-            if (urgency === 'urgent') score += 20;
 
-            score += complianceScore;
-            score += balancingBonus;
-
-            // Generate "Smart" Reasoning
-            const reasons: string[] = [];
-            if (balancingBonus > 20) reasons.push(`Network Balancing: Clearing excess stock from ${sourceSite.name}`);
-            else if (sourceSurplus > 50) reasons.push(`Source has high surplus (${sourceItem.quantity} units)`);
-
-            reasons.push(`${transportMethod.replace('_', ' ')} (${Math.round(totalTime)} min)`);
-            if (weatherDelay > 0) reasons.push('Includes weather delay adjustment');
-
-            if (distance < 5) reasons.push(`Hyper-local transfer (${distance.toFixed(1)} miles)`);
-            else reasons.push(`Optimal Route: ${distance.toFixed(1)} miles`);
-
-            if (complianceScore > 0) reasons.push('Patient Compliance: Formulation match for pediatric site');
-            if (urgency === 'emergency') reasons.push('Critical: Immediate stock restoration required');
-
-            // Calculate optimal quantity to transfer
             const maxAcceptable = shortageItem.maxLevel - shortageItem.quantity;
             const maxAvailable = sourceItem.quantity - sourceItem.minLevel;
             const transferQty = Math.min(maxAcceptable, maxAvailable);
 
             if (transferQty <= 0) continue;
 
+            const reasons: string[] = [`${transportMethod.replace('_', ' ')} (${Math.round(totalTime)} min)`];
+            if (sourceItem.quantity > sourceItem.maxLevel) {
+                score += 20;
+                reasons.push('Clearing excess stock');
+            }
+
             suggestions.push({
-                id: `sugg-${Date.now()}-${sourceSite.id}`,
+                id: `transfer-${Date.now()}-${sourceSite.id}`,
                 targetSiteId: targetSite.id,
                 sourceSiteId: sourceSite.id,
+                action: 'transfer',
                 drugName: shortageItem.drugName,
                 ndc: shortageItem.ndc,
                 quantity: transferQty,
                 urgency,
                 priorityScore: Math.round(score),
-                reason: reasons.slice(0, 3), // Top 3 reasons
+                reason: reasons,
                 transportMethod,
                 estimatedCost: Math.round(cost),
                 estimatedTimeMinutes: Math.round(totalTime)
             });
         }
 
-        // Return top suggestions
+        // --- OPTION B: MARKETPLACE BUY ---
+        // Only check if we have a shortage
+        if (shortageItem.quantity < shortageItem.minLevel) {
+
+            const marketItem = await marketplaceService.checkMarketplace(shortageItem.ndc);
+
+            if (marketItem && marketItem.inStock) {
+                const qtyNeeded = shortageItem.maxLevel - shortageItem.quantity;
+                const totalMarketCost = (marketItem.price * qtyNeeded) + 15; // +$15 shipping
+                const marketTimeMinutes = marketItem.leadTimeDays * 24 * 60;
+
+                // Decision Logic: Compare against best Transfer option
+                const bestTransfer = suggestions.sort((a, b) => b.priorityScore - a.priorityScore)[0];
+
+                let buyScore = 60; // Base score
+                const reasons: string[] = [`Market: $${marketItem.price.toFixed(2)}/unit from ${marketItem.supplier}`];
+
+                // 1. Cost Comparison
+                if (bestTransfer) {
+                    if (totalMarketCost < bestTransfer.estimatedCost) {
+                        buyScore += 30;
+                        reasons.push(`Save $${(bestTransfer.estimatedCost - totalMarketCost).toFixed(0)} vs Transfer`);
+                    } else {
+                        buyScore -= 10;
+                    }
+                }
+
+                // 2. Time/Deadline Check
+                if (patientContext?.visitDate) {
+                    const minutesToVisit = (patientContext.visitDate.getTime() - Date.now()) / 60000;
+                    if (marketTimeMinutes > minutesToVisit) {
+                        buyScore -= 50; // Too slow!
+                        reasons.push('Arrives after patient visit');
+                    } else {
+                        buyScore += 10;
+                    }
+                }
+
+                suggestions.push({
+                    id: `buy-${Date.now()}`,
+                    targetSiteId: targetSite.id,
+                    externalSourceId: marketItem.supplier,
+                    action: 'buy',
+                    drugName: shortageItem.drugName,
+                    ndc: shortageItem.ndc,
+                    quantity: qtyNeeded,
+                    urgency: 'routine', // Buying is usually routine unless expedited (not impl here)
+                    priorityScore: Math.round(buyScore),
+                    reason: reasons,
+                    transportMethod: 'shipping_standard',
+                    estimatedCost: Math.round(totalMarketCost),
+                    estimatedTimeMinutes: marketTimeMinutes
+                });
+            }
+        }
+
         return suggestions.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3);
     }
 }

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Share2, Brain, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, FileText, Brain, Shield } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -31,7 +31,7 @@ export function Sidebar() {
             items: [
                 { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
                 { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
-                { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
+                // { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
                 { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
             ]
         },

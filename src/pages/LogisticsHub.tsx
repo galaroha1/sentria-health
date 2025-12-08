@@ -38,52 +38,81 @@ export function LogisticsHub() {
         }
 
         // 2. Generate Suggestions
-        let newSuggestions: TransferSuggestion[] = [];
-        candidates.forEach(shortageItem => {
-            const itemSuggestions = autoLogisticsService.generateSuggestions(
-                selectedSite,
-                shortageItem,
-                sites,
-                inventories
-            );
-            newSuggestions = [...newSuggestions, ...itemSuggestions];
-        });
+        const generate = async () => {
+            const promises = candidates.map(async (shortageItem) => {
+                return autoLogisticsService.generateSuggestions(
+                    selectedSite,
+                    shortageItem,
+                    sites,
+                    inventories
+                    // TODO: Pass in patient context here when available in UI
+                );
+            });
 
-        // 3. Sort/Limit
-        // Deduplicate by ID
-        const uniqueMap = new Map<string, TransferSuggestion>();
-        newSuggestions.forEach(s => uniqueMap.set(s.id, s));
-        const uniqueSuggestions = Array.from(uniqueMap.values());
+            const results = await Promise.all(promises);
+            let newSuggestions = results.flat();
 
-        setSuggestions(uniqueSuggestions.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3));
+            // 3. Sort/Limit
+            // Deduplicate by ID
+            const uniqueMap = new Map<string, TransferSuggestion>();
+            newSuggestions.forEach(s => uniqueMap.set(s.id, s));
+            const uniqueSuggestions = Array.from(uniqueMap.values());
+
+            setSuggestions(uniqueSuggestions.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3));
+        };
+
+        generate();
     }, [selectedSite, selectedInventory, sites, inventories, lastScan]);
 
     const handleApproveSuggestion = (suggestion: TransferSuggestion) => {
-        // Convert suggestion to request
-        const sourceSite = sites.find(s => s.id === suggestion.sourceSiteId);
         const targetSite = sites.find(s => s.id === suggestion.targetSiteId);
+        if (!targetSite) return;
 
-        if (!sourceSite || !targetSite) return;
+        if (suggestion.action === 'buy') {
+            const newRequest: NetworkRequest = {
+                id: `PO-${Date.now()}`,
+                requestedBy: 'AutoProcurement AI',
+                requestedBySite: targetSite,
+                targetSite: targetSite,
+                drug: {
+                    name: suggestion.drugName,
+                    ndc: suggestion.ndc,
+                    quantity: suggestion.quantity
+                },
+                reason: `Auto-generated Purchase: ${suggestion.reason[0]} from ${suggestion.externalSourceId}`,
+                urgency: suggestion.urgency,
+                status: 'approved',
+                requestedAt: new Date().toISOString(),
+                approvedBy: 'System',
+                approvedAt: new Date().toISOString(),
+                policyChecks: []
+            };
+            addRequest(newRequest);
+        } else {
+            const sourceSite = sites.find(s => s.id === suggestion.sourceSiteId);
+            if (!sourceSite) return;
 
-        const newRequest: NetworkRequest = {
-            id: `TR-${Date.now()}`,
-            requestedBy: 'AutoLogistics AI',
-            requestedBySite: targetSite,
-            targetSite: sourceSite, // Requesting FROM source
-            drug: {
-                name: suggestion.drugName,
-                ndc: suggestion.ndc,
-                quantity: suggestion.quantity
-            },
-            reason: `Auto-generated: ${suggestion.reason[0]}`,
-            urgency: suggestion.urgency,
-            status: 'approved', // Auto-approve
-            requestedAt: new Date().toISOString(),
-            approvedBy: 'System',
-            approvedAt: new Date().toISOString()
-        };
+            const newRequest: NetworkRequest = {
+                id: `TR-${Date.now()}`,
+                requestedBy: 'AutoLogistics AI',
+                requestedBySite: targetSite,
+                targetSite: sourceSite,
+                drug: {
+                    name: suggestion.drugName,
+                    ndc: suggestion.ndc,
+                    quantity: suggestion.quantity
+                },
+                reason: `Auto-generated: ${suggestion.reason[0]}`,
+                urgency: suggestion.urgency,
+                status: 'approved',
+                requestedAt: new Date().toISOString(),
+                approvedBy: 'System',
+                approvedAt: new Date().toISOString(),
+                policyChecks: []
+            };
+            addRequest(newRequest);
+        }
 
-        addRequest(newRequest);
         setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     };
 
@@ -267,7 +296,7 @@ export function LogisticsHub() {
                                                 <SmartTransferCard
                                                     key={suggestion.id}
                                                     suggestion={suggestion}
-                                                    sourceSite={sites.find(s => s.id === suggestion.sourceSiteId)!}
+                                                    sourceSite={sites.find(s => s.id === suggestion.sourceSiteId)}
                                                     targetSite={sites.find(s => s.id === suggestion.targetSiteId)!}
                                                     onApprove={handleApproveSuggestion}
                                                     onDismiss={(id) => setSuggestions(prev => prev.filter(s => s.id !== id))}

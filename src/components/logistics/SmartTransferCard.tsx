@@ -1,93 +1,105 @@
-import { ArrowRight, Plane, Truck, Bike, Clock, DollarSign, BrainCircuit } from 'lucide-react';
-import type { TransferSuggestion } from '../../types/location';
-import type { Site } from '../../types/location';
+import { ArrowRight, TrendingUp, Clock, DollarSign, ShoppingCart } from 'lucide-react';
+import type { TransferSuggestion, Site } from '../../types/location';
 
 interface SmartTransferCardProps {
     suggestion: TransferSuggestion;
-    sourceSite: Site;
+    sourceSite?: Site;
     targetSite: Site;
     onApprove: (suggestion: TransferSuggestion) => void;
     onDismiss: (id: string) => void;
 }
 
 export function SmartTransferCard({ suggestion, sourceSite, targetSite, onApprove, onDismiss }: SmartTransferCardProps) {
-    const TransportIcon = {
-        'drone': Plane,
-        'courier_bike': Bike,
-        'courier_car': Truck,
-        'van_refrigerated': Truck, // Could use Snowflake icon overlay
-        'freight': Truck
-    }[suggestion.transportMethod];
+    const isBuy = suggestion.action === 'buy';
 
     return (
-        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
-            {/* AI Badge */}
-            <div className="absolute top-0 right-0 rounded-bl-xl bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700 flex items-center gap-1">
-                <BrainCircuit className="h-3 w-3" />
-                AI Optimized
-            </div>
+        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            {/* Background Pattern */}
+            <div className={`absolute top-0 right-0 h-24 w-24 translate-x-8 translate-y--8 transform rounded-full opacity-10 ${isBuy ? 'bg-blue-500' : 'bg-primary-500'}`} />
 
-            <div className="mb-4 flex items-start justify-between pr-24">
-                <div>
-                    <h4 className="font-bold text-slate-900">{suggestion.drugName}</h4>
-                    <p className="text-sm text-slate-500">Suggestion: Transfer {suggestion.quantity} units</p>
+            <div className="mb-4 flex items-start justify-between relative z-10">
+                <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isBuy ? 'bg-blue-50 text-blue-600' : 'bg-primary-50 text-primary-600'}`}>
+                        {isBuy ? <ShoppingCart className="h-5 w-5" /> : <TrendingUp className="h-5 w-5" />}
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-slate-900">{isBuy ? 'Market Opportunity' : 'Network Balancing'}</h4>
+                        <p className="text-xs text-slate-500">
+                            AI Confidence: <span className="font-medium text-green-600">{suggestion.priorityScore}%</span>
+                        </p>
+                    </div>
+                </div>
+                <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${suggestion.urgency === 'emergency' ? 'bg-red-50 text-red-700' :
+                    suggestion.urgency === 'urgent' ? 'bg-amber-50 text-amber-700' :
+                        'bg-slate-100 text-slate-600'
+                    }`}>
+                    {suggestion.urgency}
                 </div>
             </div>
 
-            {/* Route Visualization */}
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm">
-                <div className="flex-1 truncate text-right font-medium text-slate-700">{sourceSite.name}</div>
+            {/* Action Visual */}
+            <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 p-3">
+                <div className="flex flex-col">
+                    <span className="text-xs text-slate-500">Source</span>
+                    <span className="text-sm font-medium text-slate-700 truncate max-w-[100px]" title={isBuy ? suggestion.externalSourceId : sourceSite?.name}>
+                        {isBuy ? suggestion.externalSourceId : sourceSite?.name}
+                    </span>
+                </div>
                 <div className="flex flex-col items-center px-2">
-                    <span className="text-[10px] text-slate-400">{suggestion.estimatedTimeMinutes} min</span>
-                    <ArrowRight className="h-4 w-4 text-slate-400" />
-                    <TransportIcon className="h-4 w-4 text-primary-600" />
+                    <div className="h-[1px] w-12 bg-slate-300 relative top-3"></div>
+                    <ArrowRight className="h-4 w-4 text-slate-400 relative z-10 bg-slate-50 px-1" />
+                    <span className="text-[10px] text-slate-400 mt-1 uppercase">
+                        {suggestion.transportMethod.replace('_', ' ')}
+                    </span>
                 </div>
-                <div className="flex-1 truncate text-left font-medium text-slate-700">{targetSite.name}</div>
+                <div className="flex flex-col items-end">
+                    <span className="text-xs text-slate-500">Destination</span>
+                    <span className="text-sm font-medium text-slate-700 truncate max-w-[100px]">{targetSite.name}</span>
+                </div>
             </div>
 
-            {/* Logic Explanation */}
-            <div className="mb-4 space-y-1">
-                {suggestion.reason.map((reason, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-slate-600">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <div className="mb-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600 flex items-center gap-1.5">
+                        <span className="font-medium text-slate-900">{suggestion.drugName}</span>
+                    </span>
+                    <span className="font-mono font-medium text-slate-900">{suggestion.quantity} units</span>
+                </div>
+
+                {suggestion.reason.map((reason, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-600 bg-slate-50/50 p-1.5 rounded">
+                        <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
                         {reason}
                     </div>
                 ))}
             </div>
 
-            {/* Stats Footer */}
-            <div className="mb-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-                <div className="flex items-center gap-1 text-slate-600">
-                    <Clock className="h-3 w-3" />
-                    {suggestion.estimatedTimeMinutes} min ETA
-                </div>
-                <div className="flex items-center gap-1 text-slate-600">
-                    <DollarSign className="h-3 w-3" />
-                    ${suggestion.estimatedCost.toFixed(2)} est.
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
+            <div className="flex gap-3 relative z-10">
                 <button
                     onClick={() => onDismiss(suggestion.id)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 >
                     Dismiss
                 </button>
                 <button
-                    onClick={(e) => {
-                        const btn = e.currentTarget;
-                        btn.textContent = 'Approving...';
-                        btn.disabled = true;
-                        onApprove(suggestion);
-                    }}
-                    className="flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-70"
+                    onClick={() => onApprove(suggestion)}
+                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors ${isBuy ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-slate-800'}`}
                 >
-                    Approve Transfer
-                    <ArrowRight className="h-3 w-3" />
+                    {isBuy ? 'Purchase & Ship' : 'Approve Transfer'}
                 </button>
             </div>
+
+            {/* Quick Stats Overlay (if applicable) */}
+            {suggestion.action === 'buy' && (
+                <div className="mt-3 flex items-center gap-4 text-xs text-slate-500 border-t pt-2 border-slate-100">
+                    <span className="flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" /> Cost: ${suggestion.estimatedCost}
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> Time: {Math.round(suggestion.estimatedTimeMinutes / 60)}h
+                    </span>
+                </div>
+            )}
         </div>
     );
 }

@@ -7,7 +7,6 @@ import {
     Settings,
     Stethoscope,
     FileText,
-    Share2,
     Brain
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -28,7 +27,7 @@ export function MobileNav() {
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
         { name: 'CPO View', href: '/cpo-overview', icon: FileText, permission: 'dashboard' },
         { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
-        { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
+        // { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
         { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
         { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
         { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },

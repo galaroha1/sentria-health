@@ -111,15 +111,23 @@ export type TransportMethod = 'drone' | 'courier_bike' | 'courier_car' | 'van_re
 export interface TransferSuggestion {
     id: string;
     targetSiteId: string;
-    sourceSiteId: string;
+    sourceSiteId?: string; // Optional because "Buy" has no internal source
+    externalSourceId?: string; // For "Buy" option
+    action: 'transfer' | 'buy'; // NEW: Explicit action type
     drugName: string;
     ndc: string;
     quantity: number;
     urgency: 'routine' | 'urgent' | 'emergency';
     priorityScore: number; // 0-100, higher is better
     reason: string[];
-    transportMethod: TransportMethod;
+    transportMethod: TransportMethod | 'shipping_standard' | 'shipping_express';
+
+    // Cost Analysis
     estimatedCost: number;
+    costSavings?: number; // If buying is cheaper than transfer (or vice versa, though rare)
+
+    // Time Analysis
     estimatedTimeMinutes: number;
+    timeSavedMinutes?: number;
 }
 

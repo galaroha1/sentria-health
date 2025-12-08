@@ -32,10 +32,13 @@ export class PatientService {
             diagnosis.includes('Cancer') ? ['Keytruda', 'Paclitaxel'] :
                 diagnosis.includes('Crohn') ? ['Remicade'] : ['Insulin'];
 
-        // Generate appointments for next 3 months
-        for (let i = 0; i < 90; i += 14) { // Every 2 weeks
+        // Generate appointments for next 3 months, strictly in the future
+        for (let i = 1; i <= 90; i += 14) { // Start from 1 (tomorrow) to ensure future dates
             const date = new Date(today);
-            date.setDate(today.getDate() + i + (Math.random() * 3)); // Add some variance
+            date.setDate(today.getDate() + i + (Math.random() * 3)); // Add future offset + variance
+
+            // Ensure no past/today dates leak through if variance is weird (though +1 covers it)
+            if (date <= today) date.setDate(today.getDate() + 1);
 
             schedule.push({
                 id: `tx-${Date.now()}-${i}`,
