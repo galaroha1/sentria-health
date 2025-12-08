@@ -36,7 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const [sessionWarning, setSessionWarning] = useState(false);
-    const [lastActivity, setLastActivity] = useState(() => Date.now());
+    const [lastActivity, setLastActivity] = useState(() => {
+        const saved = localStorage.getItem('sentria_last_activity');
+        return saved ? parseInt(saved, 10) : Date.now();
+    });
     const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -45,6 +48,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
             if (firebaseUser) {
                 try {
+                    // Check session timeout immediately on restore
+                    const now = Date.now();
+                    const savedActivity = localStorage.getItem('sentria_last_activity');
+                    const lastActiveTime = savedActivity ? parseInt(savedActivity, 10) : now;
+
+                    if (now - lastActiveTime > SESSION_TIMEOUT) {
+                        console.warn('Session expired during reload');
+                        await signOut(auth);
+                        setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+                        localStorage.removeItem('sentria_last_activity');
+                        return;
+                    }
+
                     // Fetch user details from Firestore
                     const userDoc = await FirestoreService.getById<User>('users', firebaseUser.uid);
 
@@ -119,6 +135,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string; code?: string }> => {
         try {
             await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+            // Reset session timer on login
+            const now = Date.now();
+            setLastActivity(now);
+            localStorage.setItem('sentria_last_activity', now.toString());
             return { success: true };
         } catch (error: any) {
             console.error('Login error:', error);
@@ -128,12 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signup = async (credentials: LoginCredentials, name: string, role: UserRole = UserRole.PHARMACY_MANAGER): Promise<{ success: boolean; error?: string; code?: string }> => {
         try {
-            // 1. Check if there is a pending user invite for this email
-            // We need to query the 'users' collection where email == credentials.email
-            // Since we don't have a direct query method exposed in FirestoreService for this specific case easily without adding one,
-            // let's fetch all users and filter (not efficient for large DBs but fine for this scale)
-            // OR better, let's assume we can use FirestoreService.getAll and filter.
-
+            // 1. Check if there is a pending user invite for this email (Optional now - Open Registration)
             const allUsers = await FirestoreService.getAll<User>('users');
             const pendingUser = allUsers.find(u => u.email.toLowerCase() === credentials.email.toLowerCase());
 
@@ -146,9 +161,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             const demoAccount = DEMO_ACCOUNTS[credentials.email.toLowerCase()];
 
-            if (!pendingUser && !demoAccount) {
-                return { success: false, error: 'Account not authorized. Please contact a Super Admin to invite you.' };
-            }
+            // ALLOW OPEN REGISTRATION: Removed the check that blocked non-pending users
+            // if (!pendingUser && !demoAccount) {
+            //     return { success: false, error: 'Account not authorized. Please contact a Super Admin to invite you.' };
+            // }
 
             // 2. Create Auth User
             const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
@@ -162,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: (pendingUser?.role || demoAccount?.role || role),
                 department: pendingUser?.department || demoAccount?.department || 'General',
                 status: UserStatus.ACTIVE, // Activate the user
-                createdAt: new Date().toISOString(), // Reset created at? Or keep original? Let's reset for "joined" date.
+                createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
             };
 
@@ -183,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const logout = async () => {
         try {
             await signOut(auth);
+            localStorage.removeItem('sentria_last_activity');
             setAuthState({
                 user: null,
                 isAuthenticated: false,
@@ -237,7 +254,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const extendSession = () => {
-        setLastActivity(Date.now());
+        const now = Date.now();
+        setLastActivity(now);
+        localStorage.setItem('sentria_last_activity', now.toString());
         setSessionWarning(false);
     };
 

@@ -35,11 +35,34 @@ export class AutoLogisticsService {
         return baseRates[method] + (ratesPerMile[method] * distanceMiles);
     }
 
+    private getHandlingTime(method: TransportMethod): number { // minutes
+        switch (method) {
+            case 'drone': return 5; // Launch check + landing
+            case 'courier_bike': return 10; // Handoff + lock up
+            case 'courier_car': return 15; // Parking + reception
+            case 'van_refrigerated': return 20; // Loading + temp check
+            case 'freight': return 45; // Docking + pallet jack
+        }
+    }
+
+    private getTrafficMultiplier(method: TransportMethod): number {
+        // Base traffic multiplier
+        const randomFactor = 1 + (Math.random() * 0.4); // 1.0 - 1.4
+
+        // Drones ignore traffic
+        if (method === 'drone') return 1.0;
+
+        // Bikes filter through traffic better
+        if (method === 'courier_bike') return Math.min(randomFactor, 1.2);
+
+        return randomFactor;
+    }
+
     private getSpeed(method: TransportMethod): number { // mph
         switch (method) {
-            case 'drone': return 45; // As the crow flies
-            case 'courier_bike': return 12; // Urban traffic
-            case 'courier_car': return 25; // Urban traffic
+            case 'drone': return 60; // Upgraded from 45
+            case 'courier_bike': return 12;
+            case 'courier_car': return 25;
             case 'van_refrigerated': return 35;
             case 'freight': return 50;
         }
@@ -116,7 +139,16 @@ export class AutoLogisticsService {
 
             const transportMethod = this.determineTransportMethod(distance, shortageItem.drugName, shortageItem.maxLevel - shortageItem.quantity, urgency);
             const cost = this.getPricing(transportMethod, distance);
-            const time = (distance / this.getSpeed(transportMethod)) * 60; // Minutes
+
+            // NEW LOGISTICS EQUATION
+            // Time = ((Distance / Speed) * Traffic) + Handling + Weather
+            const speed = this.getSpeed(transportMethod);
+            const traffic = this.getTrafficMultiplier(transportMethod);
+            const handling = this.getHandlingTime(transportMethod);
+            const weatherDelay = Math.random() > 0.8 ? 10 : 0; // 20% chance of weather delay
+
+            const travelTime = (distance / speed) * 60 * traffic;
+            const totalTime = travelTime + handling + weatherDelay;
 
             // NEW RULE: Patient Compliance / Specific Population Logic
             const isPediatricSite = targetSite.type === 'clinic' && targetSite.name.toLowerCase().includes('pediatric');
@@ -141,7 +173,9 @@ export class AutoLogisticsService {
             let score = 100;
             score -= (distance * 1.5); // lower penalty for distance to encourage implementation
             score -= (cost * 0.2); // lower penalty for cost
-            if (urgency === 'emergency' && time < 60) score += 50;
+            score -= (totalTime * 0.1); // Time penalty
+
+            if (urgency === 'emergency' && totalTime < 60) score += 50;
             if (urgency === 'urgent') score += 20;
 
             score += complianceScore;
@@ -152,6 +186,9 @@ export class AutoLogisticsService {
             if (balancingBonus > 20) reasons.push(`Network Balancing: Clearing excess stock from ${sourceSite.name}`);
             else if (sourceSurplus > 50) reasons.push(`Source has high surplus (${sourceItem.quantity} units)`);
 
+            reasons.push(`${transportMethod.replace('_', ' ')} (${Math.round(totalTime)} min)`);
+            if (weatherDelay > 0) reasons.push('Includes weather delay adjustment');
+
             if (distance < 5) reasons.push(`Hyper-local transfer (${distance.toFixed(1)} miles)`);
             else reasons.push(`Optimal Route: ${distance.toFixed(1)} miles`);
 
@@ -159,8 +196,6 @@ export class AutoLogisticsService {
             if (urgency === 'emergency') reasons.push('Critical: Immediate stock restoration required');
 
             // Calculate optimal quantity to transfer
-            // Don't drain source below minLevel
-            // Don't overfill target above maxLevel
             const maxAcceptable = shortageItem.maxLevel - shortageItem.quantity;
             const maxAvailable = sourceItem.quantity - sourceItem.minLevel;
             const transferQty = Math.min(maxAcceptable, maxAvailable);
@@ -179,7 +214,7 @@ export class AutoLogisticsService {
                 reason: reasons.slice(0, 3), // Top 3 reasons
                 transportMethod,
                 estimatedCost: Math.round(cost),
-                estimatedTimeMinutes: Math.round(time)
+                estimatedTimeMinutes: Math.round(totalTime)
             });
         }
 
