@@ -25,7 +25,7 @@ export class PatientService {
         return patients;
     }
 
-    private static generateSchedule(diagnosis: string): Treatment[] {
+    public static generateSchedule(diagnosis: string, drugOverride?: string): Treatment[] {
         const schedule: Treatment[] = [];
         const today = new Date();
         const drugs = diagnosis.includes('Leukemia') ? ['Methotrexate', 'Vincristine'] :
@@ -47,7 +47,7 @@ export class PatientService {
             schedule.push({
                 id: `tx-${Date.now()}-${i}`,
                 date: date.toISOString(),
-                drugName: drugs[Math.floor(Math.random() * drugs.length)],
+                drugName: drugOverride || drugs[Math.floor(Math.random() * drugs.length)],
                 ndc: '00006-3026-02', // Mock
                 status: 'scheduled',
                 dose: '100mg',

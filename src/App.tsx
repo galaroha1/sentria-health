@@ -79,9 +79,9 @@ function App() {
   }
 
   return (
-    <AppProvider>
-      <UserProvider>
-        <AuthProvider>
+    <UserProvider>
+      <AuthProvider>
+        <AppProvider>
           <SimulationProvider>
             <CartProvider>
               <BrowserRouter basename={import.meta.env.BASE_URL}>
@@ -164,9 +164,9 @@ function App() {
               </BrowserRouter>
             </CartProvider>
           </SimulationProvider>
-        </AuthProvider>
-      </UserProvider>
-    </AppProvider>
+        </AppProvider>
+      </AuthProvider>
+    </UserProvider>
   );
 }
 

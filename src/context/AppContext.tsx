@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import type { ReactNode } from 'react';
 import type { NetworkRequest, Site, SiteInventory } from '../types/location';
 import type { Notification } from '../types/notification';
@@ -65,18 +66,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Global Patient State (Unified Source of Truth)
     const [patients, setPatients] = useState<any[]>([]);
 
+    const { user } = useAuth(); // Now accessible because AppProvider is inside AuthProvider
+
+
+
     const addPatient = (patient: any) => {
         setPatients(prev => [patient, ...prev]);
     };
 
+    // SYNC PATIENTS FROM SIMULATION DATABASE (Single Source of Truth)
     useEffect(() => {
-        // Seed patients on mount if empty
-        if (patients.length === 0) {
-            import('../services/patient.service').then(({ PatientService }) => {
-                setPatients(PatientService.generateMockPatients(50));
-            });
+        if (!user) {
+            setPatients([]);
+            return;
         }
-    }, []);
+
+        // Subscribe to the simulation results
+        const unsubscribePatients = FirestoreService.subscribe<any>(`users/${user.id}/simulations`, async (data) => {
+            if (data.length === 0) {
+                // Database cleared -> Clear local state
+                setPatients([]);
+                return;
+            }
+
+            // Lazy load PatientService to avoid circular dependency issues at top level if any
+            const { PatientService } = await import('../services/patient.service');
+
+            const mappedPatients = data.map(sim => {
+                const age = sim.profile?.age || 45;
+                const birthYear = new Date().getFullYear() - age;
+
+                return {
+                    id: sim.id,
+                    mrn: `MRN-${sim.id.substring(0, 6).toUpperCase()}`,
+                    name: sim.patientName,
+                    dateOfBirth: new Date(birthYear, 0, 1).toISOString().split('T')[0],
+                    gender: sim.profile?.gender.toLowerCase() || 'male',
+                    diagnosis: sim.condition,
+                    type: 'adult', // Could infer from age
+                    attendingPhysician: 'Dr. Auto',
+                    // Generate schedule on the fly based on the prescribed drug
+                    treatmentSchedule: PatientService.generateSchedule(sim.condition, sim.drug)
+                };
+            });
+
+            console.log(`AppContext: Synced ${mappedPatients.length} patients from Firestore.`);
+            setPatients(mappedPatients);
+        });
+
+        return () => unsubscribePatients();
+    }, [user]);
+
+    // Legacy manual seed removed - we strictly follow DB now.
+
 
     const addSite = async (site: Site) => {
         // Optimistic update
@@ -429,3 +471,4 @@ export function useApp() {
     }
     return context;
 }
+
