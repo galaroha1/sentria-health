@@ -8,7 +8,7 @@ import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { FirestoreService } from '../services/firebase.service';
 import { OptimizationService } from '../services/optimization.service';
-import { OptimizationService } from '../services/optimization.service';
+
 // PatientService import removed to prevent CI build issues
 import type { Treatment } from '../types/patient';
 
