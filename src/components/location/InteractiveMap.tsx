@@ -171,8 +171,8 @@ export function InteractiveMap({ sites, inventories, onSiteClick }: InteractiveM
 
     return (
         <MapContainer
-            center={[39.9526, -75.1652] as [number, number]}
-            zoom={11}
+            center={[40.5, -77.0] as [number, number]} // Centered between Philly/Pitt/DC/NY
+            zoom={6}
             className="location-map-container"
         >
             <TileLayer

@@ -1,0 +1,3177 @@
+[
+  {
+    "id": "site-region-100",
+    "name": "New York City Distribution Center #1",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-101-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.83455755591853,
+      "lng": -73.97830645994767
+    },
+    "address": "7327 Main St, Near New York City, NY",
+    "phone": "(555) 875-4821",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4450,
+    "currentUtilization": 42
+  },
+  {
+    "id": "site-region-101",
+    "name": "New York City Depot #2",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-102-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.362389892012544,
+      "lng": -73.95592115563763
+    },
+    "address": "3753 Main St, Near New York City, NY",
+    "phone": "(555) 556-6679",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5445,
+    "currentUtilization": 66
+  },
+  {
+    "id": "site-region-102",
+    "name": "New York City Health Clinic #3",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-103-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.3536072721941,
+      "lng": -73.86858086459286
+    },
+    "address": "8344 Main St, Near New York City, NY",
+    "phone": "(555) 961-4422",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2387,
+    "currentUtilization": 21
+  },
+  {
+    "id": "site-region-103",
+    "name": "New York City Medical Center #4",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-104-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.948942872930154,
+      "lng": -74.44266319127382
+    },
+    "address": "9380 Main St, Near New York City, NY",
+    "phone": "(555) 165-6364",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2783,
+    "currentUtilization": 35
+  },
+  {
+    "id": "site-region-104",
+    "name": "New York City Drug Store #5",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-105-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.27234445449568,
+      "lng": -73.55374406608563
+    },
+    "address": "9136 Main St, Near New York City, NY",
+    "phone": "(555) 373-5859",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4048,
+    "currentUtilization": 34
+  },
+  {
+    "id": "site-region-105",
+    "name": "New York City Specialty Center #6",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-106-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.6692587882685,
+      "lng": -74.07543736694821
+    },
+    "address": "4596 Main St, Near New York City, NY",
+    "phone": "(555) 190-1254",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3348,
+    "currentUtilization": 73
+  },
+  {
+    "id": "site-region-106",
+    "name": "New York City Logistics Hub #7",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-107-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.392030533853415,
+      "lng": -73.99096433567159
+    },
+    "address": "5687 Main St, Near New York City, NY",
+    "phone": "(555) 832-8368",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4546,
+    "currentUtilization": 63
+  },
+  {
+    "id": "site-region-107",
+    "name": "New York City Depot #8",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-108-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.72249356869769,
+      "lng": -73.58135149649748
+    },
+    "address": "4068 Main St, Near New York City, NY",
+    "phone": "(555) 418-8547",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4902,
+    "currentUtilization": 77
+  },
+  {
+    "id": "site-region-108",
+    "name": "New York City Distribution Center #9",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-109-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.441167690480164,
+      "lng": -74.08991026949222
+    },
+    "address": "1399 Main St, Near New York City, NY",
+    "phone": "(555) 224-3708",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4040,
+    "currentUtilization": 45
+  },
+  {
+    "id": "site-region-109",
+    "name": "New York City Memorial #10",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-110-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.52946060154911,
+      "lng": -73.78934301194346
+    },
+    "address": "1970 Main St, Near New York City, NY",
+    "phone": "(555) 358-1239",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3269,
+    "currentUtilization": 71
+  },
+  {
+    "id": "site-region-110",
+    "name": "New York City Pharmacy #11",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-111-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.685674264815546,
+      "lng": -74.17561932559673
+    },
+    "address": "6462 Main St, Near New York City, NY",
+    "phone": "(555) 115-1149",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3707,
+    "currentUtilization": 53
+  },
+  {
+    "id": "site-region-111",
+    "name": "New York City Rx Center #12",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-112-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.8969899941665,
+      "lng": -74.16090860006008
+    },
+    "address": "6733 Main St, Near New York City, NY",
+    "phone": "(555) 485-3796",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5302,
+    "currentUtilization": 59
+  },
+  {
+    "id": "site-region-112",
+    "name": "New York City Depot #13",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-113-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.48449241831946,
+      "lng": -73.55796307629943
+    },
+    "address": "9696 Main St, Near New York City, NY",
+    "phone": "(555) 802-4475",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1177,
+    "currentUtilization": 70
+  },
+  {
+    "id": "site-region-113",
+    "name": "New York City Health Clinic #14",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-114-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.39434525080874,
+      "lng": -74.36162242724714
+    },
+    "address": "653 Main St, Near New York City, NY",
+    "phone": "(555) 483-4818",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1376,
+    "currentUtilization": 67
+  },
+  {
+    "id": "site-region-114",
+    "name": "New York City Depot #15",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-115-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.598484218802355,
+      "lng": -73.79021019141584
+    },
+    "address": "9794 Main St, Near New York City, NY",
+    "phone": "(555) 671-9363",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1436,
+    "currentUtilization": 41
+  },
+  {
+    "id": "site-region-115",
+    "name": "New York City Depot #16",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-116-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.723198004483784,
+      "lng": -73.72657722821475
+    },
+    "address": "9900 Main St, Near New York City, NY",
+    "phone": "(555) 845-4102",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5485,
+    "currentUtilization": 69
+  },
+  {
+    "id": "site-region-116",
+    "name": "New York City Logistics Hub #17",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-117-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.62641765252571,
+      "lng": -73.9773216742209
+    },
+    "address": "9690 Main St, Near New York City, NY",
+    "phone": "(555) 912-8882",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2046,
+    "currentUtilization": 66
+  },
+  {
+    "id": "site-region-117",
+    "name": "New York City Pharmacy #18",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-118-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.644656825227806,
+      "lng": -74.06523344417512
+    },
+    "address": "6527 Main St, Near New York City, NY",
+    "phone": "(555) 702-9029",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4369,
+    "currentUtilization": 70
+  },
+  {
+    "id": "site-region-118",
+    "name": "New York City Depot #19",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-119-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.93071038476655,
+      "lng": -73.90019472421805
+    },
+    "address": "8718 Main St, Near New York City, NY",
+    "phone": "(555) 592-9938",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3285,
+    "currentUtilization": 34
+  },
+  {
+    "id": "site-region-119",
+    "name": "New York City University Hospital #20",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-120-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.35122313497845,
+      "lng": -73.581458651664
+    },
+    "address": "7258 Main St, Near New York City, NY",
+    "phone": "(555) 603-9037",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4287,
+    "currentUtilization": 79
+  },
+  {
+    "id": "site-region-120",
+    "name": "Boston Pharmacy #1",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-121-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.72494498281574,
+      "lng": -70.89623277986436
+    },
+    "address": "2860 Main St, Near Boston, MA",
+    "phone": "(555) 301-6146",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3962,
+    "currentUtilization": 49
+  },
+  {
+    "id": "site-region-121",
+    "name": "Boston Distribution Center #2",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-122-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.62782143586199,
+      "lng": -71.12789275431913
+    },
+    "address": "7334 Main St, Near Boston, MA",
+    "phone": "(555) 767-6633",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3342,
+    "currentUtilization": 78
+  },
+  {
+    "id": "site-region-122",
+    "name": "Boston University Hospital #3",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-123-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.93410710720487,
+      "lng": -71.28244725857715
+    },
+    "address": "2487 Main St, Near Boston, MA",
+    "phone": "(555) 277-1650",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1946,
+    "currentUtilization": 61
+  },
+  {
+    "id": "site-region-123",
+    "name": "Boston General #4",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-124-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.61506652742488,
+      "lng": -70.80165997943729
+    },
+    "address": "2759 Main St, Near Boston, MA",
+    "phone": "(555) 589-5710",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2085,
+    "currentUtilization": 30
+  },
+  {
+    "id": "site-region-124",
+    "name": "Boston Distribution Center #5",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-125-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.46456161174668,
+      "lng": -71.15847852121215
+    },
+    "address": "3412 Main St, Near Boston, MA",
+    "phone": "(555) 649-4777",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4614,
+    "currentUtilization": 61
+  },
+  {
+    "id": "site-region-125",
+    "name": "Boston Distribution Center #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-126-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.82401618110243,
+      "lng": -71.40958602680213
+    },
+    "address": "4501 Main St, Near Boston, MA",
+    "phone": "(555) 709-5549",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3903,
+    "currentUtilization": 33
+  },
+  {
+    "id": "site-region-126",
+    "name": "Boston Drug Store #7",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-127-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.812057984219564,
+      "lng": -70.97730978107197
+    },
+    "address": "9272 Main St, Near Boston, MA",
+    "phone": "(555) 596-5493",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1389,
+    "currentUtilization": 77
+  },
+  {
+    "id": "site-region-127",
+    "name": "Boston Pharmacy #8",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-128-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.595632087524756,
+      "lng": -71.26338374619331
+    },
+    "address": "3686 Main St, Near Boston, MA",
+    "phone": "(555) 345-4097",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1552,
+    "currentUtilization": 21
+  },
+  {
+    "id": "site-region-128",
+    "name": "Boston Memorial #9",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-129-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.800533850371174,
+      "lng": -71.03106553201127
+    },
+    "address": "2548 Main St, Near Boston, MA",
+    "phone": "(555) 242-7461",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1162,
+    "currentUtilization": 76
+  },
+  {
+    "id": "site-region-129",
+    "name": "Boston Drug Store #10",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-130-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.10463243927282,
+      "lng": -70.73238168907262
+    },
+    "address": "4513 Main St, Near Boston, MA",
+    "phone": "(555) 171-8955",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2736,
+    "currentUtilization": 78
+  },
+  {
+    "id": "site-region-130",
+    "name": "Boston General #11",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-131-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.720144056237494,
+      "lng": -70.84049694543482
+    },
+    "address": "1168 Main St, Near Boston, MA",
+    "phone": "(555) 986-2989",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5511,
+    "currentUtilization": 50
+  },
+  {
+    "id": "site-region-131",
+    "name": "Boston Depot #12",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-132-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.09836841660959,
+      "lng": -71.34336274560015
+    },
+    "address": "1438 Main St, Near Boston, MA",
+    "phone": "(555) 767-4560",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5960,
+    "currentUtilization": 40
+  },
+  {
+    "id": "site-region-132",
+    "name": "Washington Specialty Center #1",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-133-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.52779983131885,
+      "lng": -77.37012305838422
+    },
+    "address": "7178 Main St, Near Washington, DC",
+    "phone": "(555) 682-3820",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5344,
+    "currentUtilization": 56
+  },
+  {
+    "id": "site-region-133",
+    "name": "Washington Health Clinic #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-134-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.34028277903574,
+      "lng": -77.30026857264791
+    },
+    "address": "3729 Main St, Near Washington, DC",
+    "phone": "(555) 154-4175",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2295,
+    "currentUtilization": 66
+  },
+  {
+    "id": "site-region-134",
+    "name": "Washington Memorial #3",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-135-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.32627387214155,
+      "lng": -77.2070498657595
+    },
+    "address": "1833 Main St, Near Washington, DC",
+    "phone": "(555) 637-2236",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1532,
+    "currentUtilization": 34
+  },
+  {
+    "id": "site-region-135",
+    "name": "Washington General #4",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-136-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.76972885755249,
+      "lng": -77.44365718098872
+    },
+    "address": "9611 Main St, Near Washington, DC",
+    "phone": "(555) 409-9952",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4889,
+    "currentUtilization": 27
+  },
+  {
+    "id": "site-region-136",
+    "name": "Washington Memorial #5",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-137-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.80213021365575,
+      "lng": -77.39716735836284
+    },
+    "address": "4707 Main St, Near Washington, DC",
+    "phone": "(555) 957-9256",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4137,
+    "currentUtilization": 21
+  },
+  {
+    "id": "site-region-137",
+    "name": "Washington Drug Store #6",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-138-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.753982444103016,
+      "lng": -77.41786460561455
+    },
+    "address": "2719 Main St, Near Washington, DC",
+    "phone": "(555) 358-9781",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5017,
+    "currentUtilization": 36
+  },
+  {
+    "id": "site-region-138",
+    "name": "Washington Pharmacy #7",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-139-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.75522279642774,
+      "lng": -76.97941208592611
+    },
+    "address": "9121 Main St, Near Washington, DC",
+    "phone": "(555) 937-6064",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3412,
+    "currentUtilization": 62
+  },
+  {
+    "id": "site-region-139",
+    "name": "Washington Logistics Hub #8",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-140-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.692352494927974,
+      "lng": -76.87200931500522
+    },
+    "address": "7789 Main St, Near Washington, DC",
+    "phone": "(555) 301-8995",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4474,
+    "currentUtilization": 35
+  },
+  {
+    "id": "site-region-140",
+    "name": "Washington Health Clinic #9",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-141-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.34898545506125,
+      "lng": -77.52928447066016
+    },
+    "address": "4866 Main St, Near Washington, DC",
+    "phone": "(555) 571-3323",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4635,
+    "currentUtilization": 40
+  },
+  {
+    "id": "site-region-141",
+    "name": "Washington Health Clinic #10",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-142-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.88276014127176,
+      "lng": -77.0668255431455
+    },
+    "address": "9208 Main St, Near Washington, DC",
+    "phone": "(555) 497-9856",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2163,
+    "currentUtilization": 28
+  },
+  {
+    "id": "site-region-142",
+    "name": "Washington Depot #11",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-143-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.96824452217417,
+      "lng": -77.19674833349578
+    },
+    "address": "6626 Main St, Near Washington, DC",
+    "phone": "(555) 581-9172",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4826,
+    "currentUtilization": 54
+  },
+  {
+    "id": "site-region-143",
+    "name": "Washington General #12",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-144-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.41493481609422,
+      "lng": -77.23883912426541
+    },
+    "address": "8368 Main St, Near Washington, DC",
+    "phone": "(555) 262-9826",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1140,
+    "currentUtilization": 56
+  },
+  {
+    "id": "site-region-144",
+    "name": "Washington Distribution Center #13",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-145-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.4864886688721,
+      "lng": -76.69679680589172
+    },
+    "address": "6018 Main St, Near Washington, DC",
+    "phone": "(555) 212-8718",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5124,
+    "currentUtilization": 65
+  },
+  {
+    "id": "site-region-145",
+    "name": "Washington Medical Center #14",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-146-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.476105354486634,
+      "lng": -76.63602023342119
+    },
+    "address": "5226 Main St, Near Washington, DC",
+    "phone": "(555) 846-7992",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5393,
+    "currentUtilization": 31
+  },
+  {
+    "id": "site-region-146",
+    "name": "Washington Rx Center #15",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-147-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.925032194727066,
+      "lng": -77.30594898067879
+    },
+    "address": "9793 Main St, Near Washington, DC",
+    "phone": "(555) 862-5259",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4056,
+    "currentUtilization": 54
+  },
+  {
+    "id": "site-region-147",
+    "name": "Baltimore Depot #1",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-148-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.10001325793311,
+      "lng": -76.27628502631485
+    },
+    "address": "8152 Main St, Near Baltimore, MD",
+    "phone": "(555) 452-4177",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2070,
+    "currentUtilization": 60
+  },
+  {
+    "id": "site-region-148",
+    "name": "Baltimore Health Clinic #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-149-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.995122960434635,
+      "lng": -76.6784307813093
+    },
+    "address": "570 Main St, Near Baltimore, MD",
+    "phone": "(555) 913-7764",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3519,
+    "currentUtilization": 67
+  },
+  {
+    "id": "site-region-149",
+    "name": "Baltimore Memorial #3",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-150-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.064773060272714,
+      "lng": -76.2103758338121
+    },
+    "address": "2622 Main St, Near Baltimore, MD",
+    "phone": "(555) 569-9178",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5207,
+    "currentUtilization": 23
+  },
+  {
+    "id": "site-region-150",
+    "name": "Baltimore General #4",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-151-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.77854131664027,
+      "lng": -76.52943926126325
+    },
+    "address": "9952 Main St, Near Baltimore, MD",
+    "phone": "(555) 469-2424",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4713,
+    "currentUtilization": 35
+  },
+  {
+    "id": "site-region-151",
+    "name": "Baltimore Health Clinic #5",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-152-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.80217906897879,
+      "lng": -77.03011172831334
+    },
+    "address": "2917 Main St, Near Baltimore, MD",
+    "phone": "(555) 409-7383",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5783,
+    "currentUtilization": 53
+  },
+  {
+    "id": "site-region-152",
+    "name": "Baltimore Logistics Hub #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-153-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.22067699499002,
+      "lng": -76.41692644427941
+    },
+    "address": "6004 Main St, Near Baltimore, MD",
+    "phone": "(555) 473-2772",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4722,
+    "currentUtilization": 73
+  },
+  {
+    "id": "site-region-153",
+    "name": "Baltimore Depot #7",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-154-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.33487482123016,
+      "lng": -77.01086394538802
+    },
+    "address": "1804 Main St, Near Baltimore, MD",
+    "phone": "(555) 757-9191",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5740,
+    "currentUtilization": 31
+  },
+  {
+    "id": "site-region-154",
+    "name": "Baltimore Specialty Center #8",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-155-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.13654570196469,
+      "lng": -77.03136150005953
+    },
+    "address": "8696 Main St, Near Baltimore, MD",
+    "phone": "(555) 807-8156",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2396,
+    "currentUtilization": 61
+  },
+  {
+    "id": "site-region-155",
+    "name": "Baltimore Distribution Center #9",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-156-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.24279371282994,
+      "lng": -76.1286890026189
+    },
+    "address": "954 Main St, Near Baltimore, MD",
+    "phone": "(555) 829-9953",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1867,
+    "currentUtilization": 77
+  },
+  {
+    "id": "site-region-156",
+    "name": "Baltimore Distribution Center #10",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-157-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.25442736735396,
+      "lng": -76.24423747674814
+    },
+    "address": "1046 Main St, Near Baltimore, MD",
+    "phone": "(555) 174-4282",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2744,
+    "currentUtilization": 20
+  },
+  {
+    "id": "site-region-157",
+    "name": "Pittsburgh Medical Center #1",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-158-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.14885486626291,
+      "lng": -80.37680477476282
+    },
+    "address": "5687 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 544-8779",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4020,
+    "currentUtilization": 39
+  },
+  {
+    "id": "site-region-158",
+    "name": "Pittsburgh Health Clinic #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-159-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.699603406476804,
+      "lng": -79.53149859077685
+    },
+    "address": "1969 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 414-2692",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4556,
+    "currentUtilization": 28
+  },
+  {
+    "id": "site-region-159",
+    "name": "Pittsburgh Health Clinic #3",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-160-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.44761273308178,
+      "lng": -80.32152761980535
+    },
+    "address": "452 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 900-6759",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5286,
+    "currentUtilization": 69
+  },
+  {
+    "id": "site-region-160",
+    "name": "Pittsburgh Drug Store #4",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-161-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.71636813544562,
+      "lng": -79.92273297383669
+    },
+    "address": "3963 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 437-9994",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4057,
+    "currentUtilization": 74
+  },
+  {
+    "id": "site-region-161",
+    "name": "Pittsburgh University Hospital #5",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-162-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.7111157692703,
+      "lng": -79.95339036526501
+    },
+    "address": "8226 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 370-1694",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5122,
+    "currentUtilization": 33
+  },
+  {
+    "id": "site-region-162",
+    "name": "Pittsburgh Drug Store #6",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-163-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.49781633471569,
+      "lng": -80.12159213846621
+    },
+    "address": "3425 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 440-5361",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2076,
+    "currentUtilization": 23
+  },
+  {
+    "id": "site-region-163",
+    "name": "Pittsburgh General #7",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-164-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.96305810523206,
+      "lng": -79.67045520035597
+    },
+    "address": "4046 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 749-8592",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2749,
+    "currentUtilization": 25
+  },
+  {
+    "id": "site-region-164",
+    "name": "Pittsburgh Logistics Hub #8",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-165-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.33066640168196,
+      "lng": -80.23465746489006
+    },
+    "address": "9012 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 221-7736",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4566,
+    "currentUtilization": 41
+  },
+  {
+    "id": "site-region-165",
+    "name": "Pittsburgh Distribution Center #9",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-166-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.98633880163268,
+      "lng": -79.96323523981224
+    },
+    "address": "6034 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 845-9382",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4115,
+    "currentUtilization": 50
+  },
+  {
+    "id": "site-region-166",
+    "name": "Pittsburgh Logistics Hub #10",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-167-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.78473692645062,
+      "lng": -79.8044490573441
+    },
+    "address": "9705 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 285-6984",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2493,
+    "currentUtilization": 70
+  },
+  {
+    "id": "site-region-167",
+    "name": "Pittsburgh Family Practice #11",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-168-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.19988495403986,
+      "lng": -79.9878553880972
+    },
+    "address": "9119 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 470-8224",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3269,
+    "currentUtilization": 22
+  },
+  {
+    "id": "site-region-168",
+    "name": "Pittsburgh Urgent Care #12",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-169-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.53916878574445,
+      "lng": -79.54315988191834
+    },
+    "address": "7371 Main St, Near Pittsburgh, PA",
+    "phone": "(555) 121-9539",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1414,
+    "currentUtilization": 49
+  },
+  {
+    "id": "site-region-169",
+    "name": "Cleveland Distribution Center #1",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-170-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.568706624981225,
+      "lng": -81.41974749876513
+    },
+    "address": "58 Main St, Near Cleveland, OH",
+    "phone": "(555) 292-8155",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1144,
+    "currentUtilization": 52
+  },
+  {
+    "id": "site-region-170",
+    "name": "Cleveland Health Clinic #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-171-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.6396705102899,
+      "lng": -81.54523334948388
+    },
+    "address": "6091 Main St, Near Cleveland, OH",
+    "phone": "(555) 849-2799",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4455,
+    "currentUtilization": 40
+  },
+  {
+    "id": "site-region-171",
+    "name": "Cleveland Health Clinic #3",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-172-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.803183331230336,
+      "lng": -82.03297897061962
+    },
+    "address": "8919 Main St, Near Cleveland, OH",
+    "phone": "(555) 880-4666",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1102,
+    "currentUtilization": 37
+  },
+  {
+    "id": "site-region-172",
+    "name": "Cleveland Urgent Care #4",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-173-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.237529925741754,
+      "lng": -81.98552121193971
+    },
+    "address": "9140 Main St, Near Cleveland, OH",
+    "phone": "(555) 232-2045",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1575,
+    "currentUtilization": 29
+  },
+  {
+    "id": "site-region-173",
+    "name": "Cleveland Drug Store #5",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-174-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.94855961198495,
+      "lng": -81.23174991817191
+    },
+    "address": "3954 Main St, Near Cleveland, OH",
+    "phone": "(555) 913-3411",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2152,
+    "currentUtilization": 63
+  },
+  {
+    "id": "site-region-174",
+    "name": "Cleveland Distribution Center #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-175-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.6598687331178,
+      "lng": -81.58242092548775
+    },
+    "address": "8679 Main St, Near Cleveland, OH",
+    "phone": "(555) 201-9848",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5013,
+    "currentUtilization": 32
+  },
+  {
+    "id": "site-region-175",
+    "name": "Cleveland General #7",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-176-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.266368116620335,
+      "lng": -81.72487513586016
+    },
+    "address": "1972 Main St, Near Cleveland, OH",
+    "phone": "(555) 974-8178",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4325,
+    "currentUtilization": 25
+  },
+  {
+    "id": "site-region-176",
+    "name": "Cleveland Apothecary #8",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-177-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 41.065071178581924,
+      "lng": -81.53618046869616
+    },
+    "address": "2460 Main St, Near Cleveland, OH",
+    "phone": "(555) 405-3659",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1759,
+    "currentUtilization": 47
+  },
+  {
+    "id": "site-region-177",
+    "name": "Richmond Depot #1",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-178-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.97437001373866,
+      "lng": -77.63584461876145
+    },
+    "address": "3540 Main St, Near Richmond, VA",
+    "phone": "(555) 537-1464",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1362,
+    "currentUtilization": 44
+  },
+  {
+    "id": "site-region-178",
+    "name": "Richmond Logistics Hub #2",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-179-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.792711264620664,
+      "lng": -77.76377219480192
+    },
+    "address": "540 Main St, Near Richmond, VA",
+    "phone": "(555) 500-4671",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5267,
+    "currentUtilization": 27
+  },
+  {
+    "id": "site-region-179",
+    "name": "Richmond Distribution Center #3",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-180-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 38.03353233044928,
+      "lng": -77.80804888434652
+    },
+    "address": "2176 Main St, Near Richmond, VA",
+    "phone": "(555) 164-2404",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3189,
+    "currentUtilization": 73
+  },
+  {
+    "id": "site-region-180",
+    "name": "Richmond University Hospital #4",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-181-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.86517990398089,
+      "lng": -77.79391074321732
+    },
+    "address": "7008 Main St, Near Richmond, VA",
+    "phone": "(555) 539-1816",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3952,
+    "currentUtilization": 51
+  },
+  {
+    "id": "site-region-181",
+    "name": "Richmond Distribution Center #5",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-182-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.23402601801419,
+      "lng": -77.4258045976402
+    },
+    "address": "1591 Main St, Near Richmond, VA",
+    "phone": "(555) 201-1772",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2553,
+    "currentUtilization": 31
+  },
+  {
+    "id": "site-region-182",
+    "name": "Richmond Distribution Center #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-183-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.949609980432236,
+      "lng": -77.15949619807944
+    },
+    "address": "9381 Main St, Near Richmond, VA",
+    "phone": "(555) 373-4606",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1093,
+    "currentUtilization": 58
+  },
+  {
+    "id": "site-region-183",
+    "name": "Richmond Medical Center #7",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-184-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.62733036676177,
+      "lng": -77.81693660272207
+    },
+    "address": "9619 Main St, Near Richmond, VA",
+    "phone": "(555) 662-7155",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3042,
+    "currentUtilization": 31
+  },
+  {
+    "id": "site-region-184",
+    "name": "Richmond Drug Store #8",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-185-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 37.64317346863131,
+      "lng": -77.29364645837776
+    },
+    "address": "9329 Main St, Near Richmond, VA",
+    "phone": "(555) 369-7878",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3864,
+    "currentUtilization": 44
+  },
+  {
+    "id": "site-region-185",
+    "name": "Charlotte University Hospital #1",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-186-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.338764106068716,
+      "lng": -81.01644310295248
+    },
+    "address": "8878 Main St, Near Charlotte, NC",
+    "phone": "(555) 676-3264",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5573,
+    "currentUtilization": 44
+  },
+  {
+    "id": "site-region-186",
+    "name": "Charlotte Specialty Center #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-187-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 34.942978809038934,
+      "lng": -80.94669284512625
+    },
+    "address": "5854 Main St, Near Charlotte, NC",
+    "phone": "(555) 888-5660",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2254,
+    "currentUtilization": 37
+  },
+  {
+    "id": "site-region-187",
+    "name": "Charlotte Health Clinic #3",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-188-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 34.76055608888474,
+      "lng": -81.0794022563694
+    },
+    "address": "3997 Main St, Near Charlotte, NC",
+    "phone": "(555) 365-5757",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1872,
+    "currentUtilization": 33
+  },
+  {
+    "id": "site-region-188",
+    "name": "Charlotte Distribution Center #4",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-189-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.14475409634928,
+      "lng": -81.28038551138202
+    },
+    "address": "8846 Main St, Near Charlotte, NC",
+    "phone": "(555) 690-2770",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2525,
+    "currentUtilization": 21
+  },
+  {
+    "id": "site-region-189",
+    "name": "Charlotte Health Clinic #5",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-190-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.28252680999167,
+      "lng": -80.60481538465436
+    },
+    "address": "4816 Main St, Near Charlotte, NC",
+    "phone": "(555) 329-7881",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4193,
+    "currentUtilization": 51
+  },
+  {
+    "id": "site-region-190",
+    "name": "Charlotte Distribution Center #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-191-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.55445454637596,
+      "lng": -80.84005028914254
+    },
+    "address": "7132 Main St, Near Charlotte, NC",
+    "phone": "(555) 343-2421",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3282,
+    "currentUtilization": 33
+  },
+  {
+    "id": "site-region-191",
+    "name": "Charlotte Pharmacy #7",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-192-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.44700585106706,
+      "lng": -80.70642783969001
+    },
+    "address": "9443 Main St, Near Charlotte, NC",
+    "phone": "(555) 178-2462",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3136,
+    "currentUtilization": 77
+  },
+  {
+    "id": "site-region-192",
+    "name": "Charlotte University Hospital #8",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-193-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.04084738063601,
+      "lng": -81.31083664066598
+    },
+    "address": "2957 Main St, Near Charlotte, NC",
+    "phone": "(555) 268-9717",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4758,
+    "currentUtilization": 59
+  },
+  {
+    "id": "site-region-193",
+    "name": "Charlotte Pharmacy #9",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-194-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.275985929662205,
+      "lng": -80.7682113283424
+    },
+    "address": "9202 Main St, Near Charlotte, NC",
+    "phone": "(555) 535-9296",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5939,
+    "currentUtilization": 51
+  },
+  {
+    "id": "site-region-194",
+    "name": "Charlotte Pharmacy #10",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-195-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 35.70227281878945,
+      "lng": -81.179027446963
+    },
+    "address": "9111 Main St, Near Charlotte, NC",
+    "phone": "(555) 841-9078",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1878,
+    "currentUtilization": 47
+  },
+  {
+    "id": "site-region-195",
+    "name": "Buffalo Apothecary #1",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-196-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.54942543306893,
+      "lng": -79.35843204431029
+    },
+    "address": "4862 Main St, Near Buffalo, NY",
+    "phone": "(555) 533-9888",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4546,
+    "currentUtilization": 66
+  },
+  {
+    "id": "site-region-196",
+    "name": "Buffalo Distribution Center #2",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-197-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.47720939297437,
+      "lng": -78.49339843680835
+    },
+    "address": "9880 Main St, Near Buffalo, NY",
+    "phone": "(555) 946-8262",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5022,
+    "currentUtilization": 20
+  },
+  {
+    "id": "site-region-197",
+    "name": "Buffalo Urgent Care #3",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-198-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.47120916553773,
+      "lng": -78.7132917069276
+    },
+    "address": "1566 Main St, Near Buffalo, NY",
+    "phone": "(555) 841-6860",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5916,
+    "currentUtilization": 59
+  },
+  {
+    "id": "site-region-198",
+    "name": "Buffalo Depot #4",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-199-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.877597964463554,
+      "lng": -78.5299086823708
+    },
+    "address": "3593 Main St, Near Buffalo, NY",
+    "phone": "(555) 419-6954",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2745,
+    "currentUtilization": 45
+  },
+  {
+    "id": "site-region-199",
+    "name": "Buffalo Depot #5",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-200-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.89197299895432,
+      "lng": -79.21443909391067
+    },
+    "address": "6969 Main St, Near Buffalo, NY",
+    "phone": "(555) 113-2561",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2766,
+    "currentUtilization": 71
+  },
+  {
+    "id": "site-region-200",
+    "name": "Buffalo Drug Store #6",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-201-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.662258851746834,
+      "lng": -79.35522719175395
+    },
+    "address": "4793 Main St, Near Buffalo, NY",
+    "phone": "(555) 112-8015",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2997,
+    "currentUtilization": 71
+  },
+  {
+    "id": "site-region-201",
+    "name": "Columbus Distribution Center #1",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-202-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.717620102654884,
+      "lng": -82.50148594607116
+    },
+    "address": "7695 Main St, Near Columbus, OH",
+    "phone": "(555) 553-9354",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4209,
+    "currentUtilization": 21
+  },
+  {
+    "id": "site-region-202",
+    "name": "Columbus Specialty Center #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-203-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.05040016402209,
+      "lng": -83.3814963231395
+    },
+    "address": "4300 Main St, Near Columbus, OH",
+    "phone": "(555) 597-9057",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5608,
+    "currentUtilization": 46
+  },
+  {
+    "id": "site-region-203",
+    "name": "Columbus Depot #3",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-204-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.23389200976337,
+      "lng": -83.3172899564664
+    },
+    "address": "658 Main St, Near Columbus, OH",
+    "phone": "(555) 892-6834",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4123,
+    "currentUtilization": 47
+  },
+  {
+    "id": "site-region-204",
+    "name": "Columbus General #4",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-205-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.44729448531891,
+      "lng": -82.76204126595701
+    },
+    "address": "1633 Main St, Near Columbus, OH",
+    "phone": "(555) 386-7823",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1732,
+    "currentUtilization": 57
+  },
+  {
+    "id": "site-region-205",
+    "name": "Columbus Apothecary #5",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-206-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.36137537900744,
+      "lng": -83.36941650742206
+    },
+    "address": "4932 Main St, Near Columbus, OH",
+    "phone": "(555) 352-1717",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4950,
+    "currentUtilization": 35
+  },
+  {
+    "id": "site-region-206",
+    "name": "Columbus Distribution Center #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-207-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.73142156730834,
+      "lng": -83.29559399810073
+    },
+    "address": "8601 Main St, Near Columbus, OH",
+    "phone": "(555) 750-1165",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5592,
+    "currentUtilization": 41
+  },
+  {
+    "id": "site-region-207",
+    "name": "Columbus Logistics Hub #7",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-208-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.9230782731098,
+      "lng": -82.87030555238334
+    },
+    "address": "829 Main St, Near Columbus, OH",
+    "phone": "(555) 466-1655",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5707,
+    "currentUtilization": 46
+  },
+  {
+    "id": "site-region-208",
+    "name": "Columbus Memorial #8",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-209-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.8258662074165,
+      "lng": -83.47212201399412
+    },
+    "address": "3534 Main St, Near Columbus, OH",
+    "phone": "(555) 806-9857",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1891,
+    "currentUtilization": 52
+  },
+  {
+    "id": "site-region-209",
+    "name": "Detroit Drug Store #1",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-210-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.584415801922056,
+      "lng": -82.71078737360645
+    },
+    "address": "6841 Main St, Near Detroit, MI",
+    "phone": "(555) 966-8631",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5029,
+    "currentUtilization": 63
+  },
+  {
+    "id": "site-region-210",
+    "name": "Detroit Drug Store #2",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-211-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.487148232280575,
+      "lng": -82.90729290802874
+    },
+    "address": "1478 Main St, Near Detroit, MI",
+    "phone": "(555) 644-5418",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1629,
+    "currentUtilization": 21
+  },
+  {
+    "id": "site-region-211",
+    "name": "Detroit Urgent Care #3",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-212-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.182269713916156,
+      "lng": -83.03184859478122
+    },
+    "address": "5284 Main St, Near Detroit, MI",
+    "phone": "(555) 865-6112",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4531,
+    "currentUtilization": 32
+  },
+  {
+    "id": "site-region-212",
+    "name": "Detroit Drug Store #4",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-213-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.18457705374893,
+      "lng": -83.01917819181672
+    },
+    "address": "9852 Main St, Near Detroit, MI",
+    "phone": "(555) 937-5695",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4623,
+    "currentUtilization": 70
+  },
+  {
+    "id": "site-region-213",
+    "name": "Detroit Rx Center #5",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-214-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.141556838713356,
+      "lng": -83.03124381871723
+    },
+    "address": "6316 Main St, Near Detroit, MI",
+    "phone": "(555) 689-8472",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1624,
+    "currentUtilization": 77
+  },
+  {
+    "id": "site-region-214",
+    "name": "Detroit Logistics Hub #6",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-215-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.45308734874756,
+      "lng": -83.31329642756639
+    },
+    "address": "4627 Main St, Near Detroit, MI",
+    "phone": "(555) 835-5307",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3808,
+    "currentUtilization": 38
+  },
+  {
+    "id": "site-region-215",
+    "name": "Detroit Pharmacy #7",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-216-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.467406294327446,
+      "lng": -82.89125060000303
+    },
+    "address": "3803 Main St, Near Detroit, MI",
+    "phone": "(555) 398-4856",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4202,
+    "currentUtilization": 79
+  },
+  {
+    "id": "site-region-216",
+    "name": "Detroit General #8",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-217-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.661976841744384,
+      "lng": -82.9951363327329
+    },
+    "address": "941 Main St, Near Detroit, MI",
+    "phone": "(555) 663-6227",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4993,
+    "currentUtilization": 72
+  },
+  {
+    "id": "site-region-217",
+    "name": "Detroit Drug Store #9",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-218-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.566324265168,
+      "lng": -83.09797943378393
+    },
+    "address": "1437 Main St, Near Detroit, MI",
+    "phone": "(555) 973-9825",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5224,
+    "currentUtilization": 59
+  },
+  {
+    "id": "site-region-218",
+    "name": "Detroit Health Clinic #10",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-219-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 42.40086252359169,
+      "lng": -82.59393590160872
+    },
+    "address": "733 Main St, Near Detroit, MI",
+    "phone": "(555) 104-8039",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5565,
+    "currentUtilization": 74
+  },
+  {
+    "id": "site-region-219",
+    "name": "Indianapolis Pharmacy #1",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-220-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.365647493280356,
+      "lng": -85.78297637248292
+    },
+    "address": "4448 Main St, Near Indianapolis, IN",
+    "phone": "(555) 869-7166",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 3269,
+    "currentUtilization": 27
+  },
+  {
+    "id": "site-region-220",
+    "name": "Indianapolis Specialty Center #2",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-221-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.47560915490449,
+      "lng": -86.63248500198243
+    },
+    "address": "6331 Main St, Near Indianapolis, IN",
+    "phone": "(555) 711-1772",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4302,
+    "currentUtilization": 30
+  },
+  {
+    "id": "site-region-221",
+    "name": "Indianapolis University Hospital #3",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-222-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.497862828521384,
+      "lng": -86.54727028282556
+    },
+    "address": "531 Main St, Near Indianapolis, IN",
+    "phone": "(555) 754-6872",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 5642,
+    "currentUtilization": 41
+  },
+  {
+    "id": "site-region-222",
+    "name": "Indianapolis Urgent Care #4",
+    "type": "clinic",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-223-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.44551968619796,
+      "lng": -85.75533167519683
+    },
+    "address": "257 Main St, Near Indianapolis, IN",
+    "phone": "(555) 914-4138",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2531,
+    "currentUtilization": 64
+  },
+  {
+    "id": "site-region-223",
+    "name": "Indianapolis Medical Center #5",
+    "type": "hospital",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-224-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.62327004039715,
+      "lng": -85.69137428458566
+    },
+    "address": "9273 Main St, Near Indianapolis, IN",
+    "phone": "(555) 418-5577",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1237,
+    "currentUtilization": 58
+  },
+  {
+    "id": "site-region-224",
+    "name": "Indianapolis Rx Center #6",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-225-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 40.10326467414559,
+      "lng": -86.2833898947482
+    },
+    "address": "4255 Main St, Near Indianapolis, IN",
+    "phone": "(555) 974-7494",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 4866,
+    "currentUtilization": 66
+  },
+  {
+    "id": "site-region-225",
+    "name": "Indianapolis Depot #7",
+    "type": "warehouse",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-226-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.77966378835969,
+      "lng": -86.51567727882113
+    },
+    "address": "9573 Main St, Near Indianapolis, IN",
+    "phone": "(555) 908-4449",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 2419,
+    "currentUtilization": 23
+  },
+  {
+    "id": "site-region-226",
+    "name": "Indianapolis Apothecary #8",
+    "type": "pharmacy",
+    "regulatoryAvatar": "Regional",
+    "classOfTrade": "non_acute",
+    "parentEntity": "Regional Partner Network",
+    "departments": [
+      {
+        "id": "dept-227-1",
+        "name": "Main Inventory",
+        "type": "logistics"
+      }
+    ],
+    "coordinates": {
+      "lat": 39.32106586467657,
+      "lng": -85.97620251760922
+    },
+    "address": "6039 Main St, Near Indianapolis, IN",
+    "phone": "(555) 404-7529",
+    "manager": "Regional Manager",
+    "status": "operational",
+    "capacity": 1858,
+    "currentUtilization": 47
+  }
+]

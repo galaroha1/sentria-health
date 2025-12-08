@@ -1,7 +1,7 @@
 import type { Site, SiteInventory, NetworkRequest, SupplyLevel } from '../../types/location';
 
 // UPenn Health System sites (Philadelphia & Surrounding Area)
-export const sites: Site[] = [
+const sites: Site[] = [
     // City Hospitals
     {
         id: 'site-1',
@@ -369,6 +369,13 @@ export const sites: Site[] = [
     },
 ];
 
+import regionalSites from '../../data/regional-sites.json';
+// Merge UPenn sites with Regional sites
+// We need to cast the imported JSON to Site[] type effectively or ensure it matches
+const allSites: Site[] = [...sites, ...regionalSites as unknown as Site[]];
+
+export { allSites as sites }; // Re-export as 'sites' to keep other code working if they import 'sites'
+
 import realDrugCatalog from '../../data/real-drug-catalog.json';
 
 // Generate a master catalog for the simulation to ensure consistency across sites
@@ -423,8 +430,8 @@ const generateInventory = (siteId: string): SiteInventory => {
     };
 };
 
-// Generate inventories for all sites
-export const siteInventories: SiteInventory[] = sites.map(site => generateInventory(site.id));
+// Generate inventories for all sites (UPenn + Regional)
+export const siteInventories: SiteInventory[] = allSites.map(site => generateInventory(site.id));
 
 // Network transfer requests
 export const networkRequests: NetworkRequest[] = [
@@ -519,7 +526,7 @@ export const supplyLevels: SupplyLevel[] = [
     {
         drugName: 'Keytruda (Pembrolizumab)',
         ndc: '0006-3026-02',
-        distribution: sites.map(site => {
+        distribution: allSites.map(site => {
             const inv = siteInventories.find(i => i.siteId === site.id);
             const drug = inv?.drugs.find(d => d.ndc === '0006-3026-02');
             return drug ? { site, quantity: drug.quantity, status: drug.status } : null;
@@ -531,7 +538,7 @@ export const supplyLevels: SupplyLevel[] = [
     {
         drugName: 'Remicade (Infliximab)',
         ndc: '57894-030-01',
-        distribution: sites.map(site => {
+        distribution: allSites.map(site => {
             const inv = siteInventories.find(i => i.siteId === site.id);
             const drug = inv?.drugs.find(d => d.ndc === '57894-030-01');
             return drug ? { site, quantity: drug.quantity, status: drug.status } : null;
