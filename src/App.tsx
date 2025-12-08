@@ -127,7 +127,7 @@ function App() {
 
                     <Route path="network" element={<NetworkHub />} />
                     <Route path="command-center" element={<CommandCenter />} />
-                    <Route path="command-center" element={<CommandCenter />} />
+
                     <Route path="compliance" element={<Compliance />} />
                     <Route
                       path="data-generation"
