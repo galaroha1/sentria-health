@@ -52,7 +52,7 @@ export function Sidebar() {
     ];
 
     return (
-        <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-slate-50 transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl fixed h-full">
+        <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-slate-50 transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl fixed left-0 top-0 h-full">
             <div className="flex h-16 items-center border-b border-slate-200 px-6 overflow-hidden whitespace-nowrap shrink-0">
                 <div className="flex items-center gap-3 transition-all duration-300">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">
