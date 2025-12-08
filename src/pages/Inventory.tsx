@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Truck, Package, Syringe, FileText, Zap, Users } from 'lucide-react';
+import { Truck, Package, Syringe, FileText } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
