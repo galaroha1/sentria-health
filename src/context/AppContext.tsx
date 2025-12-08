@@ -8,6 +8,7 @@ import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { FirestoreService } from '../services/firebase.service';
 import { OptimizationService } from '../services/optimization.service';
+import { PatientService } from '../services/patient.service';
 
 interface AppContextType {
     // Location & Requests
@@ -88,9 +89,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 setPatients([]);
                 return;
             }
-
-            // Lazy load PatientService to avoid circular dependency issues at top level if any
-            const { PatientService } = await import('../services/patient.service');
 
             const mappedPatients = data.map(sim => {
                 const age = sim.profile?.age || 45;
