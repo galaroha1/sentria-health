@@ -133,7 +133,7 @@ export function LogisticsHub() {
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-6 h-full overflow-hidden">
+        <div className="flex flex-col gap-6">
             {/* Header */}
             <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -168,7 +168,7 @@ export function LogisticsHub() {
 
             {/* Content Area */}
             {viewMode === 'map' ? (
-                <div className="flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="h-[600px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                     <InteractiveMap
                         sites={sites}
                         inventories={inventories}
@@ -176,11 +176,11 @@ export function LogisticsHub() {
                     />
                 </div>
             ) : (
-                /* Master/Detail Layout */
-                <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                /* Master/Detail Layout - Full Page Scroll */
+                <div className="flex flex-col md:flex-row items-start rounded-xl border border-slate-200 bg-white shadow-sm">
                     {/* Left Pane: Locations List */}
-                    <div className="flex w-80 flex-col border-r border-slate-200 bg-slate-50">
-                        <div className="p-4 border-b border-slate-200">
+                    <div className="flex w-full md:w-80 flex-col border-r border-slate-200 bg-slate-50 shrink-0">
+                        <div className="p-4 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <input
@@ -192,11 +192,10 @@ export function LogisticsHub() {
                                 />
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                        <div className="p-2 space-y-1 max-h-[400px] md:max-h-none overflow-y-auto md:overflow-visible">
                             {filteredSites.map((site) => {
                                 const isSelected = selectedSiteId === site.id;
-                                // Mock status logic: Randomly assign status for demo purposes if not available
-                                // Real app would calculate this based on inventory levels
+                                // Mock status logic
                                 const hasShortage = Math.random() > 0.8;
 
                                 return (
@@ -229,10 +228,10 @@ export function LogisticsHub() {
                     </div>
 
                     {/* Right Pane: Activity */}
-                    <div className="flex-1 flex flex-col min-w-0 bg-white">
+                    <div className="flex-1 flex flex-col min-w-0 bg-white border-t md:border-t-0">
                         {selectedSite ? (
                             <>
-                                <div className="flex items-center justify-between border-b border-slate-100 px-8 py-6">
+                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100 px-6 py-6 gap-4">
                                     <div className="flex items-center gap-4">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg">
                                             <MapPin className="h-6 w-6" />
@@ -248,7 +247,7 @@ export function LogisticsHub() {
                                     </div>
                                     <button
                                         onClick={() => setShowRequestForm(true)}
-                                        className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:bg-primary-700 transition-colors"
+                                        className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:bg-primary-700 transition-colors w-full md:w-auto justify-center"
                                     >
                                         <Plus className="h-4 w-4" />
                                         New Transfer
@@ -258,7 +257,7 @@ export function LogisticsHub() {
 
                                 {/* Smart Logistics Panel */}
                                 {suggestions.length > 0 && (
-                                    <div className="border-b border-slate-100 bg-slate-50/80 px-8 py-6">
+                                    <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-6">
                                         <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500">
                                             <span className="h-2 w-2 rounded-full bg-violet-500 animate-pulse"></span>
                                             AI Optimization Opportunities
@@ -278,7 +277,7 @@ export function LogisticsHub() {
                                     </div>
                                 )}
 
-                                <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+                                <div className="p-6 bg-slate-50/50">
                                     {/* Activity Header with AI Controls */}
                                     <div className="mb-6 flex items-center justify-between">
                                         <h3 className="font-semibold text-slate-900">Recent Activity</h3>
@@ -294,7 +293,7 @@ export function LogisticsHub() {
                                 </div>
                             </>
                         ) : (
-                            <div className="flex flex-1 items-center justify-center text-slate-400">
+                            <div className="flex h-64 items-center justify-center text-slate-400">
                                 <div className="text-center">
                                     <Building2 className="mx-auto h-12 w-12 opacity-20" />
                                     <p className="mt-4">Select a location to view activity</p>
