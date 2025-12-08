@@ -58,8 +58,7 @@ export function Inventory() {
     const tabs = [
         { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
-        { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
-        { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
+
         { id: 'compliance' as TabType, label: 'Compliance', icon: FileText, desc: 'Audits & Reports' },
         { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
     ];
