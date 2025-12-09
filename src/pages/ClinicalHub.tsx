@@ -191,7 +191,10 @@ export function ClinicalHub() {
                                 {selectedDate ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'Select a date'}
                             </h3>
                             <p className="text-xs text-slate-500 mt-1">
-                                {selectedDateEvents.length} scheduled events
+                                {selectedDateEvents.length} scheduled on this day
+                                <span className="ml-2 pl-2 border-l border-slate-300 text-slate-400">
+                                    {events.length} total upcoming
+                                </span>
                             </p>
                         </div>
 

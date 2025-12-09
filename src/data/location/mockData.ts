@@ -170,7 +170,7 @@ const sites: Site[] = [
         type: 'hospital',
         regulatoryAvatar: 'CAH', // Critical Access Hospital (Mock)
         classOfTrade: 'acute',
-        parentEntity: 'Princeton Health', // Different Parent! Test DSCSA check.
+        parentEntity: 'Penn Medicine System', // Fully integrated
         regulatoryProfile: {
             is340B: false,
             deaLicense: ['II', 'III', 'IV', 'V'],
@@ -369,12 +369,10 @@ const sites: Site[] = [
     },
 ];
 
-import regionalSites from '../../data/regional-sites.json';
-// Merge UPenn sites with Regional sites
-// We need to cast the imported JSON to Site[] type effectively or ensure it matches
-const allSites: Site[] = [...sites, ...regionalSites as unknown as Site[]];
+// Export only the Penn sites
+const allSites: Site[] = sites;
 
-export { allSites as sites }; // Re-export as 'sites' to keep other code working if they import 'sites'
+export { allSites as sites };
 
 import realDrugCatalog from '../../data/real-drug-catalog.json';
 
