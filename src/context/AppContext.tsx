@@ -9,8 +9,7 @@ import { sites as initialSites, siteInventories as initialInventories } from '..
 import { FirestoreService } from '../services/firebase.service';
 import { OptimizationService } from '../services/optimization.service';
 
-// PatientService import removed to prevent CI build issues
-import type { Treatment } from '../types/patient';
+import { PatientService } from '../services/patient.service';
 
 interface AppContextType {
     // Location & Requests
@@ -54,31 +53,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Helper function inlined to avoid import issues in CI
-function generatePatientSchedule(diagnosis: string, drugOverride?: string): Treatment[] {
-    const schedule: Treatment[] = [];
-    const today = new Date();
-    const drugs = diagnosis.includes('Leukemia') ? ['Methotrexate', 'Vincristine'] :
-        diagnosis.includes('Cancer') ? ['Keytruda', 'Paclitaxel'] :
-            diagnosis.includes('Crohn') ? ['Remicade'] : ['Insulin'];
 
-    // Generate only ONE appointment per patient as requested
-    // Randomize date within the next year (365 days)
-    const daysOffset = Math.floor(Math.random() * 365) + 1;
-    const date = new Date(today);
-    date.setDate(today.getDate() + daysOffset);
-
-    schedule.push({
-        id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        date: date.toISOString(),
-        drugName: drugOverride || drugs[Math.floor(Math.random() * drugs.length)],
-        ndc: '00006-3026-02',
-        status: 'scheduled',
-        dose: '100mg',
-        notes: 'Standard protocol'
-    });
-
-    return schedule;
-}
 
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -134,7 +109,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     type: 'adult', // Could infer from age
                     attendingPhysician: 'Dr. Auto',
                     // Generate schedule on the fly based on the prescribed drug
-                    treatmentSchedule: generatePatientSchedule(sim.condition, sim.drug)
+                    // Use the Service to ensure exact Drug Name/NDC alignment
+                    treatmentSchedule: PatientService.generateSchedule(sim.condition)
                 };
             });
 
