@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Truck, Package, Syringe, FileText } from 'lucide-react';
+import { Truck, Package, Syringe, FileText, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
@@ -12,13 +12,15 @@ import { StockTab } from '../components/inventory/StockTab';
 import { AdministrationTab } from '../components/inventory/AdministrationTab';
 import { ComplianceTab } from '../components/inventory/ComplianceTab';
 import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
+import { DecisionsTab } from '../components/inventory/DecisionsTab';
 
-type TabType = 'operations' | 'stock' | 'admin' | 'compliance';
+type TabType = 'operations' | 'stock' | 'admin' | 'compliance' | 'optimization';
 
 export function Inventory() {
     const { inventories, sites, addRequest, addNotification } = useApp();
     const { selectedPatient, setSelectedPatient } = useSimulation();
-    const [activeTab, setActiveTab] = useState<TabType>('operations');
+    // Default to Optimization if proposals exist (optional), or stick to operations
+    const [activeTab, setActiveTab] = useState<TabType>('optimization');
 
     // Shared state for modals
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
@@ -59,6 +61,7 @@ export function Inventory() {
         { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
 
+        { id: 'optimization' as TabType, label: 'AI Optimization', icon: Zap, desc: 'Auto-Logistics & Approvals' },
         { id: 'compliance' as TabType, label: 'Compliance', icon: FileText, desc: 'Audits & Reports' },
         { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
     ];
@@ -143,6 +146,8 @@ export function Inventory() {
                     {activeTab === 'admin' && <AdministrationTab />}
 
                     {activeTab === 'compliance' && <ComplianceTab />}
+
+                    {activeTab === 'optimization' && <DecisionsTab />}
                 </div>
             </div>
 
