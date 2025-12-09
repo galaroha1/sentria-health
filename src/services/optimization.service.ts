@@ -109,18 +109,22 @@ export class OptimizationService {
             inv.drugs.forEach((item, index) => {
 
                 // A. Generate Forecast based on REAL PATIENT SCHEDULE
-                // Heuristic: If Department Name includes 'Oncology', assume seasonalityFactor higher
                 const deptName = inv.departmentId ? inv.departmentId : 'General';
                 const isSeasonality = deptName.toLowerCase().includes('respiratory') || deptName.toLowerCase().includes('er');
 
-                const forecast = ForecastingService.generateForecast(
+                const forecast = ForecastingService.generateProbabilisticForecast(
                     item.ndc, item.drugName, inv.siteId, '2025-CURRENT', patients,
-                    isSeasonality ? 1.2 : 1.0, // Seasonality
-                    (item as any).criticality === 'critical' ? 1.5 : 1.0 // Acuity Weight
+                    isSeasonality ? 1.2 : 1.0,
+                    (item as any).criticality === 'critical' ? 1.5 : 1.0
                 );
 
+                // DEBUG LOG
+                if (forecast.mean > 0) {
+                    console.log(`[Optimization] Demand Detected for ${item.drugName} at ${inv.siteId}: Mean=${forecast.mean}, Var=${forecast.variance.toFixed(2)}`);
+                }
+
                 // B. Safety Stock
-                const supplierInfo = this.getSupplierCatalog(item.ndc)[0]; // Use first for baseline SS calc
+                const supplierInfo = this.getSupplierCatalog(item.ndc)[0];
                 const safetyStock = ForecastingService.calculateSafetyStock(
                     forecast,
                     supplierInfo.leadTimeDays,
@@ -131,6 +135,8 @@ export class OptimizationService {
                 // C. Net Requirement = (Demand + SS) - Stock
                 const totalDemand = forecast.mean + safetyStock;
                 const netPosition = item.quantity - totalDemand;
+
+                console.log(`[Optimization] Item: ${item.drugName} | Stock: ${item.quantity} | Forecast: ${forecast.mean} | SS: ${safetyStock} | Net: ${netPosition}`);
 
                 if (netPosition < 0) {
                     // DEFICIT

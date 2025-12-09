@@ -47,6 +47,7 @@ export class ForecastingService {
                     txDate >= today &&
                     txDate <= forecastHorizon
                 ) {
+                    console.log(`[Forecast] Match Found! Patient ${patient.name} needs ${drugName} on ${txDate.toISOString().split('T')[0]}`);
                     const doseQty = parseInt(treatment.dose) || 1;
 
                     // Patient Acuity Model (A_p) - Simply randomized for now based on data presence

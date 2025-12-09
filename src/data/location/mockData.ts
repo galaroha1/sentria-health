@@ -396,23 +396,24 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
         lastUpdated: new Date().toISOString(),
         drugs: selectedDrugs.map(d => {
             // Randomize quantity to create different statuses
-            const min = 20;
-            const max = 100; // Simulated limits
+            // FORCE SCARCITY FOR DEMO: Make stock levels very low so AI triggers proposals
+            const min = 0;
+            const max = 15;
             const rand = Math.random();
             let quantity;
             let status: 'well_stocked' | 'low' | 'critical' | 'overstocked';
 
-            if (rand < 0.1) { // 10% chance of critical
-                quantity = Math.floor(Math.random() * (min / 2));
+            if (rand < 0.4) { // 40% chance of CRITICAL (0-5 units)
+                quantity = Math.floor(Math.random() * 5);
                 status = 'critical';
-            } else if (rand < 0.25) { // 15% chance of low
-                quantity = Math.floor(min + Math.random() * (min * 0.5));
+            } else if (rand < 0.7) { // 30% chance of LOW (5-10 units)
+                quantity = Math.floor(5 + Math.random() * 5);
                 status = 'low';
-            } else if (rand > 0.9) { // 10% chance of overstocked
-                quantity = Math.floor(max * 1.2);
+            } else if (rand > 0.95) { // 5% chance of overstocked (Surplus for Transfers)
+                quantity = 40 + Math.floor(Math.random() * 20);
                 status = 'overstocked';
-            } else { // 65% chance of well stocked
-                quantity = Math.floor(min + Math.random() * (max - min));
+            } else { // 25% chance of "ok" (10-20 units)
+                quantity = Math.floor(10 + Math.random() * 10);
                 status = 'well_stocked';
             }
 
