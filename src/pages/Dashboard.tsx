@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TrendingUp, DollarSign, Package, Truck, Brain } from 'lucide-react';
-import { PredictiveProcurement } from '../components/dashboard/PredictiveProcurement';
-import { CostOptimizer } from '../components/dashboard/CostOptimizer';
 import { InventoryAlerts } from '../components/dashboard/InventoryAlerts';
 import { PredictiveAnalytics } from '../components/dashboard/PredictiveAnalytics';
 import { SavingsProjection } from '../components/dashboard/SavingsProjection';
@@ -86,23 +84,21 @@ export function Dashboard() {
                             <MorningBriefing />
 
                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {/* New card for Active Transfers */}
+                                {/* Active Transfers - Shortcuts to Inventory/Logistics */}
                                 <div
-                                    onClick={() => navigate('/logistics')}
+                                    onClick={() => navigate('/inventory')}
                                     className="cursor-pointer rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Active Transfers</p>
-                                            <p className="text-2xl font-bold text-slate-900">{activeTransfersCount}</p>
+                                            <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Logistics & AI</p>
+                                            <p className="text-2xl font-bold text-slate-900">{activeTransfersCount} Active</p>
                                         </div>
                                         <div className="rounded-full bg-purple-100 p-3 text-purple-600 group-hover:bg-purple-200 transition-colors">
                                             <Truck className="h-6 w-6" />
                                         </div>
                                     </div>
                                 </div>
-                                <PredictiveProcurement />
-                                <CostOptimizer />
                                 <InventoryAlerts />
                             </div>
                         </div>
