@@ -61,19 +61,28 @@ export class OptimizationService {
     }
 
     // --- MOCK SUPPLIER DATA (Would be DB) ---
-    private static getSupplierCatalog(_ndc: string): SupplierProfile[] {
+    private static getSupplierCatalog(ndc: string): SupplierProfile[] {
+        // SYNCHRONIZED PRICING: Match the logic in SupplierService.getBasePrice(ndc)
+        // Hash the NDC to get a consistent pseudo-random price
+        let hash = 0;
+        for (let i = 0; i < ndc.length; i++) {
+            hash = ((hash << 5) - hash) + ndc.charCodeAt(i);
+            hash |= 0;
+        }
+        const basePrice = (Math.abs(hash) % 500) + 50; // Same formula as SupplierService
+
         return [
             {
-                id: 'sup-mckesson', name: 'McKesson', reliability: 0.98, leadTimeDays: 2, leadTimeVariance: 0.5, qualityScore: 99, riskScore: 10,
-                contractTerms: { minOrderQty: 10, costFunctions: [{ minQty: 0, maxQty: Infinity, unitPrice: 100 }] }
+                id: 'mckesson', name: 'McKesson', reliability: 0.98, leadTimeDays: 2, leadTimeVariance: 0.5, qualityScore: 99, riskScore: 10,
+                contractTerms: { minOrderQty: 10, costFunctions: [{ minQty: 0, maxQty: Infinity, unitPrice: Number((basePrice * 1.05).toFixed(2)) }] }
             },
             {
-                id: 'sup-cardinal', name: 'Cardinal Health', reliability: 0.95, leadTimeDays: 3, leadTimeVariance: 1.0, qualityScore: 95, riskScore: 15,
-                contractTerms: { minOrderQty: 50, costFunctions: [{ minQty: 0, maxQty: Infinity, unitPrice: 95 }] } // Cheaper but slower
+                id: 'cardinal', name: 'Cardinal Health', reliability: 0.95, leadTimeDays: 3, leadTimeVariance: 1.0, qualityScore: 95, riskScore: 15,
+                contractTerms: { minOrderQty: 50, costFunctions: [{ minQty: 0, maxQty: Infinity, unitPrice: Number((basePrice * 1.10).toFixed(2)) }] }
             },
             {
-                id: 'sup-express', name: 'Express Scripts', reliability: 0.90, leadTimeDays: 5, leadTimeVariance: 2.0, qualityScore: 80, riskScore: 30, // Higher risk
-                contractTerms: { minOrderQty: 100, costFunctions: [{ minQty: 0, maxQty: Infinity, unitPrice: 85 }] } // Deep discount spot
+                id: 'amerisource', name: 'AmerisourceBergen', reliability: 0.90, leadTimeDays: 5, leadTimeVariance: 2.0, qualityScore: 80, riskScore: 30,
+                contractTerms: { minOrderQty: 100, costFunctions: [{ minQty: 0, maxQty: Infinity, unitPrice: Number((basePrice * 1.02).toFixed(2)) }] }
             }
         ];
     }
