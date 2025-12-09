@@ -94,9 +94,17 @@ export function DecisionsTab() {
             await addLog('> STARTING_DEMAND_FORECAST_MODEL (v4.2.1)...');
             await addLog('> LOADING_TENSORFLOW_BACKEND... [OK]');
 
-            // Simulate Analysis
-            for (let i = 0; i < 5; i++) {
-                await addLog(`> ANALYZING PATIENT COHORTS: Cluster ${i + 1}/5...`, 150);
+            // Simulate Analysis - SHOW REAL PATIENT PROCESSING
+            // We sample the first 8 patients to show specific activity
+            const samplePatients = patients.slice(0, 8);
+            for (const p of samplePatients) {
+                const treatment = p.treatmentSchedule.find((t: any) => new Date(t.date) > new Date());
+                const drug = treatment ? treatment.drugName : 'Assessment';
+                await addLog(`> ANALYZING PATIENT: ${p.name} [${p.diagnosis}]`, 100);
+                await addLog(`  └── Sourcing ${drug} for ${new Date(treatment?.date || Date.now()).toLocaleDateString()}`, 50);
+            }
+            if (patients.length > 8) {
+                await addLog(`> ... and ${patients.length - 8} others.`, 20);
             }
             await addLog('> DETECTED: Seasonal spike pending for [Influenza Vaccine] in Region: Northeast');
 

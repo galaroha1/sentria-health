@@ -170,6 +170,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Subscribe to Firestore collections
     useEffect(() => {
         // 1. SITES Subscription
+        // 1. SITES Subscription
         const unsubscribeSites = FirestoreService.subscribe<Site>('sites', (data) => {
             if (data.length === 0 && initialSites.length > 0) {
                 // Seed Sites if Firestore is empty
@@ -178,7 +179,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     FirestoreService.set('sites', s.id, s);
                 });
             } else {
-                setSites(data);
+                // Enforce Penn System Restriction:
+                // Only allow sites that exist in our authoritative initialSites list (by ID or logic)
+                // This cleans up any "Regional" sites leftover in the DB
+                const allowedIds = new Set(initialSites.map(s => s.id));
+                const validSites = data.filter(s => allowedIds.has(s.id));
+                setSites(validSites);
             }
         });
 
