@@ -178,34 +178,48 @@ export class OptimizationService {
 
             // OPTION 1: NETWORK TRANSFER (y_sd)
             // Identify potential Sources (S)
+            // Priority 1: Same Site (Inter-Departmental) - Fastest, Cheapest
+            // Priority 2: Other Site (Network Transfer) - Slower, Higher Logistics Cost
             const internalSources = surpluses.filter(s =>
                 s.inv.drugs[s.itemIndex].ndc === item.ndc &&
-                s.inv.siteId === deficit.inv.siteId &&
                 s.inv !== deficit.inv &&
                 s.amount > 0
-            );
+            ).sort((a, b) => {
+                // Sort by Proximity (Same Site First)
+                const aIsSameSite = a.inv.siteId === deficit.inv.siteId;
+                const bIsSameSite = b.inv.siteId === deficit.inv.siteId;
+                if (aIsSameSite && !bIsSameSite) return -1;
+                if (!aIsSameSite && bIsSameSite) return 1;
+                return 0; // Then by amount or other factors (can add logic here)
+            });
 
             // Evaluate Transfer Cost Z_trans
             for (const source of internalSources) {
                 if (remainingDeficit <= 0) break;
 
-                // C_trans is negligible for internal, but let's assign a small heuristic logic cost
-                const C_trans = 5.0; // Handling fee
+                const isSameSite = source.inv.siteId === deficit.inv.siteId;
+                const transferTypeLabel = isSameSite ? 'Inter-Departmental Transfer' : 'Network Transfer';
+
+                // C_trans: Dept transfer is free/cheap ($5). Network transfer is trucking ($50).
+                const C_trans = isSameSite ? 5.0 : 50.0;
 
                 // Compare: Is Transfer Cost < Purchase Cost? (Usually Yes)
-                // In a full solver, we'd build the matrix. Here, Greedy is the solver for this subproblem.
-
                 const transferQty = Math.min(remainingDeficit, source.amount);
 
                 // Action: y_sd (Transfer)
                 orderItems.push({
                     sku: item.ndc,
                     drugName: item.drugName,
-                    supplierId: source.inv.departmentId || 'Internal-Dept',
-                    supplierName: `${source.inv.departmentId || 'Other Dept'} (Internal Transfer)`, // Visual cue
+                    supplierId: source.inv.departmentId || source.inv.siteId, // Identifying ID
+                    supplierName: isSameSite
+                        ? `${source.inv.departmentId || 'Main Pharmacy'} (Inter-Dept)`
+                        : `${source.inv.siteId === 'site-12' ? 'Central Warehouse' : 'Network Site'} (External)`,
                     targetSiteId: deficit.inv.siteId,
                     quantity: transferQty,
                     type: 'transfer',
+                    // We can use the text "Inter-Departmental" in proposal to filter easily on UI
+                    // or add a dedicated field if we changed the type definition. 
+                    // For now, we piggyback on 'supplierName' or 'channel' for filtering.
                     analysis: {
                         forecastMean: 0,
                         safetyStock: 0,
@@ -217,13 +231,13 @@ export class OptimizationService {
                             logistics: C_trans,
                             riskPenalty: 0
                         },
-                        supplierScore: 100,
-                        alternativeSavings: (100 * transferQty) // Synthetic savings vs $100 benchmark
+                        supplierScore: isSameSite ? 99 : 90, // Higher score for closer stock
+                        alternativeSavings: 0
                     }
                 });
 
                 remainingDeficit -= transferQty;
-                source.amount -= transferQty;
+                source.amount -= transferQty; // Decrement virtual surplus
             }
 
             // OPTION 2: EXTERNAL PROCUREMENT (x_i)

@@ -378,11 +378,25 @@ import realDrugCatalog from '../../data/real-drug-catalog.json';
 
 // Generate a master catalog for the simulation to ensure consistency across sites
 // We use the same JSON source
-const MASTER_CATALOG = realDrugCatalog.slice(0, 100).map(d => ({
-    name: `${d.name} ${d.form}`,
-    ndc: d.ndc,
-    // Add other fields if useful for simulation logic, but name/ndc are core
-}));
+// We use the same JSON source
+const MASTER_CATALOG = realDrugCatalog
+    .filter(d => {
+        const n = d.name.toUpperCase();
+        return !n.includes('FOUNDATION') &&
+            !n.includes('SPF ') &&
+            !n.includes('SUNSCREEN') &&
+            !n.includes('LIP ') &&
+            !n.includes('SHAMPOO') &&
+            !n.includes('LOTION') &&
+            !n.includes('DEODORANT') &&
+            !n.includes('ANTIPERSPIRANT');
+    })
+    .slice(0, 100)
+    .map(d => ({
+        name: `${d.name} ${d.form}`,
+        ndc: d.ndc,
+        // Add other fields if useful for simulation logic, but name/ndc are core
+    }));
 
 // Helper to generate random inventory for a specific department
 const generateInventory = (siteId: string, departmentId?: string): SiteInventory => {
@@ -403,16 +417,17 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
             let quantity;
             let status: 'well_stocked' | 'low' | 'critical' | 'overstocked';
 
-            if (rand < 0.4) { // 40% chance of CRITICAL (0-5 units)
+            if (rand < 0.3) { // 30% chance of CRITICAL (0-5 units)
                 quantity = Math.floor(Math.random() * 5);
                 status = 'critical';
-            } else if (rand < 0.7) { // 30% chance of LOW (5-10 units)
+            } else if (rand < 0.6) { // 30% chance of LOW (5-10 units)
                 quantity = Math.floor(5 + Math.random() * 5);
                 status = 'low';
-            } else if (rand > 0.95) { // 5% chance of overstocked (Surplus for Transfers)
-                quantity = 40 + Math.floor(Math.random() * 20);
+            } else if (rand > 0.8 || siteId === 'site-12' || (siteId === 'site-1' && Math.random() > 0.5)) {
+                // 20% Surplus Chance + Guaranteed Surplus for 'site-12' (Warehouse) + 50% for Main Hospital
+                quantity = 150 + Math.floor(Math.random() * 200); // MASSIVE Surplus to fuel transfers
                 status = 'overstocked';
-            } else { // 25% chance of "ok" (10-20 units)
+            } else { // 20% chance of "ok" (10-20 units)
                 quantity = Math.floor(10 + Math.random() * 10);
                 status = 'well_stocked';
             }

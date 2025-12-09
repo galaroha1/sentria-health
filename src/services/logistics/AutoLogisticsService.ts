@@ -240,7 +240,7 @@ export class AutoLogisticsService {
                 ndc: shortageItem.ndc,
                 quantity: transferQty,
                 urgency,
-                priorityScore: Math.round(score),
+                priorityScore: Math.min(100, Math.max(0, Math.round(score))),
                 reason: reasons,
                 transportMethod,
                 estimatedCost: Math.round(cost),
@@ -296,7 +296,7 @@ export class AutoLogisticsService {
                     ndc: shortageItem.ndc,
                     quantity: qtyNeeded,
                     urgency: 'routine', // Buying is usually routine unless expedited (not impl here)
-                    priorityScore: Math.round(buyScore),
+                    priorityScore: Math.min(100, Math.max(0, Math.round(buyScore))),
                     reason: reasons,
                     transportMethod: 'shipping_standard',
                     estimatedCost: Math.round(totalMarketCost),
