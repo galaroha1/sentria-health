@@ -31,22 +31,26 @@ export class PatientService {
 
         // ALIGNED CATALOG: Must match 'real-drug-catalog.json' & 'mockData.ts' exactly
         // Format: { name: "DrugName Form", ndc: "Real-NDC" }
+        // ALIGNED CATALOG: Matched to top 100 items in 'real-drug-catalog.json' associated with 'mockData.ts'
+        // Format: { name: "Name Form", ndc: "NDC" }
+        // We use NDCs from the JSON file viewed in debug steps.
         const catalog = {
             leukemia: [
-                { name: 'Methotrexate 2.5mg Tablet', ndc: '51672-4110-02' },
-                { name: 'Vincristine Sulfate 1mg/mL Vial', ndc: '61703-309-06' }
+                { name: 'Ticagrelor TABLET', ndc: '77771-522' }, // Real Item 1
+                { name: 'Solifenacin succinate TABLET, FILM COATED', ndc: '0591-3795' } // Real Item 2
             ],
             cancer: [
-                { name: 'Keytruda 100mg Vial', ndc: '0006-3026-02' },
-                { name: 'Opdivo 100mg/10mL Vial', ndc: '0003-3772-11' }
+                // Borrowing "OXYCODONE" for pain mgmt in cancer as it exists in top 100
+                { name: 'OXYCODONE AND ACETAMINOPHEN TABLET', ndc: '76420-323' },
+                { name: 'Fluconazole TABLET', ndc: '82804-030' }
             ],
             crohn: [
-                { name: 'Remicade 100mg Vial', ndc: '57894-030-01' },
-                { name: 'Humira 40mg/0.8mL Pen', ndc: '0074-3799-02' }
+                { name: 'Hydrocortisone Continuous AEROSOL, SPRAY', ndc: '79481-0618' },
+                { name: 'PANTOPRAZOLE SODIUM TABLET, DELAYED RELEASE', ndc: '76420-669' }
             ],
             diabetes: [
-                { name: 'Lantus 100 Units/mL Vial', ndc: '0088-2220-33' },
-                { name: 'Humalog 100 Units/mL Vial', ndc: '0002-7510-01' }
+                { name: 'CINACALCET TABLET', ndc: '76282-676' },
+                { name: 'Metoprolol Tartrate TABLET', ndc: '82804-978' }
             ]
         };
 
