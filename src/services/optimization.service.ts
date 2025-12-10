@@ -94,7 +94,7 @@ export class OptimizationService {
      * Heuristic approximation of MILP objective: Minimize Z = Cost(Buy) + Cost(Transfer) + Cost(Hold) + Cost(Shortage)
      */
     static selectOrderPlan(
-        _sites: Site[],
+        sites: Site[],
         inventories: SiteInventory[],
         patients: Patient[], // REAL DATA driven
         params: OptimizationParams = {
@@ -212,7 +212,10 @@ export class OptimizationService {
                     supplierId: source.inv.departmentId || source.inv.siteId, // Identifying ID
                     supplierName: isSameSite
                         ? `${source.inv.departmentId || 'Main Pharmacy'} (Inter-Dept)`
-                        : `${source.inv.siteId === 'site-12' ? 'Central Warehouse' : 'Network Site'} (External)`,
+                        : (() => {
+                            const sourceSite = sites.find(s => s.id === source.inv.siteId);
+                            return sourceSite ? sourceSite.name : `Network Site (${source.inv.siteId})`;
+                        })(),
                     targetSiteId: deficit.inv.siteId,
                     quantity: transferQty,
                     type: 'transfer',
