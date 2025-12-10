@@ -334,7 +334,7 @@ export class OptimizationService {
             id: `opt-${Math.random()}`,
             type: item.type === 'transfer' ? 'transfer' : 'procurement', // Differentiate for UI? Currently UI treats all as proposals.
             targetSiteId: item.targetSiteId,
-            targetSiteName: sites.find(s => s.id === item.targetSiteId)?.name || 'Unknown',
+            targetSiteName: sites.find(s => s.id === item.targetSiteId)?.name || item.targetSiteId,
             sourceSiteName: item.type === 'transfer' ? item.supplierName : undefined, // Show Source Dept
             drugName: item.drugName,
             ndc: item.sku,
@@ -348,11 +348,18 @@ export class OptimizationService {
                 savings: item.analysis.alternativeSavings
             },
             reason: item.type === 'transfer'
-                ? `Internal Transfer: Surplus available in ${item.supplierName}`
+                ? `${item.supplierName.includes('External') ? 'Network Transfer' : 'Internal Transfer'}: Surplus available in ${item.supplierName}`
                 : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`,
             score: item.analysis.supplierScore,
             fulfillmentNode: item.type === 'transfer' ? 'Internal' : 'External',
-            regulatoryJustification: { passed: true, details: [item.type === 'transfer' ? 'Internal Allocation' : 'Vendor Purchase'] }
+            regulatoryJustification: {
+                passed: true,
+                details: [
+                    item.type === 'transfer'
+                        ? (item.supplierName.includes('External') ? 'Network Balance' : 'Internal Allocation')
+                        : 'Vendor Purchase'
+                ]
+            }
         }));
     }
 }

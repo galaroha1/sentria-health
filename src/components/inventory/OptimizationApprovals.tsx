@@ -113,10 +113,10 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.type === 'transfer'
-                                                ? (proposal.vendorName?.includes('Inter-Dept')
-                                                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Dept Transfer
-                                                    : 'bg-blue-50 text-blue-700 ring-blue-600/20') // Blue for Network
-                                                : 'bg-purple-50 text-purple-700 ring-purple-600/20'
+                                            ? (proposal.vendorName?.includes('Inter-Dept')
+                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Dept Transfer
+                                                : 'bg-blue-50 text-blue-700 ring-blue-600/20') // Blue for Network
+                                            : 'bg-purple-50 text-purple-700 ring-purple-600/20'
                                             }`}>
                                             {proposal.type === 'transfer'
                                                 ? (proposal.vendorName?.includes('Inter-Dept') ? 'Inter-Dept Transfer' : 'Network Transfer')
@@ -199,10 +199,10 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                             <span>Est. Cost:</span>
                                             <span className="font-mono font-medium">${proposal.costAnalysis.totalCost.toLocaleString()}</span>
                                         </div>
-                                        {proposal.costAnalysis.savings && proposal.costAnalysis.savings > 0 && (
+                                        {(proposal.costAnalysis.savings || 0) > 0 && (
                                             <div className="flex justify-between text-emerald-600 font-bold border-t border-slate-200 pt-1 mt-1">
                                                 <span className="flex items-center gap-1"><TrendingDown className="h-3 w-3" /> Savings:</span>
-                                                <span className="font-mono">${proposal.costAnalysis.savings.toLocaleString()}</span>
+                                                <span className="font-mono">${proposal.costAnalysis.savings?.toLocaleString()}</span>
                                             </div>
                                         )}
                                     </div>
