@@ -66,7 +66,7 @@ export class ForecastingService {
         // 1.2 STOCHASTIC COMPONENT (eta) ~ NegBin(alpha, beta)
         // Approximated here as Poisson(lambda) + Gamma Noise
         // lambda = Base Rate (historical) * exp(LatentState)
-        const lambda_base = mu_total * 0.2; // Assume 20% unscheduled variance baseline
+        const lambda_base = mu_total * 0.2; // MODEL ASSUMPTION: 20% buffer for Unscheduled/Emergency demand (e.g. ED walk-ins)
 
         // Sampling from Poisson Distribution
         // Knuth's algorithm for Poisson generation
