@@ -198,7 +198,6 @@ export class OptimizationService {
                 if (remainingDeficit <= 0) break;
 
                 const isSameSite = source.inv.siteId === deficit.inv.siteId;
-                const transferTypeLabel = isSameSite ? 'Inter-Departmental Transfer' : 'Network Transfer';
 
                 // C_trans: Dept transfer is free/cheap ($5). Network transfer is trucking ($50).
                 const C_trans = isSameSite ? 5.0 : 50.0;
