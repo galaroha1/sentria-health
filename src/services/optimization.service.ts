@@ -242,15 +242,26 @@ export class OptimizationService {
                     const purchaseCost = (vendorPrice * transferQty) + 15; // + Shipping estimate
                     const purchaseTime = bestVendor.leadTimeDays * 24 * 60; // Minutes
 
-                    // Total Score = Cost + (Time * 1.0)
-                    const transferScore = C_trans + (routeMetrics.durationMinutes || 0);
-                    const purchaseScore = purchaseCost + (purchaseTime * 0.1); // Time less weighted for buying (days vs hours)
-
                     // LOGIC: If Buying is Significantly Cheaper (and not Emergency), Skip Transfer
                     // OR if Transfer is crazy expensive/slow
-                    const isUrgent = (item as any).criticality === 'high';
 
-                    if (!isUrgent && purchaseScore < transferScore) {
+                    // derived criticality from item status if property missing
+                    const isUrgent = (item as any).criticality === 'high' || item.status === 'critical';
+
+                    // Time Weighting:
+                    // Routine: Time is cheap (wait 2 days is fine). $0.002 per minute penalty.
+                    // Urgent: Time is expensive. $1.00 per minute penalty.
+                    const timeWeight = isUrgent ? 1.0 : 0.002;
+
+                    // Total Score = Cost + (Time * Weight)
+                    // Transfer: Distance handling + Time
+                    const transferScore = C_trans + ((routeMetrics.durationMinutes || 30) * timeWeight);
+
+                    // Purchase: Price + Shipping + LeadTime
+                    const purchaseScore = purchaseCost + (purchaseTime * timeWeight);
+
+                    // Bias: Internal transfers have hidden labor costs. Add 10% bias favor to Purchase if close.
+                    if (!isUrgent && purchaseScore < (transferScore * 1.1)) {
                         // PREFER BUYING
                         // Skip this transfer source, allowing deficit to remain for the Purchase block below
                         continue;
