@@ -442,9 +442,17 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
     const selectedDrugs = [...candidateDrugs].sort(() => 0.5 - Math.random()).slice(0, numDrugs);
 
     // FORCE: Ensure Keytruda & Ticagrelor exist for AI Demo alignment
+    // AND match all drugs used in PatientService to ensure demand hits inventory
     const demoDrugs = [
         { name: 'Ticagrelor TABLET', ndc: '77771-522' },
-        { name: 'Keytruda 100mg Vial', ndc: '0006-3026-02' }
+        { name: 'Keytruda 100mg Vial', ndc: '0006-3026-02' },
+        { name: 'Solifenacin succinate TABLET, FILM COATED', ndc: '0591-3795' },
+        { name: 'OXYCODONE AND ACETAMINOPHEN TABLET', ndc: '76420-323' },
+        { name: 'Fluconazole TABLET', ndc: '82804-030' },
+        { name: 'Hydrocortisone Continuous AEROSOL, SPRAY', ndc: '79481-0618' },
+        { name: 'PANTOPRAZOLE SODIUM TABLET, DELAYED RELEASE', ndc: '76420-669' },
+        { name: 'CINACALCET TABLET', ndc: '76282-676' },
+        { name: 'Metoprolol Tartrate TABLET', ndc: '82804-978' }
     ];
 
     // Only add if not already present (checking by NDC)
