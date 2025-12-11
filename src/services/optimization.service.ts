@@ -3,6 +3,7 @@ import type { ProcurementProposal } from '../types/procurement';
 import type { OptimizationParams, OptimizationResult, OrderPlanItem, SupplierProfile } from '../types/procurement';
 import type { Patient } from '../types/patient';
 import { ForecastingService } from './forecasting.service';
+import { RoutingService } from './routing.service';
 
 export class OptimizationService {
 
@@ -93,7 +94,7 @@ export class OptimizationService {
      * MAIN SOLVER: SelectOrderPlan(t)
      * Heuristic approximation of MILP objective: Minimize Z = Cost(Buy) + Cost(Transfer) + Cost(Hold) + Cost(Shortage)
      */
-    static selectOrderPlan(
+    static async selectOrderPlan(
         sites: Site[],
         inventories: SiteInventory[],
         patients: Patient[], // REAL DATA driven
@@ -104,7 +105,7 @@ export class OptimizationService {
             riskAversionLambda: 1.0,
             planningHorizonDays: 30
         }
-    ): OptimizationResult {
+    ): Promise<OptimizationResult> {
         const orderItems: OrderPlanItem[] = [];
         let totalEstimatedCost = 0;
         let totalRiskAdjustedCost = 0;
@@ -118,13 +119,11 @@ export class OptimizationService {
             inv.drugs.forEach((item, index) => {
 
                 // A. Generate Forecast based on REAL PATIENT SCHEDULE
-                const deptName = inv.departmentId ? inv.departmentId : 'General';
-                const isSeasonality = deptName.toLowerCase().includes('respiratory') || deptName.toLowerCase().includes('er');
 
                 const forecast = ForecastingService.generateProbabilisticForecast(
-                    item.ndc, item.drugName, inv.siteId, '2025-CURRENT', patients,
-                    isSeasonality ? 1.2 : 1.0,
-                    (item as any).criticality === 'critical' ? 1.5 : 1.0
+                    item.ndc,
+                    inv.siteId,
+                    patients.filter(p => p.assignedDepartmentId === inv.departmentId)
                 );
 
                 // DEBUG LOG
@@ -142,8 +141,7 @@ export class OptimizationService {
                 );
 
                 // C. Net Requirement = (Demand + SS) - Stock
-                const totalDemand = forecast.mean + safetyStock;
-                const netPosition = item.quantity - totalDemand;
+                const netPosition = (item.quantity) - (forecast.expectedDemand + item.minLevel);
 
                 console.log(`[Optimization] Item: ${item.drugName} | Stock: ${item.quantity} | Forecast: ${forecast.mean} | SS: ${safetyStock} | Net: ${netPosition}`);
 
@@ -199,8 +197,39 @@ export class OptimizationService {
 
                 const isSameSite = source.inv.siteId === deficit.inv.siteId;
 
-                // C_trans: Dept transfer is free/cheap ($5). Network transfer is trucking ($50).
-                const C_trans = isSameSite ? 5.0 : 50.0;
+                // --- NEW ROUTING LOGIC ---
+                let C_trans = 0;
+                let routeMetrics: any = { distanceKm: 0, durationMinutes: 0, trafficLevel: 'low', source: 'fallback' };
+
+                if (isSameSite) {
+                    C_trans = 5.0; // Flat fee for inter-dept
+                } else {
+                    // NETWORK TRANSFER
+                    // Fetch Real-Time Route Metrics!
+                    const sourceSite = sites.find(s => s.id === source.inv.siteId);
+                    const targetSite = sites.find(s => s.id === deficit.inv.siteId);
+
+                    if (sourceSite && targetSite) {
+                        try {
+                            const metrics = await RoutingService.getRouteMetrics(sourceSite, targetSite);
+                            routeMetrics = metrics; // Assign directly
+
+                            // Cost Model:
+                            // Base Fee: $50
+                            // Mileage: $1.50/km
+                            // Labor/Time: $1.00/minute (Driver cost, fuel, depreciation overhead)
+
+                            const mileageCost = metrics.distanceKm * this.TRANSPORT_RATE_PER_KM;
+                            const timeCost = metrics.durationMinutes * 1.00;
+
+                            C_trans = this.BASE_PROCESSING_FEE + mileageCost + timeCost;
+                        } catch (e) {
+                            C_trans = 100; // Safe fallback high cost
+                        }
+                    } else {
+                        C_trans = 50; // Fallback
+                    }
+                }
 
                 // Compare: Is Transfer Cost < Purchase Cost? (Usually Yes)
                 const transferQty = Math.min(remainingDeficit, source.amount);
@@ -219,8 +248,9 @@ export class OptimizationService {
                     targetSiteId: deficit.inv.siteId,
                     quantity: transferQty,
                     type: 'transfer',
+                    metrics: routeMetrics, // Pass metrics to UI!
                     // We can use the text "Inter-Departmental" in proposal to filter easily on UI
-                    // or add a dedicated field if we changed the type definition. 
+                    // or add a dedicated field if we changed the type definition.
                     // For now, we piggyback on 'supplierName' or 'channel' for filtering.
                     analysis: {
                         forecastMean: 0,
@@ -323,35 +353,38 @@ export class OptimizationService {
     /**
      * Wrapper for UI Compatibility
      */
-    static generateProposals(
+    static async generateProposals(
         sites: Site[],
         inventories: SiteInventory[],
         patients: Patient[] = [], // Passed from AppContext
         _activeRequests: any[] = []
-    ): ProcurementProposal[] {
+    ): Promise<ProcurementProposal[]> {
         // Run the Advanced Engine
-        const optimizationResult = this.selectOrderPlan(sites, inventories, patients);
+        const optimizationResult = await this.selectOrderPlan(sites, inventories, patients);
 
         // Map 'OrderPlanItem' back to 'ProcurementProposal' for UI
         return optimizationResult.items.map(item => ({
             id: `opt-${Math.random()}`,
-            type: item.type === 'transfer' ? 'transfer' : 'procurement', // Differentiate for UI? Currently UI treats all as proposals.
+            type: item.type === 'transfer' ? 'transfer' : 'procurement',
             targetSiteId: item.targetSiteId,
-            targetSiteName: sites.find(s => s.id === item.targetSiteId)?.name || item.targetSiteId,
-            sourceSiteName: item.type === 'transfer' ? item.supplierName : undefined, // Show Source Dept
+            targetSiteName: (sites.find(s => s.id === item.targetSiteId) || {}).name || item.targetSiteId,
+            sourceSiteId: item.supplierId, // For transfers, this is Site ID
+            sourceSiteName: item.supplierName,
+            vendorName: item.supplierName, // Unified field
             drugName: item.drugName,
             ndc: item.sku,
             quantity: item.quantity,
-            vendorName: item.supplierName,
             costAnalysis: {
-                distanceKm: 0,
+                distanceKm: 0, // TODO: Map real distance from result if available
                 transportCost: item.analysis.costBreakdown.logistics,
                 itemCost: item.analysis.costBreakdown.purchase,
                 totalCost: item.analysis.costBreakdown.purchase + item.analysis.costBreakdown.logistics,
                 savings: item.analysis.alternativeSavings
             },
+            // Pass through metrics if available
+            metrics: item.metrics,
             reason: item.type === 'transfer'
-                ? `${item.supplierName.includes('External') ? 'Network Transfer' : 'Internal Transfer'}: Surplus available in ${item.supplierName}`
+                ? `Internal Transfer: Surplus available in ${item.supplierName}`
                 : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`,
             score: item.analysis.supplierScore,
             fulfillmentNode: item.type === 'transfer' ? 'Internal' : 'External',

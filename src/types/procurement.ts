@@ -112,4 +112,10 @@ export interface OrderPlanItem {
         supplierScore: number;
         alternativeSavings: number; // Savings vs next best option
     };
+    metrics?: {
+        distanceKm: number;
+        durationMinutes: number;
+        trafficLevel: 'low' | 'moderate' | 'heavy' | 'unknown';
+        source: 'google' | 'osrm' | 'fallback';
+    };
 }

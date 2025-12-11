@@ -214,22 +214,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (sites.length === 0 || inventories.length === 0) return;
 
-        // 1. Calculate Potential Savings (Optimization Opportunities)
-        const proposals = OptimizationService.generateProposals(sites, inventories, patients, requests);
-        const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
+        // Run the optimization algorithm to find solutions for low stock
+        const runOptimization = async () => {
+            const proposals = await OptimizationService.generateProposals(sites, inventories, patients, requests);
+            const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
 
-        // 2. Calculate Realized Savings (Completed/Approved Transfers)
-        // We assume "savings" is stored on the request, or we re-calculate.
-        const realized = requests
-            .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
-            .reduce((sum, _r) => sum + 4250, 0); // Mock avg savings per transfer
+            // 2. Calculate Realized Savings (Completed/Approved Transfers)
+            // We assume "savings" is stored on the request, or we re-calculate.
+            const realized = requests
+                .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
+                .reduce((sum, _r) => sum + 4250, 0); // Mock avg savings per transfer
 
-        setMetrics({
-            potentialSavings,
-            realizedSavings: realized,
-            optimizationCount: proposals.length,
-            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
-        });
+            setMetrics({
+                potentialSavings,
+                realizedSavings: realized,
+                optimizationCount: proposals.length,
+                activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
+            });
+            setCurrentProposals(proposals); // Update global state
+        };
+
+        runOptimization();
     }, [inventories, sites, requests]);
 
     // Sync across tabs
@@ -258,47 +263,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (sites.length === 0 || inventories.length === 0) return;
 
         // Run the optimization algorithm to find solutions for low stock
-        const proposals = OptimizationService.generateProposals(sites, inventories, patients);
+        const checkAlerts = async () => {
+            const proposals = await OptimizationService.generateProposals(sites, inventories, patients);
 
-        proposals.forEach(proposal => {
-            setNotifications(prevNotifications => {
-                // Check if we already have an active notification for this item today
-                const today = new Date().toISOString().split('T')[0];
-                const hasNotification = prevNotifications.some(n =>
-                    n.title.includes(proposal.drugName) &&
-                    n.message.includes(proposal.targetSiteName) &&
-                    n.timestamp.startsWith(today)
-                );
+            proposals.forEach(proposal => {
+                setNotifications(prevNotifications => {
+                    // Check if we already have an active notification for this item today
+                    const today = new Date().toISOString().split('T')[0];
+                    const hasNotification = prevNotifications.some(n =>
+                        n.title.includes(proposal.drugName) &&
+                        n.message.includes(proposal.targetSiteName) &&
+                        n.timestamp.startsWith(today)
+                    );
 
-                if (!hasNotification) {
-                    const isTransfer = proposal.type === 'transfer';
-                    const title = isTransfer
-                        ? `Optimization: Transfer Available for ${proposal.drugName}`
-                        : `Low Stock: ${proposal.drugName}`;
+                    if (!hasNotification) {
+                        const isTransfer = proposal.type === 'transfer';
+                        const title = isTransfer
+                            ? `Optimization: Transfer Available for ${proposal.drugName}`
+                            : `Low Stock: ${proposal.drugName}`;
 
-                    const message = isTransfer
-                        ? `${proposal.targetSiteName} needs ${proposal.quantity} units. ${proposal.reason}`
-                        : `${proposal.targetSiteName} is low on ${proposal.drugName}. ${proposal.reason}`;
+                        const message = isTransfer
+                            ? `${proposal.targetSiteName} needs ${proposal.quantity} units. ${proposal.reason}`
+                            : `${proposal.targetSiteName} is low on ${proposal.drugName}. ${proposal.reason}`;
 
-                    const actionUrl = isTransfer
-                        ? `/transfers?source=${proposal.sourceSiteId}&target=${proposal.targetSiteId}&drug=${proposal.ndc}&qty=${proposal.quantity}`
-                        : `/inventory`; // Or procurement tab
+                        const actionUrl = isTransfer
+                            ? `/transfers?source=${proposal.sourceSiteId}&target=${proposal.targetSiteId}&drug=${proposal.ndc}&qty=${proposal.quantity}`
+                            : `/inventory`; // Or procurement tab
 
-                    return [{
-                        id: `opt-${proposal.id}`,
-                        type: isTransfer ? 'success' : 'warning', // Green for solution, Orange for warning
-                        category: 'alert',
-                        title,
-                        message,
-                        timestamp: new Date().toISOString(),
-                        read: false,
-                        link: '/inventory',
-                        actionUrl
-                    }, ...prevNotifications];
-                }
-                return prevNotifications;
+                        return [{
+                            id: `opt-${proposal.id}`,
+                            type: isTransfer ? 'success' : 'warning', // Green for solution, Orange for warning
+                            category: 'alert',
+                            title,
+                            message,
+                            timestamp: new Date().toISOString(),
+                            read: false,
+                            link: '/inventory',
+                            actionUrl
+                        }, ...prevNotifications];
+                    }
+                    return prevNotifications;
+
+                });
             });
-        });
+        };
+
+        checkAlerts();
     }, [inventories, sites]); // Run when inventories change
 
     // Inventory Management

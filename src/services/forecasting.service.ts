@@ -12,13 +12,14 @@ export class ForecastingService {
      */
     static generateProbabilisticForecast(
         ndc: string,
-        drugName: string,
         siteId: string,
-        period: string,
         patients: Patient[] = [],
+        // Optional params with defaults
+        drugName: string = 'Unknown Drug',
+        period: string = 'CURRENT',
         seasonalityFactor: number = 1.0,
         acuityWeight: number = 1.0
-    ): DemandForecast & { modelComponents: any } {
+    ): DemandForecast & { modelComponents: any, expectedDemand: number } {
 
         // 1. FORECAST HORIZON: 90 Days (H)
         const today = new Date();
@@ -104,7 +105,8 @@ export class ForecastingService {
                 eta_stochastic: eta_stochastic,
                 exogenous_impact: exogenousFactor,
                 acuity_impact: acuityWeight
-            }
+            },
+            expectedDemand: Math.ceil(D_total)
         };
     }
 
@@ -118,7 +120,7 @@ export class ForecastingService {
         seasonalityFactor: number = 1.0,
         acuityWeight: number = 1.0
     ): DemandForecast {
-        const adv = this.generateProbabilisticForecast(ndc, drugName, siteId, period, patients, seasonalityFactor, acuityWeight);
+        const adv = this.generateProbabilisticForecast(ndc, siteId, patients, drugName, period, seasonalityFactor, acuityWeight);
         return {
             ...adv,
             mean: adv.mean,
