@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Search, Filter, Download, ChevronDown, ChevronUp, AlertTriangle, UserPlus } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
 import { AddPatientModal } from './AddPatientModal';
+import { PatientDetailsModal } from './PatientDetailsModal';
 
 
 export function PatientDataTab() {
-    const { simulationResults, viewPatientDetails, fetchSimulations, loading, stats } = useSimulation();
-    // const [searchTerm, setSearchTerm] = useState(''); // Note: Search is harder with Firestore without Algolia/Typesense
+    const { simulationResults, viewPatientDetails, fetchSimulations, loading, stats, selectedPatient, setSelectedPatient } = useSimulation();
+    const [searchTerm, setSearchTerm] = useState('');
     const [sortField, setSortField] = useState<string>('date');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [lastDoc, setLastDoc] = useState<any>(null);
@@ -50,6 +51,13 @@ export function PatientDataTab() {
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+    // Filter results locally for now since Firestore search is complex
+    const filteredResults = simulationResults.filter(r =>
+        r.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.condition.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.drug.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-4">
             {/* Toolbar */}
@@ -58,9 +66,10 @@ export function PatientDataTab() {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search functionality coming soon..."
-                        disabled
-                        className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+                        placeholder="Search usage..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2 text-sm focus:border-purple-500 focus:outline-none"
                     />
                 </div>
                 <div className="flex items-center gap-4">
@@ -118,7 +127,7 @@ export function PatientDataTab() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {simulationResults.map((result) => (
+                            {filteredResults.map((result) => (
                                 <tr key={result.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-4 py-2 font-medium text-slate-900">{result.patientName}</td>
                                     <td className="px-4 py-2 text-slate-600">
@@ -200,6 +209,13 @@ export function PatientDataTab() {
 
             {isAddModalOpen && (
                 <AddPatientModal onClose={() => setIsAddModalOpen(false)} />
+            )}
+
+            {selectedPatient && (
+                <PatientDetailsModal
+                    patient={selectedPatient}
+                    onClose={() => setSelectedPatient(null)}
+                />
             )}
         </div>
     );

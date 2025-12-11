@@ -1,4 +1,5 @@
 import { AlertTriangle, Clock, ShoppingCart, ArrowRightLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useFirestore } from '../../hooks/useFirestore';
 
 interface InventoryAlert {
@@ -11,6 +12,7 @@ interface InventoryAlert {
 }
 
 export function InventoryAlerts() {
+    const navigate = useNavigate();
     const { data: alerts, loading, error } = useFirestore<InventoryAlert>('inventoryAlerts');
 
     if (loading) return <div className="p-4 text-center text-sm text-slate-500">Loading alerts...</div>;
@@ -22,7 +24,10 @@ export function InventoryAlerts() {
                     <Clock className="h-5 w-5 text-amber-500" />
                     Expiring Soon
                 </h3>
-                <button className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                <button
+                    onClick={() => navigate('/inventory')}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                >
                     View All
                 </button>
             </div>
@@ -41,10 +46,18 @@ export function InventoryAlerts() {
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200" title="Quick Order">
+                            <button
+                                onClick={() => navigate('/marketplace')}
+                                className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200"
+                                title="Quick Order"
+                            >
                                 <ShoppingCart className="h-3 w-3" />
                             </button>
-                            <button className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200" title="Transfer">
+                            <button
+                                onClick={() => navigate('/logistics')}
+                                className="flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200"
+                                title="Transfer"
+                            >
                                 <ArrowRightLeft className="h-3 w-3" />
                             </button>
                         </div>

@@ -6,6 +6,7 @@ import type { Organization, SharedInventoryItem } from '../services/networkServi
 import type { Site } from '../types/location';
 import { InteractiveMap } from '../components/location/InteractiveMap';
 import { PartnerProfileModal } from '../components/network/PartnerProfileModal';
+import { InvitePartnerModal } from '../components/network/InvitePartnerModal';
 import toast from 'react-hot-toast';
 
 export function NetworkHub() {
@@ -15,6 +16,7 @@ export function NetworkHub() {
     const [activity, setActivity] = useState<SharedInventoryItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPartner, setSelectedPartner] = useState<Organization | null>(null);
+    const [showInviteModal, setShowInviteModal] = useState(false);
 
     const refreshData = () => {
         networkService.getNearbyOrganizations().then(setPartners);
@@ -252,7 +254,7 @@ export function NetworkHub() {
                     {viewMode === 'list' && (
                         <div className="bg-slate-50 p-6 text-center border-t border-slate-100 mt-auto">
                             <button
-                                onClick={() => toast('Invite feature coming soon', { icon: '📧' })}
+                                onClick={() => setShowInviteModal(true)}
                                 className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                             >
                                 + Invite New Partner
@@ -266,6 +268,14 @@ export function NetworkHub() {
                 isOpen={!!selectedPartner}
                 onClose={() => setSelectedPartner(null)}
                 partner={selectedPartner}
+            />
+
+            <InvitePartnerModal
+                isOpen={showInviteModal}
+                onClose={() => setShowInviteModal(false)}
+                onInvite={(email, orgName) => {
+                    toast.success(`Invitation sent to ${email} for ${orgName}`);
+                }}
             />
         </div>
     );

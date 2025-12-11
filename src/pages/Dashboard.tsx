@@ -33,12 +33,26 @@ export function Dashboard() {
                 <div className="flex gap-3">
                     <button
                         onClick={() => {
-                            // Mock export functionality
-                            const blob = new Blob(['Report Data'], { type: 'text/csv' });
+                            // Export actual transfer requests
+                            const headers = ['ID', 'Item', 'Source', 'Destination', 'Status', 'Priority', 'Created At'];
+                            const csvContent = [
+                                headers.join(','),
+                                ...requests.map(r => [
+                                    r.id,
+                                    `"${r.item.name}"`,
+                                    `"${r.sourceSite.name}"`,
+                                    `"${r.destSite.name}"`,
+                                    r.status,
+                                    r.priority,
+                                    r.createdAt.toISOString()
+                                ].join(','))
+                            ].join('\n');
+
+                            const blob = new Blob([csvContent], { type: 'text/csv' });
                             const url = window.URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = `sentria-report-${new Date().toISOString().split('T')[0]}.csv`;
+                            a.download = `sentria-transfers-${new Date().toISOString().split('T')[0]}.csv`;
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);

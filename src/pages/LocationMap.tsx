@@ -1,5 +1,7 @@
+```javascript
 import { useState } from 'react';
-import { MapPin, Network, Bell } from 'lucide-react';
+import { MapPin, Navigation, Info, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { InteractiveMap } from '../components/location/InteractiveMap';
 import { SiteDetailPanel } from '../components/location/SiteDetailPanel';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
@@ -39,7 +41,7 @@ export function LocationMap() {
     const handleRequestSubmit = (newRequest: NetworkRequest) => {
         addRequest(newRequest);
         setRequestFormSource(null);
-        alert('Network transfer request submitted successfully');
+        toast.success('Network transfer request submitted successfully');
     };
 
     return (
@@ -95,20 +97,22 @@ export function LocationMap() {
                 <div className="flex gap-2 border-b border-slate-200 p-2">
                     <button
                         onClick={() => setViewMode('map')}
-                        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'map'
-                            ? 'bg-slate-900 text-white'
-                            : 'text-slate-600 hover:bg-slate-100'
-                            }`}
+                        className={`flex items - center gap - 2 rounded - lg px - 4 py - 2 text - sm font - medium transition - colors ${
+    viewMode === 'map'
+    ? 'bg-slate-900 text-white'
+    : 'text-slate-600 hover:bg-slate-100'
+} `}
                     >
                         <MapPin className="h-4 w-4" />
                         Map View
                     </button>
                     <button
                         onClick={() => setViewMode('requests')}
-                        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'requests'
-                            ? 'bg-slate-900 text-white'
-                            : 'text-slate-600 hover:bg-slate-100'
-                            }`}
+                        className={`flex items - center gap - 2 rounded - lg px - 4 py - 2 text - sm font - medium transition - colors ${
+    viewMode === 'requests'
+    ? 'bg-slate-900 text-white'
+    : 'text-slate-600 hover:bg-slate-100'
+} `}
                     >
                         <Network className="h-4 w-4" />
                         Network Requests

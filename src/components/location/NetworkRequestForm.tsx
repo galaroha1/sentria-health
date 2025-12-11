@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import type { Site, SiteInventory, NetworkRequest } from '../../types/location';
 import { useApp } from '../../context/AppContext';
+import toast from 'react-hot-toast';
 
 interface NetworkRequestFormProps {
     sourceSite: Site;
@@ -143,7 +144,7 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
                                                 setDestSite(compliantSite.id);
                                                 setValidationError(null);
                                             } else {
-                                                alert('No compliant sites found.');
+                                                toast.error('No compliant sites found.');
                                             }
                                         }}
                                         className="whitespace-nowrap rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-medium text-purple-700 hover:bg-purple-100"

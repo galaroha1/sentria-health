@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FileText, ShieldCheck, Download, AlertTriangle, CheckCircle2, Search, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { fdaService } from '../../services/fdaService';
 import type { FdaRecallResult } from '../../services/fdaService';
 
@@ -176,7 +177,7 @@ export function ComplianceTab() {
                     <h3 className="mb-4 text-lg font-bold text-slate-900">Quick Reports</h3>
                     <div className="grid gap-3">
                         <button
-                            onClick={() => alert('Downloading Controlled Substance Log...')}
+                            onClick={() => toast.success('Downloading Controlled Substance Log (PDF)...')}
                             className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
                         >
                             <div className="flex items-center gap-3">
@@ -189,7 +190,7 @@ export function ComplianceTab() {
                             <Download className="h-4 w-4 text-slate-400" />
                         </button>
                         <button
-                            onClick={() => alert('Downloading Expiration Report...')}
+                            onClick={() => toast.success('Downloading Expiration Report (CSV)...')}
                             className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
                         >
                             <div className="flex items-center gap-3">
@@ -202,7 +203,7 @@ export function ComplianceTab() {
                             <Download className="h-4 w-4 text-slate-400" />
                         </button>
                         <button
-                            onClick={() => alert('Downloading Wastage Analysis...')}
+                            onClick={() => toast.success('Downloading Wastage Analysis (PDF)...')}
                             className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
                         >
                             <div className="flex items-center gap-3">

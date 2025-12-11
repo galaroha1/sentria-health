@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Star, TrendingUp, AlertCircle, CheckCircle2, Building2 } from 'lucide-react';
+import { AddVendorModal } from '../components/vendors/AddVendorModal';
 
-const vendors = [
+const INITIAL_VENDORS = [
     {
         id: 1,
         name: 'McKesson Specialty Health',
@@ -44,6 +46,14 @@ const vendors = [
 ];
 
 export function Vendors() {
+    const [vendors, setVendors] = useState(INITIAL_VENDORS);
+    const [showAddModal, setShowAddModal] = useState(false);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleAddVendor = (newVendor: any) => {
+        setVendors([...vendors, newVendor]);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -51,7 +61,10 @@ export function Vendors() {
                     <h1 className="text-2xl font-bold text-slate-900">Vendor Management</h1>
                     <p className="text-sm text-slate-500">Monitor vendor performance and track rebates.</p>
                 </div>
-                <button className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                >
                     Add New Vendor
                 </button>
             </div>
@@ -64,7 +77,7 @@ export function Vendors() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-slate-500">Active Vendors</p>
-                            <p className="text-2xl font-bold text-slate-900">12</p>
+                            <p className="text-2xl font-bold text-slate-900">{vendors.length}</p>
                         </div>
                     </div>
                 </div>
@@ -138,6 +151,12 @@ export function Vendors() {
                     </table>
                 </div>
             </div>
+
+            <AddVendorModal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onAdd={handleAddVendor}
+            />
         </div>
     );
 }

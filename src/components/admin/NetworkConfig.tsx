@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { GeocodingService } from '../../services/geocoding.service';
 import { MapPin, Search, Plus, Check, AlertTriangle, Building2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { Site } from '../../types/location';
 
 export function NetworkConfig() {
@@ -31,7 +32,7 @@ export function NetworkConfig() {
             // Auto-update address to the official one found
             setAddress(result.displayName);
         } else {
-            alert('Address not found. Please try a more specific query.');
+            toast.error('Address not found. Please try a more specific query.');
         }
     };
 
