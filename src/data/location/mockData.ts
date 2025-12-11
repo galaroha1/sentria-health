@@ -484,10 +484,12 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
                     quantity = 200 + Math.floor(Math.random() * 300); // 200-500
                     status = 'overstocked';
                 } else {
-                    // NETWORK: Lean Inventory for others to maximize 'Transfer' opportunities
-                    // Reduced from 20 to 4 to ensure even 1-2 patients trigger a deficit
-                    quantity = Math.floor(Math.random() * 4); // 0-3 units
-                    status = quantity < 5 ? 'critical' : 'well_stocked';
+                    // NETWORK: "Healthy but Vulnerable"
+                    // Stock: 20-30 units. MinLevel: 10.
+                    // 0 Patients: Surplus (20 > 10). No Proposal.
+                    // 1 Patient (30 units): Demand(30) + Min(10) = 40. Deficit (-10). Proposal!
+                    quantity = 20 + Math.floor(Math.random() * 10); // 20-30 units
+                    status = 'well_stocked';
                 }
             } else {
                 // Formatting original random logic

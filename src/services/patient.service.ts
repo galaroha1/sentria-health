@@ -130,7 +130,7 @@ export class PatientService {
                 drugName: drug.name, // Now matches inventory exactly
                 ndc: drug.ndc,      // Now matches inventory exactly
                 status: 'scheduled',
-                dose: '1 unit', // Parsed as 1 by forecaster
+                dose: '30 units', // Increased to simulate checking out a monthly supply -> High Demand Impact
                 notes: 'Standard protocol'
             });
         }
