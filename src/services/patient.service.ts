@@ -58,6 +58,8 @@ export class PatientService {
             const diagnosis = diagnoses[Math.floor(Math.random() * diagnoses.length)];
             const type = types[Math.floor(Math.random() * types.length)];
 
+            const location = findLocation(diagnosis);
+
             patients.push({
                 id: `pat-${i}`,
                 mrn: `MRN-${10000 + i}`,
@@ -68,8 +70,8 @@ export class PatientService {
                 type,
                 attendingPhysician: 'Dr. Smith',
                 treatmentSchedule: this.generateSchedule(diagnosis),
-                assignedSiteId: findLocation(diagnosis)?.siteId,
-                assignedDepartmentId: findLocation(diagnosis)?.deptId
+                assignedSiteId: location?.siteId,
+                assignedDepartmentId: location?.deptId
             });
         }
         return patients;
