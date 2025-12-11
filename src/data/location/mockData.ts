@@ -423,62 +423,86 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
     let candidateDrugs = MASTER_CATALOG;
 
     if (deptName.includes('oncology') || deptName.includes('cancer')) {
-        // Oncology: Prioritize Infusions, Injections, Tablets commonly used
         candidateDrugs = MASTER_CATALOG.filter(d =>
             d.name.includes('INJECTION') || d.name.includes('TABLET') || d.name.includes('VIAL')
         );
-        // Bias: Take 70% from this filtered list, 30% random (supportive care)
     } else if (deptName.includes('emergency') || deptName.includes('trauma') || deptName.includes('icu')) {
-        // ER/ICU: Prioritize emergency meds
         candidateDrugs = MASTER_CATALOG.filter(d =>
             d.name.includes('INJECTION') || d.name.includes('SOLUTION') || d.name.includes('SODIUM')
         );
     } else if (deptName.includes('eye') || deptName.includes('ophthalm')) {
-        // Eye: Drops, Ointments
         candidateDrugs = MASTER_CATALOG.filter(d =>
             d.name.includes('OPHTHALMIC') || d.name.includes('SOLUTION') || d.name.includes('SUSPENSION')
         );
     }
 
-    // Pick 12-20 random drugs from the candidates (slightly more than before)
+    // Pick 12-20 random drugs
     const numDrugs = Math.floor(Math.random() * 8) + 12;
-    // Shuffle and slice
     const selectedDrugs = [...candidateDrugs].sort(() => 0.5 - Math.random()).slice(0, numDrugs);
+
+    // FORCE: Ensure Keytruda & Ticagrelor exist for AI Demo alignment
+    const demoDrugs = [
+        { name: 'Ticagrelor TABLET', ndc: '77771-522' },
+        { name: 'Keytruda 100mg Vial', ndc: '0006-3026-02' }
+    ];
+
+    // Only add if not already present (checking by NDC)
+    demoDrugs.forEach(demoDrug => {
+        if (!selectedDrugs.find(d => d.ndc === demoDrug.ndc)) {
+            selectedDrugs.push(demoDrug);
+        }
+    });
 
     return {
         siteId,
         departmentId,
         lastUpdated: new Date().toISOString(),
         drugs: selectedDrugs.map(d => {
-            // Randomize quantity to create different statuses
-            // FORCE SCARCITY FOR DEMO: Make stock levels very low so AI triggers proposals
-            const min = 0;
-            const max = 15;
-            const rand = Math.random();
+            const isDemoDrug = demoDrugs.some(demo => demo.ndc === d.ndc);
             let quantity;
             let status: 'well_stocked' | 'low' | 'critical' | 'overstocked';
 
-            if (rand < 0.3) { // 30% chance of CRITICAL (0-5 units)
-                quantity = Math.floor(Math.random() * 5);
-                status = 'critical';
-            } else if (rand < 0.6) { // 30% chance of LOW (5-10 units)
-                quantity = Math.floor(5 + Math.random() * 5);
-                status = 'low';
-            } else if (rand > 0.8 || siteId === 'site-12' || (siteId === 'site-1' && Math.random() > 0.5)) {
-                // 20% Surplus Chance + Guaranteed Surplus for 'site-12' (Warehouse) + 50% for Main Hospital
-                quantity = 150 + Math.floor(Math.random() * 200); // MASSIVE Surplus to fuel transfers
-                status = 'overstocked';
-            } else { // 20% chance of "ok" (10-20 units)
-                quantity = Math.floor(10 + Math.random() * 10);
-                status = 'well_stocked';
+            // FORCE IMBALANCE FOR AI DEMO:
+            // Site 1 (HUP) = Shortage
+            // Site 12 (Warehouse) = Surplus
+            if (isDemoDrug) {
+                if (siteId === 'site-1' || siteId === 'site-2') {
+                    // DEMAND SIDE: Critical Shortage
+                    quantity = Math.floor(Math.random() * 3); // 0-2 units
+                    status = 'critical';
+                } else if (siteId === 'site-12') {
+                    // SUPPLY SIDE: Massive Surplus
+                    quantity = 500;
+                    status = 'overstocked';
+                } else {
+                    // Random for others
+                    quantity = Math.floor(Math.random() * 20);
+                    status = 'well_stocked';
+                }
+            } else {
+                // Formatting original random logic
+                const rand = Math.random();
+                if (rand < 0.3) {
+                    quantity = Math.floor(Math.random() * 5);
+                    status = 'critical';
+                } else if (rand < 0.6) {
+                    quantity = Math.floor(5 + Math.random() * 5);
+                    status = 'low';
+                } else if (rand > 0.8 || siteId === 'site-12') {
+                    quantity = 150 + Math.floor(Math.random() * 200);
+                    status = 'overstocked';
+                } else {
+                    quantity = Math.floor(10 + Math.random() * 10);
+                    status = 'well_stocked';
+                }
             }
 
             return {
-                drugName: d.name, // Use generated name
+                drugName: d.name,
                 ndc: d.ndc,
                 quantity,
-                minLevel: min,
-                maxLevel: max,
+                minLevel: 10,
+                maxLevel: 100, // Fixed max for clarity
                 status,
                 expirationWarnings: Math.random() < 0.1 ? Math.floor(Math.random() * 3) + 1 : 0,
             };
