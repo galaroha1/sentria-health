@@ -155,12 +155,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     FirestoreService.set('sites', s.id, s);
                 });
             } else {
-                // Enforce Penn System Restriction:
-                // Only allow sites that exist in our authoritative initialSites list (by ID or logic)
-                // This cleans up any "Regional" sites leftover in the DB
-                const allowedIds = new Set(initialSites.map(s => s.id));
-                const validSites = data.filter(s => allowedIds.has(s.id));
-                setSites(validSites);
+                // Trust all sites in DB. 
+                // Previously we filtered restricted IDs, but that hides generated "Regional" sites
+                // which causes name resolution failures in Optimization Service.
+                setSites(data);
             }
         });
 
