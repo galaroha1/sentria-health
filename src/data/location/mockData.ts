@@ -25,10 +25,13 @@ const sites: Site[] = [
             }
         },
         departments: [
-            { id: 'dept-1-1', name: 'Main Pharmacy', type: 'pharmacy' },
-            { id: 'dept-1-2', name: 'Emergency Dept', type: 'clinical' },
-            { id: 'dept-1-3', name: 'ICU', type: 'clinical' },
-            { id: 'dept-1-4', name: 'Oncology', type: 'clinical' }
+            { id: 'dept-1-0', name: 'Main Pharmacy', type: 'pharmacy' },
+            { id: 'dept-1-1', name: 'Abramson Cancer Center', type: 'clinical' },
+            { id: 'dept-1-2', name: 'Division of Hematology and Oncology', type: 'clinical' },
+            { id: 'dept-1-3', name: 'Main Emergency Department', type: 'clinical' },
+            { id: 'dept-1-4', name: 'HUP - Cedar Avenue Emergency Department', type: 'clinical' },
+            { id: 'dept-1-5', name: 'Radiation Oncology', type: 'clinical' },
+            { id: 'dept-1-6', name: 'Neuroscience Center', type: 'clinical' }
         ],
         coordinates: { lat: 39.9500, lng: -75.1936 }, // University City
         address: '3400 Spruce St, Philadelphia, PA 19104',
@@ -60,9 +63,11 @@ const sites: Site[] = [
             }
         },
         departments: [
-            { id: 'dept-2-1', name: 'Inpatient Pharmacy', type: 'pharmacy' },
-            { id: 'dept-2-2', name: 'Trauma Center', type: 'clinical' },
-            { id: 'dept-2-3', name: 'Cardiology', type: 'clinical' }
+            { id: 'dept-2-0', name: 'Pharmacy Services', type: 'pharmacy' },
+            { id: 'dept-2-1', name: 'Emergency Department (Trauma Level I)', type: 'clinical' },
+            { id: 'dept-2-2', name: 'Scheie Eye Institute', type: 'clinical' },
+            { id: 'dept-2-3', name: 'Penn Orthopaedics', type: 'clinical' },
+            { id: 'dept-2-4', name: 'Philadelphia Heart Institute', type: 'clinical' }
         ],
         coordinates: { lat: 39.9550, lng: -75.1928 }, // University City
         address: '51 N 39th St, Philadelphia, PA 19104',
@@ -89,9 +94,11 @@ const sites: Site[] = [
             gpoProhibition: true
         },
         departments: [
-            { id: 'dept-3-1', name: 'Pharmacy', type: 'pharmacy' },
-            { id: 'dept-3-2', name: 'Maternity', type: 'clinical' },
-            { id: 'dept-3-3', name: 'Surgery', type: 'clinical' }
+            { id: 'dept-3-0', name: 'Pharmacy Services', type: 'pharmacy' },
+            { id: 'dept-3-1', name: 'Emergency Medicine', type: 'clinical' },
+            { id: 'dept-3-2', name: 'Joan Karnell Cancer Center', type: 'clinical' },
+            { id: 'dept-3-3', name: 'Center for Bloodless Medicine', type: 'clinical' },
+            { id: 'dept-3-4', name: 'Penn Neurological Institute', type: 'clinical' }
         ],
         coordinates: { lat: 39.9448, lng: -75.1563 }, // Center City
         address: '800 Spruce St, Philadelphia, PA 19107',
@@ -400,9 +407,43 @@ const MASTER_CATALOG = realDrugCatalog
 
 // Helper to generate random inventory for a specific department
 const generateInventory = (siteId: string, departmentId?: string): SiteInventory => {
-    // Pick 8-15 random drugs from the master catalog for each site/department
-    const numDrugs = Math.floor(Math.random() * 8) + 8;
-    const selectedDrugs = [...MASTER_CATALOG].sort(() => 0.5 - Math.random()).slice(0, numDrugs);
+    // Find department name for heuristics
+    let deptName = '';
+    if (departmentId) {
+        for (const s of sites) {
+            const d = s.departments?.find(dept => dept.id === departmentId);
+            if (d) {
+                deptName = d.name.toLowerCase();
+                break;
+            }
+        }
+    }
+
+    // Filter Catalog based on Department Function
+    let candidateDrugs = MASTER_CATALOG;
+
+    if (deptName.includes('oncology') || deptName.includes('cancer')) {
+        // Oncology: Prioritize Infusions, Injections, Tablets commonly used
+        candidateDrugs = MASTER_CATALOG.filter(d =>
+            d.name.includes('INJECTION') || d.name.includes('TABLET') || d.name.includes('VIAL')
+        );
+        // Bias: Take 70% from this filtered list, 30% random (supportive care)
+    } else if (deptName.includes('emergency') || deptName.includes('trauma') || deptName.includes('icu')) {
+        // ER/ICU: Prioritize emergency meds
+        candidateDrugs = MASTER_CATALOG.filter(d =>
+            d.name.includes('INJECTION') || d.name.includes('SOLUTION') || d.name.includes('SODIUM')
+        );
+    } else if (deptName.includes('eye') || deptName.includes('ophthalm')) {
+        // Eye: Drops, Ointments
+        candidateDrugs = MASTER_CATALOG.filter(d =>
+            d.name.includes('OPHTHALMIC') || d.name.includes('SOLUTION') || d.name.includes('SUSPENSION')
+        );
+    }
+
+    // Pick 12-20 random drugs from the candidates (slightly more than before)
+    const numDrugs = Math.floor(Math.random() * 8) + 12;
+    // Shuffle and slice
+    const selectedDrugs = [...candidateDrugs].sort(() => 0.5 - Math.random()).slice(0, numDrugs);
 
     return {
         siteId,
@@ -549,10 +590,21 @@ export const supplyLevels: SupplyLevel[] = [
         drugName: 'Keytruda (Pembrolizumab)',
         ndc: '0006-3026-02',
         distribution: allSites.map(site => {
-            const inv = siteInventories.find(i => i.siteId === site.id);
-            const drug = inv?.drugs.find(d => d.ndc === '0006-3026-02');
-            return drug ? { site, quantity: drug.quantity, status: drug.status } : null;
-        }).filter((item): item is { site: Site; quantity: number; status: "well_stocked" | "low" | "critical" | "overstocked" } => item !== null),
+            // Aggregate all department inventories for this site
+            const siteInvs = siteInventories.filter(i => i.siteId === site.id);
+            const totalQuantity = siteInvs.reduce((sum, inv) => {
+                const drug = inv.drugs.find(d => d.ndc === '0006-3026-02');
+                return sum + (drug ? drug.quantity : 0);
+            }, 0);
+
+            // Determine aggregate status
+            let status: 'well_stocked' | 'low' | 'critical' | 'overstocked' = 'well_stocked';
+            if (totalQuantity === 0) status = 'critical';
+            else if (totalQuantity < 20) status = 'low';
+            else if (totalQuantity > 100) status = 'overstocked';
+
+            return { site, quantity: totalQuantity, status };
+        }),
         totalNetwork: 0, // Calculated on frontend usually, but mock data here
         networkDemand: 500,
         status: 'balanced',
@@ -561,10 +613,20 @@ export const supplyLevels: SupplyLevel[] = [
         drugName: 'Remicade (Infliximab)',
         ndc: '57894-030-01',
         distribution: allSites.map(site => {
-            const inv = siteInventories.find(i => i.siteId === site.id);
-            const drug = inv?.drugs.find(d => d.ndc === '57894-030-01');
-            return drug ? { site, quantity: drug.quantity, status: drug.status } : null;
-        }).filter((item): item is { site: Site; quantity: number; status: "well_stocked" | "low" | "critical" | "overstocked" } => item !== null),
+            const siteInvs = siteInventories.filter(i => i.siteId === site.id);
+            const totalQuantity = siteInvs.reduce((sum, inv) => {
+                const drug = inv.drugs.find(d => d.ndc === '57894-030-01');
+                return sum + (drug ? drug.quantity : 0);
+            }, 0);
+
+            // Determine aggregate status
+            let status: 'well_stocked' | 'low' | 'critical' | 'overstocked' = 'well_stocked';
+            if (totalQuantity === 0) status = 'critical';
+            else if (totalQuantity < 20) status = 'low';
+            else if (totalQuantity > 100) status = 'overstocked';
+
+            return { site, quantity: totalQuantity, status };
+        }),
         totalNetwork: 0,
         networkDemand: 300,
         status: 'shortage',
