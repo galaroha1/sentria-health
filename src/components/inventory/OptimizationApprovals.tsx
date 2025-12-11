@@ -18,9 +18,17 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
         // Filter
         if (filterType !== 'all') {
             if (filterType === 'inter_dept') {
-                result = result.filter(p => p.type === 'transfer' && (p.vendorName || '').includes('Inter-Dept'));
+                // Inter-Dept: Type is 'transfer' AND fulfillmentNode is 'Internal' (or vendorName has Inter-Dept)
+                result = result.filter(p => p.type === 'transfer' && (
+                    p.fulfillmentNode === 'Internal' ||
+                    (p.vendorName || '').includes('Inter-Dept')
+                ));
             } else if (filterType === 'network') {
-                result = result.filter(p => p.type === 'transfer' && (p.vendorName || '').includes('External'));
+                // Network: Type is 'transfer' AND (fulfillmentNode is 'External' OR vendorName doesn't have Inter-Dept)
+                result = result.filter(p => p.type === 'transfer' && (
+                    p.fulfillmentNode === 'External' ||
+                    !(p.vendorName || '').includes('Inter-Dept')
+                ));
             } else {
                 // Procurement
                 result = result.filter(p => p.type === 'procurement');
