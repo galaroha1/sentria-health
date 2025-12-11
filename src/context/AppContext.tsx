@@ -145,6 +145,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to Firestore collections
     useEffect(() => {
+        // FORCE RE-SEED MOCK DATA (TEMPORARY FIX FOR LOGIC VERIFICATION)
+        // This ensures the new "Starved Inventory" logic in mockData.ts overwrites the stale Firestore data
+        const reseedInventory = async () => {
+            console.warn("!!! FORCING INVENTORY RESET FROM MOCK DATA !!!");
+            const { siteInventories } = await import('../data/location/mockData');
+            for (const inv of siteInventories) {
+                await FirestoreService.set('inventoryItems', inv.siteId, inv);
+            }
+            console.log("!!! INVENTORY RESET COMPLETE !!!");
+        };
+        reseedInventory();
+
         // 1. SITES Subscription
         // 1. SITES Subscription
         const unsubscribeSites = FirestoreService.subscribe<Site>('sites', (data) => {
