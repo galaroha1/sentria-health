@@ -18,17 +18,11 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
         // Filter
         if (filterType !== 'all') {
             if (filterType === 'inter_dept') {
-                // Inter-Dept: Type is 'transfer' AND fulfillmentNode is 'Internal' (or vendorName has Inter-Dept)
-                result = result.filter(p => p.type === 'transfer' && (
-                    p.fulfillmentNode === 'Internal' ||
-                    (p.vendorName || '').includes('Inter-Dept')
-                ));
+                // Inter-Dept
+                result = result.filter(p => p.transferSubType === 'inter_dept');
             } else if (filterType === 'network') {
-                // Network: Type is 'transfer' AND (fulfillmentNode is 'External' OR vendorName doesn't have Inter-Dept)
-                result = result.filter(p => p.type === 'transfer' && (
-                    p.fulfillmentNode === 'External' ||
-                    !(p.vendorName || '').includes('Inter-Dept')
-                ));
+                // Network
+                result = result.filter(p => p.transferSubType === 'network_transfer');
             } else {
                 // Procurement
                 result = result.filter(p => p.type === 'procurement');
@@ -121,10 +115,10 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.transferSubType === 'inter_dept'
-                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Internal
-                                                : proposal.transferSubType === 'network_transfer'
-                                                    ? 'bg-blue-50 text-blue-700 ring-blue-600/20' // Blue for Network
-                                                    : 'bg-purple-50 text-purple-700 ring-purple-600/20' // Purple for Purchase
+                                            ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Internal
+                                            : proposal.transferSubType === 'network_transfer'
+                                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20' // Blue for Network
+                                                : 'bg-purple-50 text-purple-700 ring-purple-600/20' // Purple for Purchase
                                             }`}>
                                             {proposal.transferSubType === 'inter_dept'
                                                 ? 'Inter-Dept Transfer'
