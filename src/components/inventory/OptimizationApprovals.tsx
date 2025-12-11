@@ -79,7 +79,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                     : 'text-slate-600 hover:bg-slate-50'
                                     } capitalize`}
                             >
-                                {type.replace('_', '-')}
+                                {type === 'network' ? 'Penn Network' : type.replace('_', '-')}
                             </button>
                         ))}
                     </div>

@@ -243,7 +243,7 @@ export class OptimizationService {
                         ? `${source.inv.departmentId || 'Main Pharmacy'} (Inter-Dept)`
                         : (() => {
                             const sourceSite = sites.find(s => s.id === source.inv.siteId);
-                            return sourceSite ? sourceSite.name : `Network Site (${source.inv.siteId})`;
+                            return sourceSite ? sourceSite.name : `Penn Network Site (${source.inv.siteId})`;
                         })(),
                     targetSiteId: deficit.inv.siteId,
                     quantity: transferQty,
@@ -384,7 +384,7 @@ export class OptimizationService {
             // Pass through metrics if available
             metrics: item.metrics,
             reason: item.type === 'transfer'
-                ? `Internal Transfer: Surplus available in ${item.supplierName}`
+                ? `Penn Network Transfer: Surplus available in ${item.supplierName}`
                 : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`,
             score: item.analysis.supplierScore,
             fulfillmentNode: item.type === 'transfer' ? 'Internal' : 'External',
@@ -392,7 +392,7 @@ export class OptimizationService {
                 passed: true,
                 details: [
                     item.type === 'transfer'
-                        ? (item.supplierName.includes('External') ? 'Network Balance' : 'Internal Allocation')
+                        ? (item.supplierName.includes('(Inter-Dept)') ? 'Internal Allocation' : 'Penn Network Balance')
                         : 'Vendor Purchase'
                 ]
             }

@@ -376,10 +376,9 @@ const sites: Site[] = [
     },
 ];
 
-import regionalSites from '../regional-sites.json';
 
 // Export only the Penn sites
-const allSites: Site[] = [...sites, ...regionalSites as unknown as Site[]];
+const allSites: Site[] = [...sites];
 
 export { allSites as sites };
 
