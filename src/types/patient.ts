@@ -18,4 +18,6 @@ export interface Patient {
     type: 'pediatric' | 'adult' | 'geriatric' | 'oncology';
     attendingPhysician: string;
     treatmentSchedule: Treatment[];
+    assignedSiteId?: string; // Links patient to a specific facility
+    assignedDepartmentId?: string; // Links patient to a specific unit (e.g. Oncology vs ER)
 }

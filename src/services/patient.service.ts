@@ -1,10 +1,58 @@
 import type { Patient, Treatment } from '../types/patient';
+import { sites as ALL_SITES } from '../data/location/mockData';
 
 export class PatientService {
     static generateMockPatients(count: number = 20): Patient[] {
         const patients: Patient[] = [];
-        const diagnoses = ['Acute Lymphoblastic Leukemia', 'Breast Cancer - Stage II', 'Diabetes Type 1', 'Crohn\'s Disease'];
+        const diagnoses = ['Acute Lymphoblastic Leukemia', 'Breast Cancer - Stage II', 'Diabetes Type 1', 'Crohn\'s Disease', 'Glaucoma', 'Traumatic Injury'];
         const types: Patient['type'][] = ['pediatric', 'adult', 'geriatric', 'oncology'];
+
+        // Helper to find best matching department
+        // Helper to find best matching department
+        const findLocation = (diagnosis: string): { siteId: string, deptId: string } | null => {
+            // Keyword mapping
+            const keywords: Record<string, string[]> = {
+                'Cancer': ['oncology', 'cancer'],
+                'Leukemia': ['oncology', 'hematology'],
+                'Glaucoma': ['eye', 'ophthalmology'],
+                'Traumatic': ['trauma', 'emergency'],
+                'Diabetes': ['primary', 'family', 'internal'],
+                'Crohn': ['gastro', 'internal', 'pharmacy']
+            };
+
+            // 1. Identify keywords for this diagnosis
+            let searchTerms: string[] = ['general'];
+            for (const key of Object.keys(keywords)) {
+                if (diagnosis.includes(key)) {
+                    searchTerms = keywords[key];
+                    break;
+                }
+            }
+
+            // 2. Find matching department across all sites
+            const candidates: { siteId: string, deptId: string }[] = [];
+
+            ALL_SITES.forEach(site => {
+                site.departments?.forEach(dept => {
+                    const dName = dept.name.toLowerCase();
+                    if (searchTerms.some(term => dName.includes(term))) {
+                        candidates.push({ siteId: site.id, deptId: dept.id });
+                    }
+                });
+            });
+
+            // 3. Return random candidate or fallback
+            if (candidates.length > 0) {
+                return candidates[Math.floor(Math.random() * candidates.length)];
+            }
+
+            // Fallback
+            const randomSite = ALL_SITES[Math.floor(Math.random() * ALL_SITES.length)];
+            return {
+                siteId: randomSite.id,
+                deptId: randomSite.departments?.[0]?.id || 'unknown'
+            };
+        };
 
         for (let i = 0; i < count; i++) {
             const diagnosis = diagnoses[Math.floor(Math.random() * diagnoses.length)];
@@ -19,7 +67,9 @@ export class PatientService {
                 diagnosis,
                 type,
                 attendingPhysician: 'Dr. Smith',
-                treatmentSchedule: this.generateSchedule(diagnosis)
+                treatmentSchedule: this.generateSchedule(diagnosis),
+                assignedSiteId: findLocation(diagnosis)?.siteId,
+                assignedDepartmentId: findLocation(diagnosis)?.deptId
             });
         }
         return patients;
