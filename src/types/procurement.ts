@@ -15,6 +15,7 @@ export interface ProcurementProposal {
     ndc: string;
     quantity: number;
     channel?: DrugChannel;
+    transferSubType?: 'inter_dept' | 'network_transfer' | 'purchase'; // New Field for Distinction
     costAnalysis: {
         distanceKm: number;
         transportCost: number;

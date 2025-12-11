@@ -190,7 +190,15 @@ export class OptimizationService {
             for (const source of internalSources) {
                 if (remainingDeficit <= 0) break;
 
-                const isSameSite = source.inv.siteId === deficit.inv.siteId;
+                // STRICT VALIDATION: Ensure Inter-Dept is physically at the logic same address
+                const sourceSiteObj = sites.find(s => s.id === source.inv.siteId);
+                const targetSiteObj = sites.find(s => s.id === deficit.inv.siteId);
+
+                const isSameSiteId = source.inv.siteId === deficit.inv.siteId;
+                const isSameAddress = sourceSiteObj?.address === targetSiteObj?.address;
+
+                // Only treat as "Same Site" if BOTH ID and Address match (Pedantic check)
+                const isSameSite = isSameSiteId && isSameAddress;
 
                 // --- NEW ROUTING LOGIC ---
                 let C_trans = 0;
@@ -437,6 +445,9 @@ export class OptimizationService {
                     : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`),
             score: item.analysis.supplierScore,
             fulfillmentNode: item.type === 'transfer' ? 'Internal' : 'External',
+            transferSubType: item.type === 'transfer'
+                ? (item.supplierName.includes('(Inter-Dept)') ? 'inter_dept' : 'network_transfer')
+                : 'purchase',
             regulatoryJustification: {
                 passed: true,
                 details: [

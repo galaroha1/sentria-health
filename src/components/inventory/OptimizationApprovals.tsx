@@ -120,15 +120,17 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                 {/* Main Info */}
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.type === 'transfer'
-                                            ? (proposal.vendorName?.includes('Inter-Dept')
-                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Dept Transfer
-                                                : 'bg-blue-50 text-blue-700 ring-blue-600/20') // Blue for Network
-                                            : 'bg-purple-50 text-purple-700 ring-purple-600/20'
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.transferSubType === 'inter_dept'
+                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Internal
+                                                : proposal.transferSubType === 'network_transfer'
+                                                    ? 'bg-blue-50 text-blue-700 ring-blue-600/20' // Blue for Network
+                                                    : 'bg-purple-50 text-purple-700 ring-purple-600/20' // Purple for Purchase
                                             }`}>
-                                            {proposal.type === 'transfer'
-                                                ? (proposal.vendorName?.includes('Inter-Dept') ? 'Inter-Dept Transfer' : 'Network Transfer')
-                                                : 'Vendor Purchase'
+                                            {proposal.transferSubType === 'inter_dept'
+                                                ? 'Inter-Dept Transfer'
+                                                : proposal.transferSubType === 'network_transfer'
+                                                    ? 'Penn Network Transfer'
+                                                    : 'Vendor Purchase'
                                             }
                                         </span>
                                         <h4 className="font-bold text-slate-900">{proposal.drugName}</h4>
@@ -237,6 +239,6 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                     ))
                 )}
             </div>
-        </div>
+        </div >
     );
 }
