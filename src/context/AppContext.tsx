@@ -155,10 +155,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     FirestoreService.set('sites', s.id, s);
                 });
             } else {
-                // Trust all sites in DB. 
-                // Previously we filtered restricted IDs, but that hides generated "Regional" sites
-                // which causes name resolution failures in Optimization Service.
-                setSites(data);
+                // STRICTLY FILTER: Only allow known Penn System sites (Purge legacy/zombie data)
+                // This ensures that even if Firestore has old "Regional" sites, they are ignored.
+                const validIds = new Set(initialSites.map(s => s.id));
+                const cleanSites = data.filter(s => validIds.has(s.id));
+
+                if (cleanSites.length !== data.length) {
+                    console.log(`Purged ${data.length - cleanSites.length} non-Penn sites from state.`);
+                }
+                setSites(cleanSites);
             }
         });
 

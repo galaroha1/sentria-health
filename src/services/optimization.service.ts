@@ -231,10 +231,33 @@ export class OptimizationService {
                     }
                 }
 
-                // Compare: Is Transfer Cost < Purchase Cost? (Usually Yes)
+                // Compare: Is Transfer Cost < Purchase Cost?
                 const transferQty = Math.min(remainingDeficit, source.amount);
 
-                // Action: y_sd (Transfer)
+                // BENCHMARK: Get Purchase Cost for comparison
+                const suppliers = this.getSupplierCatalog(item.ndc);
+                const bestVendor = suppliers[0]; // Simplified: Compare against primary vendor
+                if (bestVendor) {
+                    const vendorPrice = bestVendor.contractTerms.costFunctions[0].unitPrice;
+                    const purchaseCost = (vendorPrice * transferQty) + 15; // + Shipping estimate
+                    const purchaseTime = bestVendor.leadTimeDays * 24 * 60; // Minutes
+
+                    // Total Score = Cost + (Time * 1.0)
+                    const transferScore = C_trans + (routeMetrics.durationMinutes || 0);
+                    const purchaseScore = purchaseCost + (purchaseTime * 0.1); // Time less weighted for buying (days vs hours)
+
+                    // LOGIC: If Buying is Significantly Cheaper (and not Emergency), Skip Transfer
+                    // OR if Transfer is crazy expensive/slow
+                    const isUrgent = (item as any).criticality === 'high';
+
+                    if (!isUrgent && purchaseScore < transferScore) {
+                        // PREFER BUYING
+                        // Skip this transfer source, allowing deficit to remain for the Purchase block below
+                        continue;
+                    }
+                }
+
+                // Action: y_sd (Transfer) -- If we get here, Transfer Won
                 orderItems.push({
                     sku: item.ndc,
                     drugName: item.drugName,
@@ -249,9 +272,6 @@ export class OptimizationService {
                     quantity: transferQty,
                     type: 'transfer',
                     metrics: routeMetrics, // Pass metrics to UI!
-                    // We can use the text "Inter-Departmental" in proposal to filter easily on UI
-                    // or add a dedicated field if we changed the type definition.
-                    // For now, we piggyback on 'supplierName' or 'channel' for filtering.
                     analysis: {
                         forecastMean: 0,
                         safetyStock: 0,
