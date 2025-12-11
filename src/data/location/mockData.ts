@@ -481,12 +481,13 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
                     status = 'critical';
                 } else if (siteId === 'site-12') {
                     // SUPPLY SIDE: Massive Surplus
-                    quantity = 500;
+                    quantity = 200 + Math.floor(Math.random() * 300); // 200-500
                     status = 'overstocked';
                 } else {
-                    // Random for others
-                    quantity = Math.floor(Math.random() * 20);
-                    status = 'well_stocked';
+                    // NETWORK: Lean Inventory for others to maximize 'Transfer' opportunities
+                    // Reduced from 20 to 4 to ensure even 1-2 patients trigger a deficit
+                    quantity = Math.floor(Math.random() * 4); // 0-3 units
+                    status = quantity < 5 ? 'critical' : 'well_stocked';
                 }
             } else {
                 // Formatting original random logic
