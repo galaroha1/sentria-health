@@ -39,12 +39,12 @@ export function Dashboard() {
                                 headers.join(','),
                                 ...requests.map(r => [
                                     r.id,
-                                    `"${r.item.name}"`,
-                                    `"${r.sourceSite.name}"`,
-                                    `"${r.destSite.name}"`,
+                                    `"${r.drug.name}"`,
+                                    `"${r.requestedBySite.name}"`,
+                                    `"${r.targetSite.name}"`,
                                     r.status,
-                                    r.priority,
-                                    r.createdAt.toISOString()
+                                    r.urgency,
+                                    r.requestedAt
                                 ].join(','))
                             ].join('\n');
 

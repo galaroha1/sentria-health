@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Building2, X, Plus, CheckCircle2 } from 'lucide-react';
+import { X, Building2, Plus } from 'lucide-react';
 
 interface AddVendorModalProps {
     isOpen: boolean;
