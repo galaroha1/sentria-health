@@ -181,7 +181,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     FirestoreService.set('inventoryItems', inv.siteId, inv);
                 });
             } else {
-                setInventories(data);
+                // STRICTLY FILTER: Only trust inventories for valid sites
+                const validIds = new Set(initialSites.map(s => s.id));
+                const cleanInventories = data.filter(inv => validIds.has(inv.siteId));
+
+                if (cleanInventories.length !== data.length) {
+                    console.log(`Purged ${data.length - cleanInventories.length} orphaned inventories.`);
+                }
+                setInventories(cleanInventories);
             }
             setIsLoading(false); // Data loaded
         });

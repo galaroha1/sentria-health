@@ -115,7 +115,8 @@ export interface OrderPlanItem {
     metrics?: {
         distanceKm: number;
         durationMinutes: number;
-        trafficLevel: 'low' | 'moderate' | 'heavy' | 'unknown';
-        source: 'google' | 'osrm' | 'fallback';
+        trafficLevel: 'low' | 'moderate' | 'heavy';
+        source: 'google' | 'fallback';
     };
+    cause?: 'safety_stock' | 'demand'; // Reason for order
 }

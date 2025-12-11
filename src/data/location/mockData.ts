@@ -483,17 +483,23 @@ const generateInventory = (siteId: string, departmentId?: string): SiteInventory
             } else {
                 // Formatting original random logic
                 const rand = Math.random();
-                if (rand < 0.3) {
-                    quantity = Math.floor(Math.random() * 5);
-                    status = 'critical';
-                } else if (rand < 0.6) {
-                    quantity = Math.floor(5 + Math.random() * 5);
-                    status = 'low';
-                } else if (rand > 0.8 || siteId === 'site-12') {
+
+                // SKW TOWARDS SCARCITY (Depleted Starting Stores)
+                if (siteId === 'site-12') {
+                    // Warehouse still needs stuff to sell/transfer
                     quantity = 150 + Math.floor(Math.random() * 200);
                     status = 'overstocked';
+                } else if (rand < 0.6) {
+                    // 60% chance of Critical/Low (Depleted)
+                    quantity = Math.floor(Math.random() * 4); // 0-3 units (Very Low)
+                    status = 'critical';
+                } else if (rand < 0.9) {
+                    // 30% chance of Low
+                    quantity = Math.floor(4 + Math.random() * 6); // 4-9 units
+                    status = 'low';
                 } else {
-                    quantity = Math.floor(10 + Math.random() * 10);
+                    // Only 10% well stocked
+                    quantity = Math.floor(10 + Math.random() * 5);
                     status = 'well_stocked';
                 }
             }

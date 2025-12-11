@@ -131,19 +131,14 @@ export class OptimizationService {
                     console.log(`[Optimization] Demand Detected for ${item.drugName} at ${inv.siteId}: Mean=${forecast.mean}, Var=${forecast.variance.toFixed(2)}`);
                 }
 
-                // B. Safety Stock
-                const supplierInfo = this.getSupplierCatalog(item.ndc)[0];
-                const safetyStock = ForecastingService.calculateSafetyStock(
-                    forecast,
-                    supplierInfo.leadTimeDays,
-                    supplierInfo.leadTimeVariance,
-                    params.serviceLevelTarget
-                );
+                // B. Safety Stock (Internal Calculation, not used for display yet)
+                // const supplierInfo = this.getSupplierCatalog(item.ndc)[0];
+                // const safetyStock = ... (Removed to fix lint)
+
+                // C. Net Requirement = (Demand + SS) - Stock
 
                 // C. Net Requirement = (Demand + SS) - Stock
                 const netPosition = (item.quantity) - (forecast.expectedDemand + item.minLevel);
-
-                console.log(`[Optimization] Item: ${item.drugName} | Stock: ${item.quantity} | Forecast: ${forecast.mean} | SS: ${safetyStock} | Net: ${netPosition}`);
 
                 if (netPosition < 0) {
                     // DEFICIT
@@ -269,6 +264,13 @@ export class OptimizationService {
                 }
 
                 // Action: y_sd (Transfer) -- If we get here, Transfer Won
+                const forecast = ForecastingService.generateProbabilisticForecast(
+                    item.ndc,
+                    deficit.inv.siteId, // Use deficit site context
+                    patients.filter(p => p.assignedDepartmentId === deficit.inv.departmentId)
+                );
+                const isSafetyStockDriven = (item.quantity >= forecast.expectedDemand) && (deficit.amount > 0);
+
                 orderItems.push({
                     sku: item.ndc,
                     drugName: item.drugName,
@@ -277,7 +279,8 @@ export class OptimizationService {
                         ? `${source.inv.departmentId || 'Main Pharmacy'} (Inter-Dept)`
                         : (() => {
                             const sourceSite = sites.find(s => s.id === source.inv.siteId);
-                            return sourceSite ? sourceSite.name : `Penn Network Site (${source.inv.siteId})`;
+                            const deptSuffix = source.inv.departmentId ? ` (${source.inv.departmentId})` : '';
+                            return sourceSite ? `${sourceSite.name}${deptSuffix}` : `Penn Network Site (${source.inv.siteId})`;
                         })(),
                     targetSiteId: deficit.inv.siteId,
                     quantity: transferQty,
@@ -296,7 +299,9 @@ export class OptimizationService {
                         },
                         supplierScore: isSameSite ? 99 : 90, // Higher score for closer stock
                         alternativeSavings: 0
-                    }
+                    },
+                    // Add Custom Field for Reason Logic
+                    cause: isSafetyStockDriven ? 'safety_stock' : 'demand'
                 });
 
                 remainingDeficit -= transferQty;
@@ -339,6 +344,13 @@ export class OptimizationService {
                 }
 
                 if (bestOption) {
+                    const forecast = ForecastingService.generateProbabilisticForecast(
+                        item.ndc,
+                        deficit.inv.siteId,
+                        patients.filter(p => p.assignedDepartmentId === deficit.inv.departmentId)
+                    );
+                    const isSafetyStockDriven = (item.quantity >= forecast.expectedDemand) && (deficit.amount > 0);
+
                     orderItems.push({
                         sku: item.ndc,
                         drugName: item.drugName,
@@ -347,6 +359,7 @@ export class OptimizationService {
                         targetSiteId: deficit.inv.siteId,
                         quantity: Math.max(remainingDeficit, bestOption.supplier.contractTerms.minOrderQty),
                         type: 'contract',
+                        cause: isSafetyStockDriven ? 'safety_stock' : 'demand',
                         analysis: {
                             forecastMean: remainingDeficit,
                             safetyStock: 0,
@@ -398,7 +411,7 @@ export class OptimizationService {
             id: `opt-${Math.random()}`,
             type: item.type === 'transfer' ? 'transfer' : 'procurement',
             targetSiteId: item.targetSiteId,
-            targetSiteName: (sites.find(s => s.id === item.targetSiteId) || {}).name || item.targetSiteId,
+            targetSiteName: (sites.find(s => s.id === item.targetSiteId) || {}).name || `Penn Network Site (${item.targetSiteId})`,
             sourceSiteId: item.supplierId, // For transfers, this is Site ID
             sourceSiteName: item.supplierName,
             vendorName: item.supplierName, // Unified field
@@ -414,9 +427,14 @@ export class OptimizationService {
             },
             // Pass through metrics if available
             metrics: item.metrics,
+            // Logic for Reason text
             reason: item.type === 'transfer'
-                ? `Penn Network Transfer: Surplus available in ${item.supplierName}`
-                : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`,
+                ? ((item as any).cause === 'safety_stock'
+                    ? `Safety Stock Replenishment: Restoring min level. Surplus in ${item.supplierName}`
+                    : `Penn Network Transfer: Surplus available in ${item.supplierName}`)
+                : ((item as any).cause === 'safety_stock'
+                    ? `Safety Stock Replenishment: Inventory below minimum level.`
+                    : `AI Optimization: Demand Forecast based on ${patients.length} scheduled patients.`),
             score: item.analysis.supplierScore,
             fulfillmentNode: item.type === 'transfer' ? 'Internal' : 'External',
             regulatoryJustification: {
