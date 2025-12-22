@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { TrendingUp, AlertCircle, Package } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useApp } from '../../context/AppContext';
+import type { Treatment } from '../../types/patient';
 
 export function PredictiveProcurement() {
     const { patients, inventories } = useApp();
@@ -50,7 +51,7 @@ export function PredictiveProcurement() {
 
             // Sum demand from ALL patients for Keytruda in this week
             patients.forEach(p => {
-                p.treatmentSchedule.forEach(tx => {
+                p.treatmentSchedule.forEach((tx: Treatment) => {
                     if (tx.ndc === TRACKED_DRUGS[0].ndc && tx.status === 'scheduled') {
                         const txDate = new Date(tx.date);
                         if (txDate >= week.start && txDate < week.end) {
@@ -73,7 +74,7 @@ export function PredictiveProcurement() {
     }, [patients, currentStock]);
 
     // 3. Derived Metrics
-    const totalProjectedDemand = chartData.reduce((sum, w) => sum + w.demand, 0);
+    // const totalProjectedDemand = chartData.reduce((sum, w) => sum + w.demand, 0); // Removed unused var
     const weeksUntilStockout = chartData.findIndex(w => w.inventory === 0);
     const stockoutRiskWarning = weeksUntilStockout !== -1
         ? `Stockout projected in Week ${weeksUntilStockout + 1}`
@@ -111,8 +112,8 @@ export function PredictiveProcurement() {
                     // Calculate specific demand for this drug for the card
                     const drugDemand = patients.reduce((total, p) => {
                         return total + p.treatmentSchedule
-                            .filter(tx => tx.ndc === drug.ndc && tx.status === 'scheduled')
-                            .reduce((sum, tx) => sum + (parseInt(tx.dose) || 1), 0);
+                            .filter((tx: Treatment) => tx.ndc === drug.ndc && tx.status === 'scheduled')
+                            .reduce((sum: number, tx: Treatment) => sum + (parseInt(tx.dose) || 1), 0);
                     }, 0);
 
                     const currentLevel = currentStock[drug.ndc] || 0;

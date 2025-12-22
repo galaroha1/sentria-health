@@ -122,7 +122,7 @@ export function DecisionsTab() {
             }
 
             // Generate Results
-            const initialProposals = await OptimizationService.generateProposals(sites, inventories, patients, requests);
+            const initialProposals = await OptimizationService.generateProposals(sites, inventories, patients);
 
             setExecutionStep('compliance');
             await addLog('> RUNNING_COMPLIANCE_CHECKS...');

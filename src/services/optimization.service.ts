@@ -21,7 +21,7 @@ export class OptimizationService {
      * Helper: Infer Clinical Attributes from Drug Metadata
      * (Simulating a Clinical Database Lookup)
      */
-    private static inferAttributes(drugName: string, ndc: string): { isColdChain: boolean, schedule: 'II' | 'III' | 'IV' | 'V' | null } {
+    public static inferAttributes(drugName: string, _ndc?: string): { isColdChain: boolean, schedule: 'II' | 'III' | 'IV' | 'V' | null } {
         const n = drugName.toLowerCase();
         let isColdChain = false;
         let schedule: 'II' | 'III' | 'IV' | 'V' | null = null;

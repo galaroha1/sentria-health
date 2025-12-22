@@ -110,7 +110,12 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
                                             if (newDestId) {
                                                 const target = allSites.find(s => s.id === newDestId);
                                                 if (target) {
-                                                    const result = OptimizationService.validateTransfer(sourceSite, target);
+                                                    // Infer attrs or use null for generic site check (Act 145/DSCSA only) if no drug selected
+                                                    const attrs = selectedDrugInfo
+                                                        ? OptimizationService.inferAttributes(selectedDrugInfo.drugName, selectedDrugInfo.ndc)
+                                                        : { schedule: null, isColdChain: false };
+
+                                                    const result = OptimizationService.validateTransfer(sourceSite, target, attrs);
                                                     if (!result.valid) {
                                                         setValidationError(result.reason || 'Invalid transfer');
                                                     } else {
@@ -136,9 +141,13 @@ export function NetworkRequestForm({ sourceSite, destinationSite, inventories, o
                                         onClick={() => {
                                             // Simple logic: find closest compliant site
                                             // For now, just pick the first compliant one that isn't source
+                                            const attrs = selectedDrugInfo
+                                                ? OptimizationService.inferAttributes(selectedDrugInfo.drugName, selectedDrugInfo.ndc)
+                                                : { schedule: null, isColdChain: false };
+
                                             const compliantSite = allSites.find(s =>
                                                 s.id !== sourceSite.id &&
-                                                OptimizationService.validateTransfer(sourceSite, s).valid
+                                                OptimizationService.validateTransfer(sourceSite, s, attrs).valid
                                             );
                                             if (compliantSite) {
                                                 setDestSite(compliantSite.id);

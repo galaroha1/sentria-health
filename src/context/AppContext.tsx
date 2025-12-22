@@ -240,7 +240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Run the optimization algorithm to find solutions for low stock
         const runOptimization = async () => {
-            const proposals = await OptimizationService.generateProposals(sites, inventories, patients, requests);
+            const proposals = await OptimizationService.generateProposals(sites, inventories, patients);
             const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
 
             // 2. Calculate Realized Savings (Completed/Approved Transfers)
