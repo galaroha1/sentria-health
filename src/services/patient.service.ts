@@ -92,7 +92,8 @@ export class PatientService {
                 { name: 'Solifenacin succinate TABLET, FILM COATED', ndc: '0591-3795' } // Real Item 2
             ],
             cancer: [
-                // Borrowing "OXYCODONE" for pain mgmt in cancer as it exists in top 100
+                { name: 'Keytruda (Pembrolizumab)', ndc: '0006-3026-02' },
+                { name: 'Opdivo (Nivolumab)', ndc: '0003-3772-11' },
                 { name: 'OXYCODONE AND ACETAMINOPHEN TABLET', ndc: '76420-323' },
                 { name: 'Fluconazole TABLET', ndc: '82804-030' }
             ],
