@@ -53,17 +53,20 @@ export function Login() {
     // Watch for auth state changes to handle errors during login
     // If we are locally loading (waiting for login), but global auth finishes loading and we are NOT authenticated,
     // it means the login succeeded but the profile load failed (e.g. Firestore permissions).
-    useEffect(() => {
-        if (isLoading && !useAuthLoading && !isAuthenticated) {
-            setError('Login successful, but failed to load user profile. Please check your Firestore Security Rules or network connection.');
-            setIsLoading(false);
-        }
-    }, [useAuthLoading, isAuthenticated, isLoading]);
+    // useEffect(() => {
+    //     if (isLoading && !useAuthLoading && !isAuthenticated) {
+    //         setError('Login successful, but failed to load user profile. Please check your Firestore Security Rules or network connection.');
+    //         setIsLoading(false);
+    //     }
+    // }, [useAuthLoading, isAuthenticated, isLoading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
+
+        // Add 3 second buffer as requested
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         let result;
         if (isLogin) {
@@ -91,6 +94,9 @@ export function Login() {
         const creds = DEMO_CREDENTIALS[role];
         setIsLoading(true);
         setError('');
+
+        // Add 3 second buffer as requested
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         // Try login first
         let result = await login({ email: creds.email, password: creds.password });
