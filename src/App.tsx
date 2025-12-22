@@ -26,7 +26,7 @@ import { CommandCenter } from './components/simulation/CommandCenter';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider } from './context/AppContext';
 import { UserProvider } from './context/UserContext';
 import { SimulationProvider } from './context/SimulationContext';
 
@@ -35,7 +35,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { CommandPalette } from './components/common/CommandPalette';
 import { MobileNav } from './components/layout/MobileNav';
 import { Header } from './components/layout/Header';
-import { FullScreenLoader } from './components/layout/FullScreenLoader';
+// import { FullScreenLoader } from './components/layout/FullScreenLoader';
 import { PageTransition } from './components/layout/PageTransition';
 import { useState } from 'react';
 
@@ -50,13 +50,9 @@ function DashboardLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-8 pb-24 md:pb-8 overflow-y-auto">
           <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="*" element={
-                <PageTransition>
-                  <Outlet />
-                </PageTransition>
-              } />
-            </Routes>
+            <PageTransition key={location.pathname}>
+              <Outlet />
+            </PageTransition>
           </AnimatePresence>
         </main>
       </div>
@@ -66,12 +62,13 @@ function DashboardLayout() {
 }
 
 function AppContent() {
-  const { isLoading } = useApp();
+  // const { isLoading } = useApp();
 
   // Show Global Loader during initial sync
-  if (isLoading) {
-    return <FullScreenLoader />;
-  }
+  // Show Global Loader during initial sync
+  // if (isLoading) {
+  //   return <FullScreenLoader />;
+  // }
 
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
