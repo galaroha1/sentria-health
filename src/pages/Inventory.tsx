@@ -19,8 +19,8 @@ type TabType = 'operations' | 'stock' | 'admin' | 'compliance' | 'optimization';
 export function Inventory() {
     const { inventories, sites, addRequest, addNotification } = useApp();
     const { selectedPatient, setSelectedPatient } = useSimulation();
-    // Default to Optimization if proposals exist (optional), or stick to operations
-    const [activeTab, setActiveTab] = useState<TabType>('optimization');
+    // Default to 'stock' for better visibility
+    const [activeTab, setActiveTab] = useState<TabType>('stock');
 
     // Shared state for modals
     const [locatorDrug, setLocatorDrug] = useState<{ name: string, siteId: string } | null>(null);
@@ -56,6 +56,10 @@ export function Inventory() {
             link: '/inventory'
         });
     };
+
+
+
+
 
     const tabs = [
         { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },

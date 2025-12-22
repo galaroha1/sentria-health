@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
 
@@ -7,6 +7,13 @@ const REMEMBER_ME_KEY = 'sentria_remember_me';
 
 export function Login() {
     const { login, signup, isAuthenticated, isLoading: useAuthLoading } = useAuth();
+    const location = useLocation();
+
+    // Redirect if already authenticated
+    if (isAuthenticated) {
+        const from = (location.state as any)?.from?.pathname || '/dashboard';
+        return <Navigate to={from} replace />;
+    }
     // Initialize state from localStorage
     const [email, setEmail] = useState(() => {
         try {
@@ -40,10 +47,7 @@ export function Login() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Redirect if already authenticated
-    if (isAuthenticated) {
-        return <Navigate to="/" replace />;
-    }
+
 
     // Watch for auth state changes to handle errors during login
     // If we are locally loading (waiting for login), but global auth finishes loading and we are NOT authenticated,
