@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AnimatePresence } from 'framer-motion';
+
 
 import { Dashboard } from './pages/Dashboard';
 import { InventoryHub } from './pages/InventoryHub';
@@ -36,12 +36,12 @@ import { CommandPalette } from './components/common/CommandPalette';
 import { MobileNav } from './components/layout/MobileNav';
 import { Header } from './components/layout/Header';
 // import { FullScreenLoader } from './components/layout/FullScreenLoader';
-import { PageTransition } from './components/layout/PageTransition';
+
 import { useState } from 'react';
 
 function DashboardLayout() {
   const [, setSidebarOpen] = useState(false);
-  const location = useLocation();
+
 
   return (
     <div className="flex bg-slate-50 overflow-hidden h-screen">
@@ -49,11 +49,7 @@ function DashboardLayout() {
       <div className="flex-1 flex flex-col md:ml-20 transition-all duration-300 min-h-screen overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-8 pb-24 md:pb-8 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-              <Outlet />
-            </PageTransition>
-          </AnimatePresence>
+          <Outlet />
         </main>
       </div>
       <MobileNav />
