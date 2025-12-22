@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
@@ -6,7 +6,7 @@ import { ShieldCheck, AlertCircle } from 'lucide-react';
 const REMEMBER_ME_KEY = 'sentria_remember_me';
 
 export function Login() {
-    const { login, signup, isAuthenticated, isLoading: useAuthLoading } = useAuth();
+    const { login, signup, isAuthenticated } = useAuth();
     const location = useLocation();
 
     // Redirect if already authenticated
