@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ModelTraining } from '../components/admin/ModelTraining';
 import { NetworkConfig } from '../components/admin/NetworkConfig';
+import { SystemSettings } from '../components/admin/SystemSettings';
 import { Brain, Shield, Network } from 'lucide-react';
 
 export function Admin() {
@@ -55,13 +56,7 @@ export function Admin() {
             <div className="min-h-[400px]">
                 {activeTab === 'training' && <ModelTraining />}
                 {activeTab === 'network' && <NetworkConfig />}
-                {activeTab === 'settings' && (
-                    <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-500">
-                        <Shield className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                        <h3 className="text-lg font-medium text-slate-900">System Settings</h3>
-                        <p>Global system configuration options will appear here.</p>
-                    </div>
-                )}
+                {activeTab === 'settings' && <SystemSettings />}
             </div>
         </div>
     );

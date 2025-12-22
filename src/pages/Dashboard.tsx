@@ -7,6 +7,7 @@ import { SavingsProjection } from '../components/dashboard/SavingsProjection';
 import { ModelTraining } from '../components/admin/ModelTraining';
 import { MorningBriefing } from '../components/dashboard/MorningBriefing';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { PageTransition } from '../components/layout/PageTransition';
 
 type TabType = 'overview' | 'analytics' | 'savings' | 'training';
@@ -14,6 +15,7 @@ type TabType = 'overview' | 'analytics' | 'savings' | 'training';
 export function Dashboard() {
     const navigate = useNavigate();
     const { requests, resetSimulation } = useApp();
+    const { user } = useAuth();
     const activeTransfersCount = requests.filter(r => r.status === 'in_transit').length;
     const [activeTab, setActiveTab] = useState<TabType>('overview');
 
@@ -32,12 +34,14 @@ export function Dashboard() {
                     <p className="text-sm text-slate-500">Intelligent insights and real-time metrics for your hospital network.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={resetSimulation}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
-                    >
-                        Reset Demo
-                    </button>
+                    {user?.role === 'admin' && (
+                        <button
+                            onClick={resetSimulation}
+                            className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                        >
+                            Reset Demo
+                        </button>
+                    )}
                     <button
                         onClick={() => {
                             // Export actual transfer requests

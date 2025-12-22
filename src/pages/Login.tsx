@@ -84,68 +84,18 @@ export function Login() {
         }
     };
 
-    const DEMO_CREDENTIALS = {
-        admin: { email: 'admin@sentria.health', password: 'admin123', name: 'Super Admin' },
-        pharmacy: { email: 'pharmacy@sentria.health', password: 'pharmacy123', name: 'Pharmacy Manager' },
-        procurement: { email: 'procurement@sentria.health', password: 'procurement123', name: 'Procurement Officer' },
-    };
 
-    const handleDemoLogin = async (role: keyof typeof DEMO_CREDENTIALS) => {
-        const creds = DEMO_CREDENTIALS[role];
-        setIsLoading(true);
-        setError('');
-
-        // Add 3 second buffer as requested
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        // Try login first
-        let result = await login({ email: creds.email, password: creds.password });
-
-        if (result.success) {
-            // Do nothing, wait for isAuthenticated to trigger redirect
-            return;
-        }
-
-        console.log('Login failed:', result.error, result.code);
-
-        // If login failed, it might be because the user doesn't exist (auth/user-not-found)
-        // or because the password is wrong (auth/wrong-password).
-        // If it's wrong password, we shouldn't try to signup (it will fail with email-already-in-use).
-
-        if (result.code === 'auth/wrong-password') {
-            setError('Incorrect password for this demo account. If you changed it, please sign in manually.');
-            setIsLoading(false);
-            return;
-        }
-
-        // For other errors (like user-not-found), try to create the account
-        console.log('Attempting to create demo account...');
-        const signupResult = await signup({ email: creds.email, password: creds.password }, creds.name);
-
-        if (signupResult.success) {
-            // Do nothing, wait for isAuthenticated to trigger redirect
-        } else {
-            console.error('Signup failed:', signupResult.error, signupResult.code);
-
-            if (signupResult.code === 'auth/email-already-in-use') {
-                setError('Account exists but password incorrect. Please sign in manually.');
-            } else {
-                setError(signupResult.error || 'Failed to access demo account');
-            }
-            setIsLoading(false);
-        }
-    };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-slate-50 to-secondary-50 px-4">
             <div className="w-full max-w-md">
                 <div className="mb-8 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-600 shadow-lg">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-800 shadow-lg">
                         <ShieldCheck className="h-10 w-10 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-900">Sentria Health</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">Penn Medicine</h1>
                     <p className="mt-2 text-sm text-slate-600">
-                        {isLogin ? 'Sign in to your account' : 'Create a new account'}
+                        Supply Chain Intelligence Platform
                     </p>
                 </div>
 
@@ -186,7 +136,7 @@ export function Login() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                                placeholder="you@sentria.health"
+                                placeholder="you@pennmedicine.upenn.edu"
                             />
                         </div>
 
@@ -228,7 +178,7 @@ export function Login() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-lg bg-primary-800 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-800 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isLoading ? (isLogin ? 'Signing in...' : 'Creating Account...') : (isLogin ? 'Sign In' : 'Create Account')}
                         </button>
@@ -246,65 +196,7 @@ export function Login() {
                             </button>
                         </div>
                     </form>
-
-                    <div className="mt-6 border-t border-slate-200 pt-6">
-                        <p className="mb-3 text-xs font-semibold text-slate-700">One-Click Demo Access:</p>
-                        <div className="space-y-3">
-                            <button
-                                type="button"
-                                onClick={() => handleDemoLogin('admin')}
-                                disabled={isLoading}
-                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all disabled:opacity-50"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900">Super Admin</p>
-                                        <p className="mt-1 text-xs text-slate-600">
-                                            Full system access - manage all features, users, inventory, vendors, and reports
-                                        </p>
-                                    </div>
-                                    <span className="ml-2 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">All</span>
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleDemoLogin('pharmacy')}
-                                disabled={isLoading}
-                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all disabled:opacity-50"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900">Pharmacy Manager</p>
-                                        <p className="mt-1 text-xs text-slate-600">
-                                            Manage inventory, track stock levels, approve transfers, and oversee vendor relationships
-                                        </p>
-                                    </div>
-                                    <span className="ml-2 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700">Ops</span>
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleDemoLogin('procurement')}
-                                disabled={isLoading}
-                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100 hover:border-slate-300 transition-all disabled:opacity-50"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900">Procurement Officer</p>
-                                        <p className="mt-1 text-xs text-slate-600">
-                                            Purchase from marketplace, manage orders, track procurement analytics and cost savings
-                                        </p>
-                                    </div>
-                                    <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">Buy</span>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
                 </div>
-
-                <p className="mt-4 text-center text-xs text-slate-500">
-                    Demo credentials are auto-filled when you click a role button
-                </p>
             </div>
         </div>
     );

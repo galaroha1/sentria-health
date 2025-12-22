@@ -57,10 +57,10 @@ export function Sidebar() {
         <aside className="hidden md:flex w-20 hover:w-64 flex-col border-r border-slate-200 bg-slate-50 transition-all duration-300 ease-in-out group overflow-hidden z-50 shadow-sm hover:shadow-xl fixed left-0 top-0 h-full">
             <div className="flex h-16 items-center border-b border-slate-200 px-6 overflow-hidden whitespace-nowrap shrink-0">
                 <div className="flex items-center gap-3 transition-all duration-300">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">
-                        S
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-800 text-white font-bold">
+                        P
                     </div>
-                    <span className="text-lg font-bold text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">Sentria</span>
+                    <span className="text-lg font-bold text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 whitespace-nowrap">Penn Medicine</span>
                 </div>
             </div>
 
