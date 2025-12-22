@@ -259,7 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
         runOptimization();
-    }, [inventories, sites, requests]);
+    }, [inventories, sites, requests, patients]);
 
     // Sync across tabs
     useEffect(() => {
@@ -333,7 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
         checkAlerts();
-    }, [inventories, sites]); // Run when inventories change
+    }, [inventories, sites, patients]); // Run when inventories change
 
     // Inventory Management
     const updateInventory = async (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {

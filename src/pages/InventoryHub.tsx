@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Search, Filter, Warehouse, ShoppingCart, Building2 } from 'lucide-react';
+import { Search, Filter, Warehouse, ShoppingCart, Building2, Eye } from 'lucide-react';
 import { Inventory } from './Inventory';
 import { Marketplace } from './Marketplace';
 import { Vendors } from './Vendors';
+import { GlobalInventoryTable } from '../components/inventory/GlobalInventoryTable';
+import { useAuth } from '../context/AuthContext';
 
-type TabType = 'internal' | 'marketplace' | 'vendors';
+type TabType = 'internal' | 'marketplace' | 'vendors' | 'visibility';
 
 export function InventoryHub() {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('internal');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -15,6 +18,10 @@ export function InventoryHub() {
         { id: 'marketplace' as TabType, label: 'Marketplace', icon: ShoppingCart },
         { id: 'vendors' as TabType, label: 'Vendor Catalog', icon: Building2 },
     ];
+
+    if (user?.role === 'Super Admin') {
+        tabs.push({ id: 'visibility' as TabType, label: 'Back End Visibility', icon: Eye });
+    }
 
     return (
         <div className="flex h-[calc(100vh-4rem)] flex-col gap-6">
@@ -80,6 +87,11 @@ export function InventoryHub() {
                 {activeTab === 'vendors' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Vendors />
+                    </div>
+                )}
+                {activeTab === 'visibility' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <GlobalInventoryTable />
                     </div>
                 )}
             </div>
