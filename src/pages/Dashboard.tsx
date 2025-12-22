@@ -7,12 +7,13 @@ import { SavingsProjection } from '../components/dashboard/SavingsProjection';
 import { ModelTraining } from '../components/admin/ModelTraining';
 import { MorningBriefing } from '../components/dashboard/MorningBriefing';
 import { useApp } from '../context/AppContext';
+import { PageTransition } from '../components/layout/PageTransition';
 
 type TabType = 'overview' | 'analytics' | 'savings' | 'training';
 
 export function Dashboard() {
     const navigate = useNavigate();
-    const { requests } = useApp();
+    const { requests, resetSimulation } = useApp();
     const activeTransfersCount = requests.filter(r => r.status === 'in_transit').length;
     const [activeTab, setActiveTab] = useState<TabType>('overview');
 
@@ -30,7 +31,13 @@ export function Dashboard() {
                     <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
                     <p className="text-sm text-slate-500">Intelligent insights and real-time metrics for your hospital network.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={resetSimulation}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                    >
+                        Reset Demo
+                    </button>
                     <button
                         onClick={() => {
                             // Export actual transfer requests
@@ -94,35 +101,49 @@ export function Dashboard() {
 
                 <div className="p-6">
                     {activeTab === 'overview' && (
-                        <div className="space-y-6">
-                            <MorningBriefing />
+                        <PageTransition>
+                            <div className="space-y-6">
+                                <MorningBriefing />
 
-                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {/* Active Transfers - Shortcuts to Inventory/Logistics */}
-                                <div
-                                    onClick={() => navigate('/inventory')}
-                                    className="cursor-pointer rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Logistics & AI</p>
-                                            <p className="text-2xl font-bold text-slate-900">{activeTransfersCount} Active</p>
-                                        </div>
-                                        <div className="rounded-full bg-purple-100 p-3 text-purple-600 group-hover:bg-purple-200 transition-colors">
-                                            <Truck className="h-6 w-6" />
+                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                    {/* Active Transfers - Shortcuts to Inventory/Logistics */}
+                                    <div
+                                        onClick={() => navigate('/inventory')}
+                                        className="cursor-pointer rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Logistics & AI</p>
+                                                <p className="text-2xl font-bold text-slate-900">{activeTransfersCount} Active</p>
+                                            </div>
+                                            <div className="rounded-full bg-purple-100 p-3 text-purple-600 group-hover:bg-purple-200 transition-colors">
+                                                <Truck className="h-6 w-6" />
+                                            </div>
                                         </div>
                                     </div>
+                                    <InventoryAlerts />
                                 </div>
-                                <InventoryAlerts />
                             </div>
-                        </div>
+                        </PageTransition>
                     )}
 
-                    {activeTab === 'analytics' && <PredictiveAnalytics />}
+                    {activeTab === 'analytics' && (
+                        <PageTransition>
+                            <PredictiveAnalytics />
+                        </PageTransition>
+                    )}
 
-                    {activeTab === 'savings' && <SavingsProjection />}
+                    {activeTab === 'savings' && (
+                        <PageTransition>
+                            <SavingsProjection />
+                        </PageTransition>
+                    )}
 
-                    {activeTab === 'training' && <ModelTraining />}
+                    {activeTab === 'training' && (
+                        <PageTransition>
+                            <ModelTraining />
+                        </PageTransition>
+                    )}
                 </div>
             </div>
         </div>

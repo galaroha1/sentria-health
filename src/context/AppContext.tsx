@@ -48,6 +48,9 @@ interface AppContextType {
 
     // Loading State
     isLoading: boolean;
+
+    // Simulation Control
+    resetSimulation: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -143,20 +146,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
 
-    // Subscribe to Firestore collections
-    useEffect(() => {
-        // FORCE RE-SEED MOCK DATA (TEMPORARY FIX FOR LOGIC VERIFICATION)
-        // This ensures the new "Starved Inventory" logic in mockData.ts overwrites the stale Firestore data
-        const reseedInventory = async () => {
-            console.warn("!!! FORCING INVENTORY RESET FROM MOCK DATA !!!");
+    const resetSimulation = async () => {
+        setIsLoading(true);
+        try {
+            // 1. Clear Existing Data
+            console.log("Resetting simulation data...");
+            // We could clear existing collections here if we wanted a truly clean slate
+            // await FirestoreService.deleteAllDocuments('inventoryItems');
+
+            // 2. Reseed from Mock Data
             const { siteInventories } = await import('../data/location/mockData');
             for (const inv of siteInventories) {
                 await FirestoreService.set('inventoryItems', inv.siteId, inv);
             }
-            console.log("!!! INVENTORY RESET COMPLETE !!!");
-        };
-        reseedInventory();
+            console.log("Simulation Data Reset Complete.");
+            window.location.reload(); // Refresh to reflect changes
+        } catch (error) {
+            console.error("Failed to reset simulation:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
+    // Subscribe to Firestore collections
+    useEffect(() => {
         // 1. SITES Subscription
         // 1. SITES Subscription
         const unsubscribeSites = FirestoreService.subscribe<Site>('sites', (data) => {
@@ -498,6 +511,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             metrics,
             currentProposals,
             setCurrentProposals,
+            resetSimulation,
             isLoading
         }}>
             {children}
