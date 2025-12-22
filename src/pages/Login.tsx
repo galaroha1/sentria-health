@@ -14,6 +14,7 @@ export function Login() {
         const from = (location.state as any)?.from?.pathname || '/dashboard';
         return <Navigate to={from} replace />;
     }
+
     // Initialize state from localStorage
     const [email, setEmail] = useState(() => {
         try {
