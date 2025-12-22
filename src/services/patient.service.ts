@@ -123,6 +123,11 @@ export class PatientService {
                 date.setDate(today.getDate() + 1);
             }
 
+            // SET RANDOM TIME (8 AM - 4 PM)
+            const hour = Math.floor(Math.random() * 9) + 8; // 8 to 16 inclusive
+            const minute = Math.floor(Math.random() * 60);
+            date.setHours(hour, minute, 0, 0);
+
             const drug = selectedDrugs[Math.floor(Math.random() * selectedDrugs.length)];
 
             schedule.push({
@@ -132,7 +137,7 @@ export class PatientService {
                 ndc: drug.ndc,      // Now matches inventory exactly
                 status: 'scheduled',
                 dose: '30 units', // Increased to simulate checking out a monthly supply -> High Demand Impact
-                notes: 'Standard protocol'
+                notes: `Follow-up @ ${hour}:${minute < 10 ? '0' + minute : minute}`
             });
         }
         return schedule;
