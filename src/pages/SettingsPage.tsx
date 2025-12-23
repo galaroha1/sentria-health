@@ -5,10 +5,12 @@ import { ApiManager } from '../components/admin/ApiManager';
 import { UserRole } from '../types';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { InviteUserModal } from '../components/admin/InviteUserModal';
 
 export function Settings() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
     // UI State
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -44,9 +46,20 @@ export function Settings() {
 
     return (
         <div className="max-w-4xl space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-                <p className="text-slate-600">Manage your account and application preferences.</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+                    <p className="text-slate-600">Manage your account and application preferences.</p>
+                </div>
+                {user?.role === UserRole.SUPER_ADMIN && (
+                    <button
+                        onClick={() => setIsInviteModalOpen(true)}
+                        className="bg-primary-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-900 transition-colors flex items-center gap-2"
+                    >
+                        <User className="h-4 w-4" />
+                        Invite New User
+                    </button>
+                )}
             </div>
 
             {/* SUPER ADMIN ONLY: System API Manager */}
@@ -55,6 +68,8 @@ export function Settings() {
                     <ApiManager />
                 </div>
             )}
+
+            <InviteUserModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
 
             <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="divide-y divide-slate-100">

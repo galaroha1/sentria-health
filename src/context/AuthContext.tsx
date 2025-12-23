@@ -155,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Special bypass for demo accounts
             const DEMO_ACCOUNTS: Record<string, { role: UserRole; name: string; department: string }> = {
                 'admin@sentria.health': { role: UserRole.SUPER_ADMIN, name: 'Super Admin', department: 'Administration' },
+                'super@penn.edu': { role: UserRole.SUPER_ADMIN, name: 'Penn Super Admin', department: 'Administration' },
                 'pharmacy@sentria.health': { role: UserRole.PHARMACY_MANAGER, name: 'Pharmacy Manager', department: 'Pharmacy' },
                 'procurement@sentria.health': { role: UserRole.PROCUREMENT_OFFICER, name: 'Procurement Officer', department: 'Procurement' }
             };

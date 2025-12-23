@@ -2,6 +2,8 @@ export const UserRole = {
     SUPER_ADMIN: 'Super Admin',
     PHARMACY_MANAGER: 'Pharmacy Manager',
     PROCUREMENT_OFFICER: 'Procurement Officer',
+    CLINICAL_DIRECTOR: 'Clinical Director',
+    INVENTORY_SPECIALIST: 'Inventory Specialist',
 } as const;
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];
@@ -45,6 +47,8 @@ export const ROLE_PERMISSIONS = {
     [UserRole.SUPER_ADMIN]: ['*'], // Full access
     [UserRole.PHARMACY_MANAGER]: ['dashboard', 'inventory', 'vendors', 'reports', 'transfers', 'locations'],
     [UserRole.PROCUREMENT_OFFICER]: ['dashboard', 'marketplace', 'cart', 'reports'],
+    [UserRole.CLINICAL_DIRECTOR]: ['dashboard', 'clinical', 'reports', 'analytics'],
+    [UserRole.INVENTORY_SPECIALIST]: ['dashboard', 'inventory', 'logistics', 'reports'],
 };
 
 // Mock user database
