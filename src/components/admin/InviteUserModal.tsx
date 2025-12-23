@@ -61,7 +61,10 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
     const handleSendEmail = () => {
         const subject = encodeURIComponent("You're invited to Penn Medicine Supply Chain");
         const body = encodeURIComponent(`Hello,\n\nYou have been invited to join the Penn Medicine Supply Chain Intelligence Platform.\n\nRole: ${role}\nDepartment: ${department}\n\nPlease click the link below to create your account:\n${inviteLink}\n\nNote: You must use this email address (${email}) to sign up.\n\nBest regards,\nPenn Medicine Team`);
-        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+
+        // Gmail Compose URL
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+        window.open(gmailUrl, '_blank');
     };
 
     const copyToClipboard = () => {
