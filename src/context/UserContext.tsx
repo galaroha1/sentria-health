@@ -23,16 +23,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const addUser = async (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'createdBy'>) => {
-        // Create a placeholder user document.
-        // We use the email as a temporary ID or just a queryable field. 
-        // To make lookup easy during signup, we can use the email as the document ID for the placeholder,
-        // and then delete it and create a new one with the Auth UID later.
-        // OR we can query by email. Querying by email is safer if we want to support changing emails later,
-        // but for this simple "invite" flow, using email as ID for the invite is convenient.
-        // Let's use a random ID but ensure we can query it.
-
+        // Create a pending user document.
+        // AuthContext.signup() will look for a user with this email to 'claim' the profile.
+        // This allows admins to pre-set roles/departments for users who haven't signed up yet.
         const newUser: User = {
             ...userData,
+            email: userData.email.toLowerCase(), // Ensure normalization
             id: `invite-${Date.now()}`,
             createdAt: new Date().toISOString(),
             lastLogin: undefined,
