@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const REMEMBER_ME_KEY = 'sentria_remember_me';
 
@@ -89,12 +89,10 @@ export function Login() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-slate-50 to-secondary-50 px-4">
             <div className="w-full max-w-md">
-                <div className="mb-8 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-800 shadow-lg">
-                        <ShieldCheck className="h-10 w-10 text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-slate-900">Penn Medicine</h1>
-                    <p className="mt-2 text-sm text-slate-600">
+                <div className="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <img src="/penn_logo.png" alt="Penn Medicine" className="h-16 mx-auto mb-4 object-contain" />
+                    {/* <h1 className="text-3xl font-bold text-primary-800">Penn Medicine</h1> */}
+                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">
                         Supply Chain Intelligence Platform
                     </p>
                 </div>
