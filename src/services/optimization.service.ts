@@ -198,7 +198,8 @@ export class OptimizationService {
                                     },
                                     fulfillmentNode: 'Internal',
                                     vendorName: otherSite.name,
-                                    regulatoryJustification: { passed: true, details: ['Internal Approved'] }
+                                    regulatoryJustification: { passed: true, details: ['Internal Approved'] },
+                                    trigger: 'patient_demand'
                                 });
 
                                 // Reduce NetDeficit
@@ -236,11 +237,97 @@ export class OptimizationService {
                             savings: 0
                         },
                         fulfillmentNode: 'External',
-                        regulatoryJustification: { passed: true, details: ['Vendor Approved'] }
+                        regulatoryJustification: { passed: true, details: ['Vendor Approved'] },
+                        trigger: 'patient_demand'
                     });
                 }
             }
         }
+
+        // =============================================================================
+        // DECISION 12: Handle Pure Stock Refills (Low Stock, No Patient Demand)
+        // =============================================================================
+        // Identify items that are below MinLevel but were NOT processed above (no patient demand)
+        for (const site of sites) {
+            const siteInv = inventoryMap.get(site.id);
+            if (!siteInv) continue;
+
+            const demandedForSite = demandMap.get(site.id);
+
+            for (const [ndc, item] of siteInv.entries()) {
+                // If it was already handled by Demand Logic, skip
+                if (demandedForSite && demandedForSite.has(ndc)) continue;
+
+                // Check Low Stock
+                if (item.quantity < item.minLevel) {
+                    const refillQty = item.maxLevel - item.quantity;
+                    if (refillQty <= 0) continue;
+
+                    let netDeficit = refillQty;
+                    const drugName = item.drugName;
+
+                    // --- Internal Transfer Logic (Refill) ---
+                    for (const otherSite of sites) {
+                        if (netDeficit <= 0) break;
+                        if (otherSite.id === site.id) continue;
+
+                        const otherInvMap = inventoryMap.get(otherSite.id);
+                        const sourceItem = otherInvMap?.get(ndc);
+
+                        if (sourceItem && sourceItem.quantity > sourceItem.maxLevel) {
+                            const surplus = sourceItem.quantity - sourceItem.maxLevel;
+                            const transferQty = Math.min(surplus, netDeficit);
+
+                            if (transferQty > 0) {
+                                proposals.push({
+                                    id: `prop-refill-${Date.now()}-${Math.random()}`,
+                                    type: 'transfer',
+                                    transferSubType: 'network_transfer',
+                                    targetSiteId: site.id,
+                                    targetSiteName: site.name,
+                                    sourceSiteId: otherSite.id,
+                                    sourceSiteName: otherSite.name,
+                                    drugName: drugName,
+                                    ndc: ndc,
+                                    quantity: transferQty,
+                                    reason: `Stock Refill: Level fell below min (${item.minLevel}). Sourced from surplus.`,
+                                    score: 0.90,
+                                    costAnalysis: { distanceKm: 50, transportCost: 50, itemCost: 0, totalCost: 50, savings: 5000 },
+                                    fulfillmentNode: 'Internal',
+                                    vendorName: otherSite.name,
+                                    regulatoryJustification: { passed: true, details: ['Internal Approved'] },
+                                    trigger: 'stock_refill'
+                                });
+                                netDeficit -= transferQty;
+                            }
+                        }
+                    }
+
+                    // --- Procurement Logic (Refill) ---
+                    if (netDeficit > 0) {
+                        const estimatedCost = netDeficit * 150;
+                        proposals.push({
+                            id: `prop-refill-buy-${Date.now()}-${Math.random()}`,
+                            type: 'procurement',
+                            targetSiteId: site.id,
+                            targetSiteName: site.name,
+                            drugName: drugName,
+                            ndc: ndc,
+                            quantity: netDeficit,
+                            reason: `Stock Refill: Level fell below min (${item.minLevel}).`,
+                            vendorName: 'McKesson',
+                            score: 0.80,
+                            channel: 'WAC',
+                            costAnalysis: { distanceKm: 0, transportCost: 15, itemCost: estimatedCost, totalCost: estimatedCost + 15, savings: 0 },
+                            fulfillmentNode: 'External',
+                            regulatoryJustification: { passed: true, details: ['Vendor Approved'] },
+                            trigger: 'stock_refill'
+                        });
+                    }
+                }
+            }
+        }
+
 
         return proposals;
     }

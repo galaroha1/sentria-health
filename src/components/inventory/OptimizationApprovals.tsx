@@ -141,6 +141,18 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                         "{proposal.reason}"
                                     </p>
 
+                                    {/* Trigger Marker */}
+                                    {proposal.trigger && (
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium border ${proposal.trigger === 'patient_demand'
+                                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                                                }`}>
+                                                {proposal.trigger === 'patient_demand' ? 'Target: Patient Demand' : 'Target: Stock Refill'}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {/* Compliance Justification */}
                                     {proposal.regulatoryJustification && (
                                         <div className="mt-3 space-y-1">
