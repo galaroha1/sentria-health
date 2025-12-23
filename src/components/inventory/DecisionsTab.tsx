@@ -50,7 +50,7 @@ export function DecisionsTab() {
 
     // Initial Data Fetch
     useEffect(() => {
-        fetchSimulations(100); // Fetch last 100 patients for analysis
+        fetchSimulations(10000); // Fetch up to 10,000 patients to support scale testing
     }, []);
 
     // Log State
