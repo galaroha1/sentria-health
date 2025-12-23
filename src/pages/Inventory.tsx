@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Truck, Package, Syringe } from 'lucide-react';
+import { Truck, Package, Syringe, FileText } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
 import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
@@ -10,10 +10,11 @@ import { useSimulation } from '../context/SimulationContext';
 import { OperationsTab } from '../components/inventory/OperationsTab';
 import { StockTab } from '../components/inventory/StockTab';
 import { AdministrationTab } from '../components/inventory/AdministrationTab';
+import { ComplianceTab } from '../components/inventory/ComplianceTab';
 
 import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
 
-type TabType = 'operations' | 'stock' | 'admin';
+type TabType = 'operations' | 'stock' | 'admin' | 'compliance';
 
 export function Inventory() {
     const { inventories, sites, addRequest, addNotification } = useApp();
@@ -63,6 +64,8 @@ export function Inventory() {
     const tabs = [
         { id: 'operations' as TabType, label: 'Logistics', icon: Truck, desc: 'Procurement, Shipping & Receiving' },
         { id: 'stock' as TabType, label: 'Stock & Storage', icon: Package, desc: 'Inventory Levels' },
+
+        { id: 'compliance' as TabType, label: 'Compliance', icon: FileText, desc: 'Audits & Reports' },
 
 
         { id: 'admin' as TabType, label: 'Administration', icon: Syringe, desc: 'Patient Administration' },
@@ -146,6 +149,8 @@ export function Inventory() {
                     )}
 
                     {activeTab === 'admin' && <AdministrationTab />}
+
+                    {activeTab === 'compliance' && <ComplianceTab />}
 
 
                 </div>
