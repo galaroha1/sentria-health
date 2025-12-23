@@ -1,6 +1,7 @@
 import { Search, Filter, MapPin, AlertTriangle, Thermometer, Droplets } from 'lucide-react';
 import { useState } from 'react';
 import type { SiteInventory, Site } from '../../types/location';
+import { GlobalInventoryTable } from './GlobalInventoryTable';
 
 interface StockTabProps {
     inventories: SiteInventory[];
@@ -144,6 +145,11 @@ export function StockTab({ inventories, sites, onLocate }: StockTabProps) {
                         })}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Backend Visibility / Global Table */}
+            <div className="pt-8 border-t border-slate-200">
+                <GlobalInventoryTable />
             </div>
         </div>
     );
