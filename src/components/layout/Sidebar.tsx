@@ -83,12 +83,12 @@ export function Sidebar() {
                                             to={item.href}
                                             className={({ isActive }: { isActive: boolean }) =>
                                                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap group/item ${isActive
-                                                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+                                                    ? 'bg-primary-50 text-primary-900 shadow-sm'
                                                     : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-slate-900'
                                                 } `
                                             }
                                         >
-                                            <Icon className={`h-5 w-5 shrink-0 transition-colors ${item.href === location.pathname ? 'text-indigo-600' : 'text-slate-500 group-hover/item:text-slate-700'} `} />
+                                            <Icon className={`h-5 w-5 shrink-0 transition-colors ${item.href === location.pathname ? 'text-primary-800' : 'text-slate-500 group-hover/item:text-slate-700'} `} />
                                             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.name}</span>
                                         </NavLink>
                                     );
@@ -100,11 +100,11 @@ export function Sidebar() {
 
                 <div className="border-t border-slate-200 p-4 whitespace-nowrap bg-slate-50/50 backdrop-blur-sm shrink-0 mt-auto">
                     <div className="flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-white/60">
-                        <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                        <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-primary-100 flex items-center justify-center">
                             {user?.avatar ? (
                                 <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                             ) : (
-                                <span className="text-sm font-bold text-indigo-600">{user?.name?.charAt(0)}</span>
+                                <span className="text-sm font-bold text-primary-700">{user?.name?.charAt(0)}</span>
                             )}
                         </div>
                         <div className="flex-1 min-w-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
