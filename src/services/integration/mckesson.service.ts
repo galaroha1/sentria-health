@@ -8,8 +8,12 @@ export class McKessonService {
      * Fetch live price from McKesson Connect
      * Requires VITE_MCKESSON_API_KEY in .env
      */
-    static async getQuote(ndc: string, quantity: number): Promise<SupplierQuote | null> {
-        const apiKey = await SystemSettingsService.getSecret('VITE_MCKESSON_API_KEY');
+    static async getQuote(ndc: string, quantity: number, apiKeyOverride?: string): Promise<SupplierQuote | null> {
+        let apiKey = apiKeyOverride;
+        if (!apiKey) {
+            apiKey = await SystemSettingsService.getSecret('VITE_MCKESSON_API_KEY');
+        }
+
         const accountId = await SystemSettingsService.getSecret('VITE_MCKESSON_ACCOUNT_ID');
 
         if (!apiKey || !accountId) {

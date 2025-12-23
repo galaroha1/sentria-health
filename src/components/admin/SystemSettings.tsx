@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Key, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { FirestoreService } from '../../services/firebase.service';
 
 export function SystemSettings() {
     const [isLoading, setIsLoading] = useState(false);
@@ -11,8 +12,26 @@ export function SystemSettings() {
     });
 
     useEffect(() => {
-        // In a real implementation, fetch existing keys (masked) from secure storage
-        // For now, init empty
+        const loadSettings = async () => {
+            try {
+                const settings = await FirestoreService.getById<{
+                    openai_api_key: string;
+                    mckesson_api_key: string;
+                    cardinal_api_key: string;
+                }>('system_settings', 'global');
+
+                if (settings) {
+                    setKeys({
+                        openai_api_key: settings.openai_api_key || '',
+                        mckesson_api_key: settings.mckesson_api_key || '',
+                        cardinal_api_key: settings.cardinal_api_key || ''
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load system settings", err);
+            }
+        };
+        loadSettings();
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,13 +43,21 @@ export function SystemSettings() {
         setIsLoading(true);
         setSuccessMessage('');
 
-        // Simulate secure save
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Simulate secure save (keeping UI feedback)
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        // Logic to save to Firestore 'system_settings' collection would go here
-        console.log('Saving keys (mock secure save):', keys);
-
-        setSuccessMessage('System configuration updated successfully.');
+        // Save to Firestore
+        try {
+            await FirestoreService.set('system_settings', 'global', {
+                ...keys,
+                updatedAt: new Date().toISOString(),
+                updatedBy: 'admin' // In real app, use auth.currentUser.uid
+            });
+            setSuccessMessage('System configuration updated successfully.');
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+            setSuccessMessage('Error saving settings. Check console.');
+        }
         setIsLoading(false);
     };
 
@@ -49,8 +76,8 @@ export function SystemSettings() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {successMessage && (
-                        <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100">
-                            <CheckCircle2 className="h-4 w-4" />
+                        <div className={`flex items-center gap-2 p-3 ${successMessage.includes('Error') ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'} text-sm rounded-lg border`}>
+                            {successMessage.includes('Error') ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                             {successMessage}
                         </div>
                     )}

@@ -9,8 +9,11 @@ export class CardinalService {
      * Fetch live price from Cardinal Order Express
      * Requires VITE_CARDINAL_API_KEY in .env
      */
-    static async getQuote(ndc: string, quantity: number): Promise<SupplierQuote | null> {
-        const apiKey = await SystemSettingsService.getSecret('VITE_CARDINAL_API_KEY');
+    static async getQuote(ndc: string, quantity: number, apiKeyOverride?: string): Promise<SupplierQuote | null> {
+        let apiKey = apiKeyOverride;
+        if (!apiKey) {
+            apiKey = await SystemSettingsService.getSecret('VITE_CARDINAL_API_KEY');
+        }
 
         if (!apiKey) {
             console.warn("Cardinal API Keys missing. Cannot fetch real quote.");
