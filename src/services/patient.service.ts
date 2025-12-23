@@ -50,42 +50,7 @@ export class PatientService {
         };
     }
 
-    static generateMockPatients(count: number = 20): Patient[] {
-        const patients: Patient[] = [];
-        const diagnoses = ['Acute Lymphoblastic Leukemia', 'Breast Cancer - Stage II', 'Diabetes Type 1', 'Crohn\'s Disease', 'Glaucoma', 'Traumatic Injury'];
-        const types: Patient['type'][] = ['pediatric', 'adult', 'geriatric', 'oncology'];
 
-        for (let i = 0; i < count; i++) {
-            const diagnosis = diagnoses[Math.floor(Math.random() * diagnoses.length)];
-            const type = types[Math.floor(Math.random() * types.length)];
-
-            const location = this.assignLocation(diagnosis);
-
-            const weight = 50 + Math.random() * 70; // 50-120kg
-            const height = 150 + Math.random() * 40; // 150-190cm
-            const bsa = 0.007184 * Math.pow(weight, 0.425) * Math.pow(height, 0.725); // Du Bois
-
-            patients.push({
-                id: `pat-${i}`,
-                mrn: `MRN-${10000 + i}`,
-                name: `Patient ${String.fromCharCode(65 + (i % 26))}.`, // Cycle A-Z
-                dateOfBirth: new Date(Date.now() - Math.random() * 2000000000000).toISOString().split('T')[0],
-                gender: Math.random() > 0.5 ? 'male' : 'female',
-                diagnosis,
-                type,
-                attendingPhysician: 'Dr. Smith',
-                treatmentSchedule: this.generateSchedule(diagnosis),
-                assignedSiteId: location.siteId,
-                assignedDepartmentId: location.assignedDepartmentId,
-                biometrics: {
-                    weight: parseFloat(weight.toFixed(1)),
-                    height: parseFloat(height.toFixed(0)),
-                    bsa: parseFloat(bsa.toFixed(2))
-                }
-            });
-        }
-        return patients;
-    }
 
     // DEFINITIVE CLINICAL MAP (Deterministic Scaling)
     // Derived from real-drug-catalog.json to ensure 100% match with Inventory.
