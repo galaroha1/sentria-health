@@ -249,6 +249,16 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             const birthDate = new Date(patient.birthDate);
             const age = new Date().getFullYear() - birthDate.getFullYear();
 
+            // Generate Biometrics
+            const weight = 45 + Math.random() * 75; // 45-120kg
+            const height = 150 + Math.random() * 45; // 150-195cm
+            const bsa = 0.007184 * Math.pow(weight, 0.425) * Math.pow(height, 0.725);
+            const biometrics = {
+                weight: parseFloat(weight.toFixed(1)),
+                height: parseFloat(height.toFixed(0)),
+                bsa: parseFloat(bsa.toFixed(2))
+            };
+
             const profile: PatientProfile = {
                 name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
                 age: age,
@@ -260,7 +270,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     bpDiastolic: 80 + Math.floor(Math.random() * 10),
                     heartRate: 60 + Math.floor(Math.random() * 40),
                     temperature: 98.6,
-                    weight: 70
+                    weight: biometrics.weight
                 },
                 allergies: []
             };
@@ -281,7 +291,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 price: prediction.price,
                 profile: profile,
                 aiPrediction: prediction,
-                rawBundle: bundle
+                rawBundle: bundle,
+                biometrics: biometrics // Persist for AppContext sync
             };
         });
 
