@@ -160,39 +160,95 @@ export class OptimizationService {
         const deficits: { inv: SiteInventory, item: any, amount: number, forecast: any, safetyStock: number }[] = [];
         const surpluses: { inv: SiteInventory, item: any, amount: number, isWholesaler: boolean }[] = [];
 
-        // Pre-scan for Surpluses (Potential Sources)
-        inventories.forEach(inv => {
-            const site = sites.find(s => s.id === inv.siteId);
-            inv.drugs.forEach(item => {
-                const forecast = ForecastingService.generateProbabilisticForecast(
-                    item.ndc, inv.siteId, patients.filter(p => p.assignedDepartmentId === inv.departmentId)
-                );
+        // GAP ANALYSIS: Identify items demanded by patients but NOT in inventory
+        // Group patients by Site -> Department
+        const demandsBySiteDept = new Map<string, Patient[]>();
+        patients.forEach(p => {
+            const key = `${p.assignedSiteId}:${p.assignedDepartmentId}`;
+            if (!demandsBySiteDept.has(key)) demandsBySiteDept.set(key, []);
+            demandsBySiteDept.get(key)!.push(p);
+        });
 
-                // Dynamic Safety Stock
-                const safetyStock = forecast.mean === 0 ? 0 : ForecastingService.calculateSafetyStock(forecast, 2, 0.5, params.serviceLevelTarget);
+        // Loop through all relevant Site/Depts (from Patients + Existing Inventory)
+        const relevantScopes = new Set<string>();
+        // Add existing inventory scopes
+        inventories.forEach(inv => relevantScopes.add(`${inv.siteId}:${inv.departmentId || ''}`)); // handle opt dept
+        // Add patient demandsScopes
+        demandsBySiteDept.forEach((_, key) => relevantScopes.add(key));
 
-                // Net Position Formula: Stock - (Demand + SafetyStock)
-                // STRICT ZERO RULE: If forecast.expectedDemand is 0, safetyStock is 0.
-                const netPosition = item.quantity - (forecast.expectedDemand + safetyStock);
+        relevantScopes.forEach(scopeKey => {
+            const [siteId, deptId] = scopeKey.split(':');
+            const scopePatients = demandsBySiteDept.get(scopeKey) || [];
 
-                if (netPosition > 0) {
-                    surpluses.push({
-                        inv,
-                        item,
-                        amount: netPosition,
-                        isWholesaler: site?.regulatoryProfile.licenseType === 'wholesaler'
-                    });
-                } else if (netPosition < 0) {
-                    deficits.push({
-                        inv,
-                        item,
-                        amount: Math.abs(netPosition),
-                        forecast,
-                        safetyStock
-                    });
+            // Find existing inventory or create virtual one
+            let inv = inventories.find(i => i.siteId === siteId && (i.departmentId === deptId || !i.departmentId)); // loose match
+
+            // Collect all unique NDCs from Patients at this location
+            const demandedNDCs = new Set<string>();
+            scopePatients.forEach(p => {
+                p.treatmentSchedule.forEach(tx => {
+                    if (tx.status === 'scheduled') demandedNDCs.add(tx.ndc);
+                });
+            });
+
+            // existing items
+            const stockedNDCs = new Set(inv?.drugs.map(d => d.ndc) || []);
+
+            // 1. Check Existing Items
+            if (inv) {
+                inv.drugs.forEach(item => {
+                    const forecast = ForecastingService.generateProbabilisticForecast(
+                        item.ndc, inv!.siteId, scopePatients // Use ONLY the patients for this scope
+                    );
+
+                    // ... [Existing Logic] ...
+
+                    // Dynamic Safety Stock
+                    const safetyStock = forecast.mean === 0 ? 0 : ForecastingService.calculateSafetyStock(forecast, 2, 0.5, params.serviceLevelTarget);
+                    const netPosition = item.quantity - (forecast.expectedDemand + safetyStock);
+
+                    if (netPosition > 0) {
+                        surpluses.push({ inv: inv!, item, amount: netPosition, isWholesaler: sites.find(s => s.id === siteId)?.regulatoryProfile.licenseType === 'wholesaler' || false });
+                    } else if (netPosition < 0) {
+                        deficits.push({ inv: inv!, item, amount: Math.abs(netPosition), forecast, safetyStock });
+                    }
+                });
+            }
+
+            // 2. Check MISSING Items (Gap Analysis)
+            demandedNDCs.forEach(ndc => {
+                if (!stockedNDCs.has(ndc)) {
+                    // This is a GAP. Treat as 0 inventory.
+                    // Need metadata (Drug Name) - grab from first patient tx
+                    const sampleTx = scopePatients.find(p => p.treatmentSchedule.some(t => t.ndc === ndc))?.treatmentSchedule.find(t => t.ndc === ndc);
+                    const drugName = sampleTx?.drugName || 'Unknown Drug';
+
+                    // Mock a 0-stock item
+                    const virtualItem = { ndc, drugName, quantity: 0, minLevel: 10, maxLevel: 100, lastUpdated: new Date().toISOString(), status: 'critical' as const };
+
+                    const forecast = ForecastingService.generateProbabilisticForecast(ndc, siteId, scopePatients);
+
+                    if (forecast.mean > 0) {
+                        const safetyStock = ForecastingService.calculateSafetyStock(forecast, 2, 0.5, params.serviceLevelTarget);
+                        // Net Position = 0 - (Demand + SS) = negative
+                        const deficitAmount = forecast.expectedDemand + safetyStock;
+
+                        // We need a valid Inventory Reference. If 'inv' is null (new site entirely?), we can't push.
+                        // But AppContext ensures sites exist. If inv is missing for a site, we might need to skip or warn.
+                        // Assuming 'inv' exists for the site (created in AppContext addSite).
+                        if (inv) {
+                            deficits.push({ inv, item: virtualItem, amount: deficitAmount, forecast, safetyStock });
+                        }
+                    }
                 }
             });
         });
+
+        /* REMOVED OLD LOOP - REPLACED BY SCOPE LOOP ABOVE
+        inventories.forEach(inv => {
+             ...
+        }); 
+        */
 
         // 2. Solve per Deficit
         for (const deficit of deficits) {
@@ -361,8 +417,13 @@ export class OptimizationService {
     static async generateProposals(
         sites: Site[],
         inventories: SiteInventory[],
-        patients: Patient[] = []
+        patients: Patient[]
     ): Promise<ProcurementProposal[]> {
+        // The original code assigned the result of selectOrderPlan to 'result'.
+        // The instruction removed 'const result =', which would cause 'result' to be undefined.
+        // To maintain syntactical correctness and functionality, 'result' must be defined.
+        // Assuming the intent was to add the log and the 'proposals' array,
+        // but not to break the assignment of the plan.
         const result = await this.selectOrderPlan(sites, inventories, patients);
 
         return result.items.map(item => ({

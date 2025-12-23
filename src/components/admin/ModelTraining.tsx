@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Activity, Database, Server, Play, CheckCircle2, AlertTriangle, Clock, Trash2 } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
+import { useApp } from '../../context/AppContext';
 import toast, { Toaster } from 'react-hot-toast';
 
 export function ModelTraining() {
+    const { resetSimulation } = useApp();
     const {
         isTraining,
         progress,
@@ -80,14 +82,29 @@ export function ModelTraining() {
                         />
                     </div>
 
+
                     {simulationResults.length > 0 && !isTraining && (
-                        <button
-                            onClick={handleClear}
-                            className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Clear Data
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={async () => {
+                                    if (confirm("Reset Inventory to Baseline? This helps if demand/optimization seems stuck.")) {
+                                        await resetSimulation();
+                                        toast.success("Inventory Reset Complete");
+                                    }
+                                }}
+                                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                            >
+                                <Database className="h-4 w-4" />
+                                Reset Inventory
+                            </button>
+                            <button
+                                onClick={handleClear}
+                                className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Clear Data
+                            </button>
+                        </div>
                     )}
 
                     <button

@@ -265,6 +265,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const runOptimization = async () => {
             const proposals = await OptimizationService.generateProposals(sites, inventories, patients);
             const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
+            // ...
 
             // 2. Calculate Realized Savings (Completed/Approved Transfers)
             // We assume "savings" is stored on the request, or we re-calculate.
