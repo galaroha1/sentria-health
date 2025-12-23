@@ -6,7 +6,6 @@ export function SystemSettings() {
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [keys, setKeys] = useState({
-        openai_api_key: '',
         mckesson_api_key: '',
         cardinal_api_key: ''
     });
@@ -15,14 +14,12 @@ export function SystemSettings() {
         const loadSettings = async () => {
             try {
                 const settings = await FirestoreService.getById<{
-                    openai_api_key: string;
                     mckesson_api_key: string;
                     cardinal_api_key: string;
                 }>('system_settings', 'global');
 
                 if (settings) {
                     setKeys({
-                        openai_api_key: settings.openai_api_key || '',
                         mckesson_api_key: settings.mckesson_api_key || '',
                         cardinal_api_key: settings.cardinal_api_key || ''
                     });
@@ -81,19 +78,6 @@ export function SystemSettings() {
                             {successMessage}
                         </div>
                     )}
-
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-slate-700">OpenAI API Key</label>
-                        <input
-                            type="password"
-                            name="openai_api_key"
-                            value={keys.openai_api_key}
-                            onChange={handleChange}
-                            placeholder="sk-..."
-                            className="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                        <p className="text-xs text-slate-400">Used for Generative AI and Decision Engine.</p>
-                    </div>
 
                     <div className="space-y-1">
                         <label className="text-sm font-medium text-slate-700">McKesson Connect API Key</label>

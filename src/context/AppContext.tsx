@@ -113,7 +113,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     attendingPhysician: 'Dr. Auto',
                     // Generate schedule on the fly based on the prescribed drug
                     // Use the Service to ensure exact Drug Name/NDC alignment
-                    treatmentSchedule: PatientService.generateSchedule(sim.condition)
+                    treatmentSchedule: PatientService.generateSchedule(sim.condition),
+                    ...PatientService.assignLocation(sim.condition)
                 };
             });
 

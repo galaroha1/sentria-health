@@ -8,7 +8,8 @@ export interface RouteMetrics {
 }
 
 export class RoutingService {
-    private static readonly GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+    // Safe access to environment variable for both Browser and Node.js contexts
+    private static readonly GOOGLE_API_KEY = (import.meta?.env?.VITE_GOOGLE_MAPS_API_KEY) || '';
 
     // Tortuosity Factor: Real roads are roughly 1.3x to 1.4x the straight-line distance
     private static readonly TORTUOSITY_FACTOR = 1.35;

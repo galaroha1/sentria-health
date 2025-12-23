@@ -125,7 +125,21 @@ export class OptimizationService {
      * MAIN SOLVER: SelectOrderPlan(t)
      * Objective: Minimize Z = C(Logistics) + C(Purchase) + C(Risk) + C(Holding)
      */
+    /**
+     * Calculate Economic Order Quantity (EOQ)
+     * EOQ = Sqrt(2 * D * S / H)
+     */
+    private static calculateEOQ(annualDemand: number, setupCost: number, holdingCost: number): number {
+        if (holdingCost <= 0) return annualDemand;
+        return Math.sqrt((2 * annualDemand * setupCost) / holdingCost);
+    }
+
+    /**
+     * MAIN SOLVER: SelectOrderPlan(t)
+     * ...
+     */
     static async selectOrderPlan(
+        // ... existing args ...
         sites: Site[],
         inventories: SiteInventory[],
         patients: Patient[],
@@ -137,6 +151,7 @@ export class OptimizationService {
             planningHorizonDays: 30
         }
     ): Promise<OptimizationResult> {
+        // ... existing start of function ...
         const orderItems: OrderPlanItem[] = [];
         let totalEstimatedCost = 0;
         let totalRiskAdjustedCost = 0;
@@ -266,13 +281,21 @@ export class OptimizationService {
             // OPTION B: EXTERNAL PURCHASE
             if (remainingDeficit > 0) {
                 const suppliers = this.getSupplierCatalog(deficit.item.ndc);
-                let bestOption: { supplier: SupplierProfile, Z: number, purchase: number, risk: number } | null = null;
+                let bestOption: { supplier: SupplierProfile, Z: number, purchase: number, risk: number, orderQty: number } | null = null; // Added orderQty to type
 
                 for (const supplier of suppliers) {
-                    const orderQty = Math.max(remainingDeficit, supplier.contractTerms.minOrderQty);
+                    // CALCULATE EOQ (Economic Order Quantity)
+                    const annualDemand = deficit.forecast.mean * 4; // Annualized from 90-day forecast
+                    const unitPrice = supplier.contractTerms.costFunctions[0].unitPrice;
+                    const holdingCost = unitPrice * params.holdingCostRate;
+                    const eoq = this.calculateEOQ(annualDemand, this.RATES.BASE_FEE, holdingCost);
+
+                    // Strategy: Order MAX of (Deficit, MinOrder, EOQ)
+                    // This implements the "Optimization" - ordering less freq but larger batches if economical
+                    const orderQty = Math.max(remainingDeficit, supplier.contractTerms.minOrderQty, Math.ceil(eoq));
 
                     // Cost Components
-                    const C_purch = supplier.contractTerms.costFunctions[0].unitPrice;
+                    const C_purch = unitPrice; // Assuming flat price for simplicity of loop
                     const Purchase = (orderQty * C_purch) + this.RATES.SHIPPING_FLAT;
 
                     // Risk Cost: (1 - Reliability) * (Failure Impact)
@@ -282,19 +305,20 @@ export class OptimizationService {
                     const Z = Purchase + Risk;
 
                     if (!bestOption || Z < bestOption.Z) {
-                        bestOption = { supplier, Z, purchase: Purchase, risk: Risk };
+                        bestOption = { supplier, Z, purchase: Purchase, risk: Risk, orderQty };
                     }
                 }
 
                 if (bestOption) {
-                    const orderQty = Math.max(remainingDeficit, bestOption.supplier.contractTerms.minOrderQty);
+                    const finalQty = bestOption.orderQty;
                     orderItems.push({
                         sku: deficit.item.ndc,
                         drugName: deficit.item.drugName,
                         supplierId: bestOption.supplier.id,
                         supplierName: bestOption.supplier.name,
                         targetSiteId: targetSite.id,
-                        quantity: orderQty,
+                        quantity: finalQty,
+
                         type: 'contract',
                         cause: deficit.forecast.mean > 0 ? 'demand' : 'safety_stock',
                         analysis: {

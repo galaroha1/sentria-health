@@ -356,6 +356,19 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             attendingPhysician: 'Dr. Auto',
             treatmentSchedule: [] // We could generate a schedule based on the drug
         };
+
+        // Generate consistent biometrics for the sync
+        const weight = 50 + Math.random() * 70;
+        const height = 150 + Math.random() * 40;
+        const bsa = 0.007184 * Math.pow(weight, 0.425) * Math.pow(height, 0.725);
+
+        // @ts-ignore - Extending the object dynamically
+        newPatient.biometrics = {
+            weight: parseFloat(weight.toFixed(1)),
+            height: parseFloat(height.toFixed(0)),
+            bsa: parseFloat(bsa.toFixed(2))
+        };
+
         addPatient(newPatient);
     };
 

@@ -2,76 +2,86 @@ import type { Patient, Treatment } from '../types/patient';
 import { sites as ALL_SITES } from '../data/location/mockData';
 
 export class PatientService {
+
+    // Public helper to find best matching department for a diagnosis
+    public static assignLocation(diagnosis: string): { siteId: string, assignedDepartmentId: string } {
+        // Keyword mapping
+        const keywords: Record<string, string[]> = {
+            'Cancer': ['oncology', 'cancer'],
+            'Leukemia': ['oncology', 'hematology'],
+            'Glaucoma': ['eye', 'ophthalmology'],
+            'Traumatic': ['trauma', 'emergency'],
+            'Diabetes': ['primary', 'family', 'internal'],
+            'Crohn': ['gastro', 'internal', 'pharmacy']
+        };
+
+        // 1. Identify keywords for this diagnosis
+        let searchTerms: string[] = ['general'];
+        for (const key of Object.keys(keywords)) {
+            if (diagnosis.includes(key)) {
+                searchTerms = keywords[key];
+                break;
+            }
+        }
+
+        // 2. Find matching department across all sites
+        const candidates: { siteId: string, deptId: string }[] = [];
+
+        ALL_SITES.forEach(site => {
+            site.departments?.forEach(dept => {
+                const dName = dept.name.toLowerCase();
+                if (searchTerms.some(term => dName.includes(term))) {
+                    candidates.push({ siteId: site.id, deptId: dept.id });
+                }
+            });
+        });
+
+        // 3. Return random candidate or fallback
+        if (candidates.length > 0) {
+            const match = candidates[Math.floor(Math.random() * candidates.length)];
+            return { siteId: match.siteId, assignedDepartmentId: match.deptId };
+        }
+
+        // Fallback
+        const randomSite = ALL_SITES[Math.floor(Math.random() * ALL_SITES.length)];
+        return {
+            siteId: randomSite.id,
+            assignedDepartmentId: randomSite.departments?.[0]?.id || 'unknown'
+        };
+    }
+
     static generateMockPatients(count: number = 20): Patient[] {
         const patients: Patient[] = [];
         const diagnoses = ['Acute Lymphoblastic Leukemia', 'Breast Cancer - Stage II', 'Diabetes Type 1', 'Crohn\'s Disease', 'Glaucoma', 'Traumatic Injury'];
         const types: Patient['type'][] = ['pediatric', 'adult', 'geriatric', 'oncology'];
 
-        // Helper to find best matching department
-        // Helper to find best matching department
-        const findLocation = (diagnosis: string): { siteId: string, deptId: string } | null => {
-            // Keyword mapping
-            const keywords: Record<string, string[]> = {
-                'Cancer': ['oncology', 'cancer'],
-                'Leukemia': ['oncology', 'hematology'],
-                'Glaucoma': ['eye', 'ophthalmology'],
-                'Traumatic': ['trauma', 'emergency'],
-                'Diabetes': ['primary', 'family', 'internal'],
-                'Crohn': ['gastro', 'internal', 'pharmacy']
-            };
-
-            // 1. Identify keywords for this diagnosis
-            let searchTerms: string[] = ['general'];
-            for (const key of Object.keys(keywords)) {
-                if (diagnosis.includes(key)) {
-                    searchTerms = keywords[key];
-                    break;
-                }
-            }
-
-            // 2. Find matching department across all sites
-            const candidates: { siteId: string, deptId: string }[] = [];
-
-            ALL_SITES.forEach(site => {
-                site.departments?.forEach(dept => {
-                    const dName = dept.name.toLowerCase();
-                    if (searchTerms.some(term => dName.includes(term))) {
-                        candidates.push({ siteId: site.id, deptId: dept.id });
-                    }
-                });
-            });
-
-            // 3. Return random candidate or fallback
-            if (candidates.length > 0) {
-                return candidates[Math.floor(Math.random() * candidates.length)];
-            }
-
-            // Fallback
-            const randomSite = ALL_SITES[Math.floor(Math.random() * ALL_SITES.length)];
-            return {
-                siteId: randomSite.id,
-                deptId: randomSite.departments?.[0]?.id || 'unknown'
-            };
-        };
-
         for (let i = 0; i < count; i++) {
             const diagnosis = diagnoses[Math.floor(Math.random() * diagnoses.length)];
             const type = types[Math.floor(Math.random() * types.length)];
 
-            const location = findLocation(diagnosis);
+            const location = this.assignLocation(diagnosis);
+
+            const weight = 50 + Math.random() * 70; // 50-120kg
+            const height = 150 + Math.random() * 40; // 150-190cm
+            const bsa = 0.007184 * Math.pow(weight, 0.425) * Math.pow(height, 0.725); // Du Bois
 
             patients.push({
                 id: `pat-${i}`,
                 mrn: `MRN-${10000 + i}`,
-                name: `Patient ${String.fromCharCode(65 + i)}.`, // Anonymized
+                name: `Patient ${String.fromCharCode(65 + (i % 26))}.`, // Cycle A-Z
                 dateOfBirth: new Date(Date.now() - Math.random() * 2000000000000).toISOString().split('T')[0],
                 gender: Math.random() > 0.5 ? 'male' : 'female',
                 diagnosis,
                 type,
                 attendingPhysician: 'Dr. Smith',
                 treatmentSchedule: this.generateSchedule(diagnosis),
-                assignedSiteId: location?.siteId,
-                assignedDepartmentId: location?.deptId
+                assignedSiteId: location.siteId,
+                assignedDepartmentId: location.assignedDepartmentId,
+                biometrics: {
+                    weight: parseFloat(weight.toFixed(1)),
+                    height: parseFloat(height.toFixed(0)),
+                    bsa: parseFloat(bsa.toFixed(2))
+                }
             });
         }
         return patients;

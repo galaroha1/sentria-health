@@ -10,6 +10,48 @@ export class ForecastingService {
      * Advanced Multilevel Probabilistic Forecast (Eq 1.1)
      * D(h) = mu(h) + eta(h)
      */
+    /**
+     * Calculates specific dosage requirement for a patient based on biometrics and drug type.
+     * Returns: quantity in units
+     */
+    private static calculateDosage(patient: Patient, drugName: string): number {
+        const name = drugName.toLowerCase();
+        let quantity = 1; // Default base unit
+
+        // 1. ONCOLOGY: BSA-Based Dosing (mg/m2) -> Converted to Vials
+        // Keytruda/Opdivo/Chemo typically 2mg/kg or fixed mg/m2
+        if (name.includes('keytruda') || name.includes('opdivo') || name.includes('fluorouracil') || patient.type === 'oncology') {
+            const bsa = patient.biometrics?.bsa || 1.73; // Fallback to average human BSA
+            // Mock: 100mg/m2 required
+            const mgRequired = bsa * 100; // e.g. 1.73 * 100 = 173mg
+            // Vials: Comes in 100mg vials. Round up.
+            quantity = Math.ceil(mgRequired / 100);
+        }
+
+        // 2. PEDIATRIC: Weight-Based Dosing (mg/kg)
+        else if (patient.type === 'pediatric') {
+            const weight = patient.biometrics?.weight || 20; // Fallback 20kg
+            // Rule: 1 vial per 30kg of body weight
+            quantity = Math.ceil(weight / 30);
+        }
+
+        // 3. STANDARD ADULT: Fixed Dosing w/ Acuity multiplier
+        else {
+            // High acuity diagnoses might require double dosing or more frequent admin
+            if (patient.diagnosis.toLowerCase().includes('stage iv') || patient.diagnosis.toLowerCase().includes('severe')) {
+                quantity = 2;
+            } else {
+                quantity = 1;
+            }
+        }
+
+        return quantity;
+    }
+
+    /**
+     * Advanced Multilevel Probabilistic Forecast (Eq 1.1)
+     * D(h) = sum(PatientNeed_p) + eta(h)
+     */
     static generateProbabilisticForecast(
         ndc: string,
         siteId: string,
@@ -27,15 +69,13 @@ export class ForecastingService {
         forecastHorizon.setDate(today.getDate() + 90);
 
         // 1.1 DETERMINISTIC COMPONENT (mu)
-        // Sum(Scheduled * Seasonality * Acuity * Risk * Exogenous)
+        // Sum(Scheduled * SpecificDosage * Seasonality * Risk)
         let mu_total = 0;
 
-        // Mock Exogenous Factors (Eq 1.1.1 E(h))
-        // In real system, this pulls from 'f(ILI, COVID, temp)'
-        // We assume "Winter" season spikes respiratory drugs
+        // Exogenous Factors
         const isFluSeason = new Date().getMonth() > 9 || new Date().getMonth() < 2;
         const exogenousFactor = (drugName.includes('Vaccine') || drugName.includes('Tamiflu')) && isFluSeason
-            ? 1.4 // High ILI prevalence 
+            ? 1.4
             : 1.0;
 
         patients.forEach(patient => {
@@ -48,29 +88,25 @@ export class ForecastingService {
                     txDate >= today &&
                     txDate <= forecastHorizon
                 ) {
-                    console.log(`[Forecast] Match Found! Patient ${patient.name} needs ${drugName} on ${txDate.toISOString().split('T')[0]}`);
-                    const doseQty = parseInt(treatment.dose) || 1;
+                    // CALCULATE TRUE PATIENT NEED
+                    const specificQty = this.calculateDosage(patient, drugName);
 
-                    // Patient Acuity Model (A_p) - Simply randomized for now based on data presence
-                    // In Eq: A_p = sigma(theta * x_p)
-                    const patientAcuity = acuityWeight;
+                    // Patient Risk Factor (Adherence/No-Show)
+                    // Older patients > 70 might miss appointments? Or be more compliant?
+                    // Let's assume Distance is a factor (mocked as random 0.8-1.0 adherence if missing data)
+                    const adherenceProb = 0.95;
 
                     // Time-Varying Seasonality (W(h))
-                    // Modeled as simple scalar here
                     const seasonalW = seasonalityFactor;
 
-                    mu_total += doseQty * patientAcuity * seasonalW * exogenousFactor;
+                    mu_total += specificQty * adherenceProb * seasonalW * exogenousFactor;
                 }
             });
         });
 
         // 1.2 STOCHASTIC COMPONENT (eta) ~ NegBin(alpha, beta)
-        // Approximated here as Poisson(lambda) + Gamma Noise
-        // lambda = Base Rate (historical) * exp(LatentState)
-        const lambda_base = mu_total * 0.2; // MODEL ASSUMPTION: 20% buffer for Unscheduled/Emergency demand (e.g. ED walk-ins)
-
-        // Sampling from Poisson Distribution
-        // Knuth's algorithm for Poisson generation
+        // Approximated here as Poisson(lambda)
+        const lambda_base = mu_total * 0.2; // 20% Unscheduled buffer
         const L = Math.exp(-lambda_base);
         let k = 0;
         let p = 1;
@@ -84,8 +120,9 @@ export class ForecastingService {
         const D_total = mu_total + eta_stochastic;
 
         // 1.4 Variance Calculation (for Safety Stock)
-        // Var = Mean + (Dispersion * Mean^2) -> characteristic of NegBin
-        const dispersion = acuityWeight > 1.2 ? 0.5 : 0.1;
+        // Higher variance for Oncology (due to BSA variability and condition changes)
+        // Var = Mean + (Dispersion * Mean^2)
+        const dispersion = drugName.toLowerCase().includes('keytruda') || drugName.toLowerCase().includes('cancer') ? 0.8 : 0.2;
         const variance = D_total + (dispersion * Math.pow(D_total, 2));
 
         return {

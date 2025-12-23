@@ -13,7 +13,7 @@ export interface SystemSettings {
 
 export class SystemSettingsService {
     private static cache: SystemSettings | null = null;
-    private static readonly DOC_ID = 'config';
+    private static readonly DOC_ID = 'global';
 
     /**
      * Get a secret key. Tries Firestore first, falls back to ENV.

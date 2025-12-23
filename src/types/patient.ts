@@ -20,4 +20,9 @@ export interface Patient {
     treatmentSchedule: Treatment[];
     assignedSiteId?: string; // Links patient to a specific facility
     assignedDepartmentId?: string; // Links patient to a specific unit (e.g. Oncology vs ER)
+    biometrics?: {
+        weight: number; // kg
+        height: number; // cm
+        bsa?: number;   // m2 (calculated)
+    };
 }
