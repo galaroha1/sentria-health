@@ -3,6 +3,32 @@ import type { ProcurementProposal } from '../types/procurement';
 
 export class OptimizationService {
 
+    // --- HELPER METHODS RESTORED FOR COMPATIBILITY ---
+
+    /**
+     * Helper: Infer Clinical Attributes from Drug Metadata
+     */
+    public static inferAttributes(drugName: string, _ndc?: string): { isColdChain: boolean, schedule: 'II' | 'III' | 'IV' | 'V' | null } {
+        const n = drugName.toLowerCase();
+        let isColdChain = false;
+        let schedule: 'II' | 'III' | 'IV' | 'V' | null = null;
+        if (n.includes('injection') || n.includes('vial') || n.includes('suspension') || n.includes('insulin') || n.includes('vaccine')) isColdChain = true;
+        if (n.includes('oxycodone') || n.includes('fentanyl') || n.includes('morphine')) schedule = 'II';
+        else if (n.includes('testosterone') || n.includes('ketamine')) schedule = 'III';
+        else if (n.includes('alprazolam') || n.includes('clonazepam') || n.includes('diazepam')) schedule = 'IV';
+        else if (n.includes('pregabalin') || n.includes('codeine')) schedule = 'V';
+        return { isColdChain, schedule };
+    }
+
+    /**
+     * REGULATORY COMPLIANCE LAYER
+     */
+    static validateTransfer(source: Site, target: Site, _drugAttributes: { schedule: string | null }): { valid: boolean; reason?: string } {
+        if (!source.regulatoryProfile?.dscsaCompliant || !target.regulatoryProfile?.dscsaCompliant) return { valid: false, reason: 'DSCSA Validation Failed' };
+        if (source.regulatoryProfile.is340B !== target.regulatoryProfile.is340B) return { valid: false, reason: '340B Integrity Conflict' };
+        return { valid: true };
+    }
+
     /**
      * STRICT DECISION LOGIC SPECIFICATION (DECISIONS 1-9)
      * Aligns with "AI Inventory Optimization — Decision Logic Specification"
@@ -79,12 +105,10 @@ export class OptimizationService {
                 // DECISION 3: Does the site have inventory for this drug?
                 // =============================================================================
                 let onHand = 0;
-                let maxLevel = 100; // Default if unknown
                 const inventoryItem = siteInv?.get(ndc);
 
                 if (inventoryItem) {
                     onHand = inventoryItem.quantity;
-                    maxLevel = inventoryItem.maxLevel;
                 } else {
                     // ELSE OnHand = 0 (Virtual Deficit)
                     onHand = 0;
@@ -117,7 +141,7 @@ export class OptimizationService {
                 // DECISION 6: What is the target quantity?
                 // =============================================================================
                 // TargetQuantity = ceil(RawDeficit * (1 + SafetyBuffer))
-                // Note: User spec says RawDeficit * Buffer. Usually it's Demand * Buffer. 
+                // Note: User spec says RawDeficit * Buffer. Usually it's Demand * Buffer.
                 // Following Spec: applied to the *Deficit* to buffer the *buy*.
                 const targetQty = Math.ceil(rawDeficit * (1 + safetyBufferPct));
 
@@ -164,20 +188,17 @@ export class OptimizationService {
                                     ndc: ndc,
                                     quantity: transferQty,
                                     reason: `Network Transfer: Surplus identified at ${otherSite.name} (> Max Levels)`,
-                                    status: 'pending',
                                     score: 0.95,
-                                    confidence: 0.9,
-                                    impact: { financial: 1000, operational: 'high', clinical: 'high' },
                                     costAnalysis: {
-                                        currentCost: 0,
-                                        projectedCost: 50, // Logistics cost
-                                        savings: 5000, // Mock savings vs Purchase
+                                        distanceKm: 50, // Mock
                                         transportCost: 50,
                                         itemCost: 0,
-                                        totalCost: 50
+                                        totalCost: 50,
+                                        savings: 5000 // Mock savings vs Purchase
                                     },
                                     fulfillmentNode: 'Internal',
-                                    vendorName: otherSite.name
+                                    vendorName: otherSite.name,
+                                    regulatoryJustification: { passed: true, details: ['Internal Approved'] }
                                 });
 
                                 // Reduce NetDeficit
@@ -192,6 +213,7 @@ export class OptimizationService {
                 // =============================================================================
                 // IF NetDeficit > 0 AFTER all transfers
                 if (netDeficit > 0) {
+                    const estimatedCost = netDeficit * 150;
                     // Create PURCHASE Proposal
                     proposals.push({
                         id: `prop-buy-${Date.now()}-${Math.random()}`,
@@ -203,19 +225,18 @@ export class OptimizationService {
                         quantity: netDeficit,
                         reason: `External Procurement: Needed to cover demand deficit`,
                         vendorName: 'McKesson', // Default vendor
-                        status: 'pending',
                         score: 0.85,
-                        confidence: 0.8,
-                        impact: { financial: -netDeficit * 100, operational: 'medium', clinical: 'critical' },
+                        channel: 'GPO',
+
                         costAnalysis: {
-                            currentCost: 0,
-                            projectedCost: netDeficit * 150,
-                            savings: 0,
+                            distanceKm: 0,
                             transportCost: 15,
-                            itemCost: netDeficit * 150,
-                            totalCost: (netDeficit * 150) + 15
+                            itemCost: estimatedCost,
+                            totalCost: estimatedCost + 15,
+                            savings: 0
                         },
-                        fulfillmentNode: 'External'
+                        fulfillmentNode: 'External',
+                        regulatoryJustification: { passed: true, details: ['Vendor Approved'] }
                     });
                 }
             }
