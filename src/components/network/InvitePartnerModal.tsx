@@ -34,7 +34,7 @@ export function InvitePartnerModal({ isOpen, onClose, onInvite }: InvitePartnerM
             <div className="w-full max-w-md rounded-xl border border-blue-100 bg-white shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between border-b border-slate-200 p-6">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-primary-600">
                             <Mail className="h-5 w-5" />
                         </div>
                         <h2 className="text-xl font-bold text-slate-900">Invite Partner</h2>
@@ -91,7 +91,7 @@ export function InvitePartnerModal({ isOpen, onClose, onInvite }: InvitePartnerM
                         </button>
                         <button
                             type="submit"
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 flex items-center gap-2"
+                            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 flex items-center gap-2"
                         >
                             <Send className="h-4 w-4" />
                             Send Invitation

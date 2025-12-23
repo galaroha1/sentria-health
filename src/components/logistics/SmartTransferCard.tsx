@@ -19,7 +19,7 @@ export function SmartTransferCard({ suggestion, sourceSite, targetSite, onApprov
 
             <div className="mb-4 flex items-start justify-between relative z-10">
                 <div className="flex items-center gap-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isBuy ? 'bg-blue-50 text-blue-600' : 'bg-primary-50 text-primary-600'}`}>
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isBuy ? 'bg-blue-50 text-primary-600' : 'bg-primary-50 text-primary-600'}`}>
                         {isBuy ? <ShoppingCart className="h-5 w-5" /> : <TrendingUp className="h-5 w-5" />}
                     </div>
                     <div>
@@ -75,7 +75,7 @@ export function SmartTransferCard({ suggestion, sourceSite, targetSite, onApprov
                 </div>
                 {suggestion.reason.map((reason, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-slate-600 bg-slate-50/50 p-1.5 rounded">
-                        <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-primary-500 shrink-0" />
                         {reason}
                     </div>
                 ))}
@@ -90,7 +90,7 @@ export function SmartTransferCard({ suggestion, sourceSite, targetSite, onApprov
                 </button>
                 <button
                     onClick={() => onApprove(suggestion)}
-                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors ${isBuy ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-slate-800'}`}
+                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors ${isBuy ? 'bg-primary-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-slate-800'}`}
                 >
                     {isBuy ? 'Purchase & Ship' : 'Approve Transfer'}
                 </button>

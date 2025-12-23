@@ -91,7 +91,7 @@ export function CalendarGrid({ currentDate, events, onDateChange, onSelectDate, 
                             onClick={() => onSelectDate(dateObj)}
                             className={`p-2 transition-all cursor-pointer flex flex-col justify-between group relative
                                 ${isSelected ? 'bg-blue-50 ring-2 ring-inset ring-blue-500' : ''}
-                                ${isToday ? 'bg-indigo-50/30' : ''}
+                                ${isToday ? 'bg-primary-50/30' : ''}
                                 ${isHighlighted ? 'bg-yellow-50 ring-2 ring-inset ring-yellow-400 z-10' : 'hover:bg-blue-50/50'}
                             `}
                         >
@@ -106,7 +106,7 @@ export function CalendarGrid({ currentDate, events, onDateChange, onSelectDate, 
                             )}
 
                             <div className="flex justify-between items-start">
-                                <span className={`text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full ${isToday ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-700'
+                                <span className={`text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full ${isToday ? 'bg-primary-600 text-white shadow-sm' : 'text-slate-700'
                                     }`}>
                                     {day}
                                 </span>

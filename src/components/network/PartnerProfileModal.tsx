@@ -15,7 +15,7 @@ export function PartnerProfileModal({ isOpen, onClose, partner }: PartnerProfile
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="relative h-32 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <div className="relative h-32 bg-gradient-to-r from-primary-600 to-primary-600">
                     <button
                         onClick={onClose}
                         className="absolute right-4 top-4 p-2 bg-black/20 hover:bg-black/30 text-white rounded-full transition-colors"
@@ -24,7 +24,7 @@ export function PartnerProfileModal({ isOpen, onClose, partner }: PartnerProfile
                     </button>
                     <div className="absolute -bottom-10 left-8">
                         <div className="h-20 w-20 rounded-2xl bg-white p-1 shadow-lg">
-                            <div className="h-full w-full rounded-xl bg-slate-50 flex items-center justify-center text-blue-600">
+                            <div className="h-full w-full rounded-xl bg-slate-50 flex items-center justify-center text-primary-600">
                                 <Building2 className="h-10 w-10" />
                             </div>
                         </div>
@@ -104,7 +104,7 @@ export function PartnerProfileModal({ isOpen, onClose, partner }: PartnerProfile
 
                             <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                                 <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-blue-600" />
+                                    <ShieldCheck className="h-4 w-4 text-primary-600" />
                                     Active Agreement
                                 </h3>
                                 <p className="text-xs text-blue-700 leading-relaxed">
@@ -121,7 +121,7 @@ export function PartnerProfileModal({ isOpen, onClose, partner }: PartnerProfile
                         >
                             Close
                         </button>
-                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm shadow-blue-200 transition-colors">
+                        <button className="px-4 py-2 bg-primary-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm shadow-blue-200 transition-colors">
                             Request Connection
                         </button>
                     </div>

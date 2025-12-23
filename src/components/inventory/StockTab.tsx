@@ -39,13 +39,13 @@ export function StockTab({ inventories, sites, onLocate }: StockTabProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-primary-600">
                         <Droplets className="h-6 w-6" />
                     </div>
                     <div>
                         <p className="text-sm font-medium text-slate-500">Humidity</p>
                         <p className="text-xl font-bold text-slate-900">45%</p>
-                        <p className="text-xs text-blue-600">Normal</p>
+                        <p className="text-xs text-primary-600">Normal</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

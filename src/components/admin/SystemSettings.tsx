@@ -133,7 +133,7 @@ export function SystemSettings() {
             </div>
 
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-primary-600 shrink-0 mt-0.5" />
                 <div>
                     <h4 className="text-sm font-semibold text-blue-900">Security Note</h4>
                     <p className="text-xs text-blue-700 mt-1">

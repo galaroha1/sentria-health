@@ -19,19 +19,19 @@ export function MorningBriefing() {
     };
 
     return (
-        <div className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white shadow-lg">
+        <div className="rounded-xl bg-gradient-to-r from-primary-600 to-violet-600 p-6 text-white shadow-lg">
             <div className="flex items-start justify-between">
                 <div>
-                    <div className="flex items-center gap-2 text-indigo-100">
+                    <div className="flex items-center gap-2 text-primary-100">
                         <Sun className="h-5 w-5" />
                         <span className="font-medium">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
                     </div>
                     <h2 className="mt-2 text-3xl font-bold">{getTimeGreeting()}, Dr. Smith.</h2>
-                    <p className="mt-1 text-indigo-100">Here's what requires your attention today:</p>
+                    <p className="mt-1 text-primary-100">Here's what requires your attention today:</p>
                 </div>
                 <div className="hidden rounded-lg bg-white/10 p-3 backdrop-blur-sm sm:block">
                     <div className="text-center">
-                        <p className="text-xs font-medium text-indigo-100">System Status</p>
+                        <p className="text-xs font-medium text-primary-100">System Status</p>
                         <div className="mt-1 flex items-center justify-center gap-1.5">
                             <div className="h-2 w-2 rounded-full bg-emerald-400" />
                             <span className="text-sm font-bold">Operational</span>
@@ -48,7 +48,7 @@ export function MorningBriefing() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold">{criticalStockouts}</p>
-                            <p className="text-xs font-medium text-indigo-100">Critical Stockouts</p>
+                            <p className="text-xs font-medium text-primary-100">Critical Stockouts</p>
                         </div>
                     </div>
                 </div>
@@ -60,7 +60,7 @@ export function MorningBriefing() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold">{pendingRequests}</p>
-                            <p className="text-xs font-medium text-indigo-100">Pending Approvals</p>
+                            <p className="text-xs font-medium text-primary-100">Pending Approvals</p>
                         </div>
                     </div>
                 </div>
@@ -72,7 +72,7 @@ export function MorningBriefing() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold">{activeTransfers}</p>
-                            <p className="text-xs font-medium text-indigo-100">Active Transfers</p>
+                            <p className="text-xs font-medium text-primary-100">Active Transfers</p>
                         </div>
                     </div>
                 </div>

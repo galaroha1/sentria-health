@@ -94,12 +94,12 @@ export function Inventory() {
                                 >
                                     {/* Active Indicator Line */}
                                     {isActive && (
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-indigo-500 rounded-r-full" />
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-primary-500 rounded-r-full" />
                                     )}
 
                                     <div className={`rounded-lg p-2 transition-all duration-300 ${isActive
                                         ? 'bg-white/20 text-white rotate-0'
-                                        : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-600 group-hover:rotate-12 group-hover:shadow-sm'
+                                        : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-primary-600 group-hover:rotate-12 group-hover:shadow-sm'
                                         }`}>
                                         <Icon className="h-5 w-5" />
                                     </div>
@@ -108,7 +108,7 @@ export function Inventory() {
                                         <span className={`block text-sm font-bold transition-colors ${isActive ? 'text-white' : 'text-slate-700 group-hover:text-slate-900'}`}>
                                             {tab.label}
                                         </span>
-                                        <span className={`block text-[10px] font-medium transition-colors ${isActive ? 'text-slate-400' : 'text-slate-400 group-hover:text-indigo-500/80'
+                                        <span className={`block text-[10px] font-medium transition-colors ${isActive ? 'text-slate-400' : 'text-slate-400 group-hover:text-primary-500/80'
                                             }`}>
                                             {tab.desc}
                                         </span>
@@ -116,7 +116,7 @@ export function Inventory() {
 
                                     {/* Hover Arrow */}
                                     <div className={`transition-all duration-200 ${isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'}`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-indigo-400' : 'bg-indigo-600'}`} />
+                                        <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-primary-400' : 'bg-primary-600'}`} />
                                     </div>
                                 </button>
                             );

@@ -89,7 +89,7 @@ export function CaseCartModal({ isOpen, onClose, patientName, procedureName, sur
                                             {item.status.toUpperCase()}
                                         </p>
                                     </div>
-                                    <button className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-blue-600 transition-all">
+                                    <button className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-primary-600 transition-all">
                                         <Edit2 className="h-4 w-4" />
                                     </button>
                                 </div>

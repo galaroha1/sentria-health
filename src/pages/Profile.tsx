@@ -169,7 +169,7 @@ export function Profile() {
                                                     updateUser({ role: 'Super Admin' as any });
                                                     setTimeout(() => window.location.reload(), 500);
                                                 }}
-                                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                                                className="text-xs font-bold text-primary-600 hover:text-primary-800"
                                             >
                                                 Switch to Super Admin (Demo)
                                             </button>

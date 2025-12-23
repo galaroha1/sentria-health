@@ -154,7 +154,7 @@ export function PatientDetailsModal({ patient, onClose }: PatientDetailsModalPro
                                 {/* Encounters */}
                                 <div className="rounded-xl border border-slate-200 p-5">
                                     <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-900">
-                                        <Activity className="h-5 w-5 text-indigo-500" /> Recent Encounters
+                                        <Activity className="h-5 w-5 text-primary-500" /> Recent Encounters
                                     </h3>
                                     <div className="space-y-3">
                                         {patient.rawBundle.encounters?.map((enc: any, i: number) => (
@@ -163,7 +163,7 @@ export function PatientDetailsModal({ patient, onClose }: PatientDetailsModalPro
                                                     <p className="font-medium text-slate-900">{enc.type[0].text}</p>
                                                     <p className="text-xs text-slate-500">{new Date(enc.period.start).toLocaleDateString()}</p>
                                                 </div>
-                                                <span className="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">
+                                                <span className="px-2 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-medium">
                                                     {enc.class.code}
                                                 </span>
                                             </div>

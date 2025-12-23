@@ -56,7 +56,7 @@ export function Marketplace() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow">
+            <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm focus-within:ring-2 focus-within:ring-primary-500 transition-shadow">
                 <Search className="h-5 w-5 text-slate-400" />
                 <input
                     type="text"

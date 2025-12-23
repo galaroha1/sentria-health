@@ -37,12 +37,12 @@ export function DataGeneration() {
                                 >
                                     {/* Active Indicator Line */}
                                     {isActive && (
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-indigo-500 rounded-r-full" />
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-primary-500 rounded-r-full" />
                                     )}
 
                                     <div className={`rounded-lg p-2 transition-all duration-300 ${isActive
                                         ? 'bg-white/20 text-white rotate-0'
-                                        : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-600 group-hover:rotate-12 group-hover:shadow-sm'
+                                        : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-primary-600 group-hover:rotate-12 group-hover:shadow-sm'
                                         }`}>
                                         <Icon className="h-5 w-5" />
                                     </div>
@@ -56,7 +56,7 @@ export function DataGeneration() {
                                     </div>
 
                                     {isActive && (
-                                        <div className="absolute right-4 h-2 w-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.6)] animate-pulse" />
+                                        <div className="absolute right-4 h-2 w-2 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(129,140,248,0.6)] animate-pulse" />
                                     )}
                                 </button>
                             );

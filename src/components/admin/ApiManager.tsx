@@ -77,7 +77,7 @@ export function ApiManager() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center">
                         <Shield className="h-5 w-5" />
                     </div>
                     <div>
@@ -103,7 +103,7 @@ export function ApiManager() {
                                     type={showSecrets.mckKey ? "text" : "password"}
                                     value={keys.mckessonApiKey}
                                     onChange={e => setKeys({ ...keys, mckessonApiKey: e.target.value })}
-                                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-slate-50"
                                     placeholder="Enter Production API Key"
                                 />
                                 <button onClick={() => toggleShow('mckKey')} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
@@ -120,7 +120,7 @@ export function ApiManager() {
                                     type="text"
                                     value={keys.mckessonAccountId}
                                     onChange={e => setKeys({ ...keys, mckessonAccountId: e.target.value })}
-                                    className="w-full pl-9 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                                    className="w-full pl-9 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-slate-50"
                                     placeholder="McKesson Account ID"
                                 />
                             </div>
@@ -144,7 +144,7 @@ export function ApiManager() {
                                 type={showSecrets.cardKey ? "text" : "password"}
                                 value={keys.cardinalApiKey}
                                 onChange={e => setKeys({ ...keys, cardinalApiKey: e.target.value })}
-                                className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                                className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-slate-50"
                                 placeholder="Enter Production API Key"
                             />
                             <button onClick={() => toggleShow('cardKey')} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">

@@ -79,14 +79,14 @@ export function ComplianceTab() {
                             placeholder={verificationType === 'device' ? "Enter UDI (Device Identifier)..." : "Enter Drug Brand Name..."}
                             value={verificationTerm}
                             onChange={(e) => setVerificationTerm(e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                             onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
                         />
                     </div>
                     <button
                         onClick={handleVerify}
                         disabled={isVerifying || !verificationTerm}
-                        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
                     >
                         {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                         Verify

@@ -72,7 +72,7 @@ export function SavingsProjection() {
 
                 <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600">
                             <TrendingUp className="h-5 w-5 text-white" />
                         </div>
                         <div>
@@ -114,7 +114,7 @@ export function SavingsProjection() {
                         const Icon = item.icon;
                         const colorClassesMap: Record<string, { bg: string; text: string; badge: string }> = {
                             emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600', badge: 'bg-emerald-50 text-emerald-700' },
-                            blue: { bg: 'bg-blue-100', text: 'text-blue-600', badge: 'bg-blue-50 text-blue-700' },
+                            blue: { bg: 'bg-blue-100', text: 'text-primary-600', badge: 'bg-blue-50 text-blue-700' },
                             purple: { bg: 'bg-purple-100', text: 'text-purple-600', badge: 'bg-purple-50 text-purple-700' },
                         };
                         const colorClasses = colorClassesMap[item.color];

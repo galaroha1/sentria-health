@@ -59,7 +59,7 @@ export function ProcurementTab() {
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-bold text-slate-900">Receive Shipment</h3>
-                        <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                        <div className="rounded-full bg-blue-100 p-2 text-primary-600">
                             <Truck className="h-5 w-5" />
                         </div>
                     </div>

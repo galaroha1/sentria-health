@@ -143,7 +143,7 @@ export function ModelTraining() {
                     </div>
                     <div className="mb-6 h-3 w-full overflow-hidden rounded-full bg-slate-100">
                         <div
-                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-300 ease-out"
+                            className="h-full bg-gradient-to-r from-purple-500 to-primary-600 transition-all duration-300 ease-out"
                             style={{ width: `${progress}%` }}
                         />
                     </div>

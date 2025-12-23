@@ -62,7 +62,7 @@ export function Compliance() {
             {/* Quick Stats / Highlights */}
             <div className="grid gap-6 md:grid-cols-3">
                 <div className="rounded-xl border border-blue-100 bg-blue-50 p-6">
-                    <div className="mb-4 inline-flex rounded-lg bg-blue-100 p-3 text-blue-600">
+                    <div className="mb-4 inline-flex rounded-lg bg-blue-100 p-3 text-primary-600">
                         <Info className="h-6 w-6" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900">PAD Definition</h3>

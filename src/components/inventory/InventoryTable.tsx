@@ -49,7 +49,7 @@ export function InventoryTable({ items }: InventoryTableProps) {
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${item.status === 'critical' ? 'bg-red-50 text-red-700 ring-1 ring-red-100' :
                                         item.status === 'low' ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-100' :
-                                            item.status === 'overstocked' ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100' :
+                                            item.status === 'overstocked' ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-100' :
                                                 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
                                         }`}>
                                         {item.status === 'well_stocked' && <CheckCircle2 className="h-3 w-3" />}

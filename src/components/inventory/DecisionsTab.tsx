@@ -20,13 +20,13 @@ function StepItem({ step, current, label, desc }: { step: string, current: strin
     return (
         <div className={`flex items-start gap-3 transition-colors ${isActive ? 'opacity-100' : isComplete ? 'opacity-70' : 'opacity-40'}`}>
             <div className={`mt-1 h-5 w-5 rounded-full border flex items-center justify-center ${isComplete ? 'bg-emerald-500 border-emerald-500 text-white' :
-                isActive ? 'border-indigo-600 text-indigo-600' : 'border-slate-300'
+                isActive ? 'border-primary-600 text-primary-600' : 'border-slate-300'
                 }`}>
                 {isComplete && <CheckCircle2 className="h-3 w-3" />}
-                {isActive && <div className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />}
+                {isActive && <div className="h-2 w-2 rounded-full bg-primary-600 animate-pulse" />}
             </div>
             <div>
-                <p className={`text-sm font-bold ${isActive ? 'text-indigo-900' : 'text-slate-900'}`}>{label}</p>
+                <p className={`text-sm font-bold ${isActive ? 'text-primary-900' : 'text-slate-900'}`}>{label}</p>
                 <p className="text-xs text-slate-500">{desc}</p>
             </div>
         </div>
@@ -235,7 +235,7 @@ export function DecisionsTab() {
                         {/* Left Side: Status Steps */}
                         <div className="w-full md:w-1/3 bg-slate-50 p-8 border-r border-slate-200 flex flex-col">
                             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <Zap className={`h-6 w-6 text-indigo-600 ${isOptimizing ? 'animate-spin' : ''}`} />
+                                <Zap className={`h-6 w-6 text-primary-600 ${isOptimizing ? 'animate-spin' : ''}`} />
                                 Auto-Logistics
                             </h2>
 
@@ -295,7 +295,7 @@ export function DecisionsTab() {
                 <button
                     onClick={runOptimization}
                     disabled={isOptimizing}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:opacity-70"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:from-primary-700 hover:to-purple-700 hover:shadow-xl disabled:opacity-70"
                 >
                     <Zap className={`h-4 w-4 ${isOptimizing ? 'animate-spin' : ''}`} />
                     {isOptimizing ? 'Running Analysis...' : 'Run Auto-Logistics'}
@@ -310,7 +310,7 @@ export function DecisionsTab() {
                         }`}
                 >
                     <div className="flex items-center justify-between">
-                        <div className="rounded-full bg-blue-100 p-3 text-blue-600">
+                        <div className="rounded-full bg-blue-100 p-3 text-primary-600">
                             <Clock className="h-6 w-6" />
                         </div>
                         <span className="text-2xl font-black text-slate-900">{pendingRequests.length}</span>
@@ -366,7 +366,7 @@ export function DecisionsTab() {
                                     <div key={req.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:shadow-sm">
                                         <div className="flex items-center gap-4">
                                             <div className={`flex h-10 w-10 items-center justify-center rounded-full ${req.urgency === 'emergency' ? 'bg-red-100 text-red-600' :
-                                                req.urgency === 'urgent' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                                                req.urgency === 'urgent' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-primary-600'
                                                 }`}>
                                                 <Clock className="h-5 w-5" />
                                             </div>

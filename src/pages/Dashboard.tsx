@@ -114,11 +114,11 @@ export function Dashboard() {
                                     {/* Active Transfers - Shortcuts to Inventory/Logistics */}
                                     <div
                                         onClick={() => navigate('/inventory')}
-                                        className="cursor-pointer rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group"
+                                        className="cursor-pointer rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-primary-200 group"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Logistics & AI</p>
+                                                <p className="text-sm font-medium text-slate-500 group-hover:text-primary-600 transition-colors">Logistics & AI</p>
                                                 <p className="text-2xl font-bold text-slate-900">{activeTransfersCount} Active</p>
                                             </div>
                                             <div className="rounded-full bg-purple-100 p-3 text-purple-600 group-hover:bg-purple-200 transition-colors">

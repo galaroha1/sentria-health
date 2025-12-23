@@ -48,7 +48,7 @@ export function PreferenceCardView({ card, onSave }: PreferenceCardViewProps) {
                                     onSave({ ...card, items });
                                     setIsEditing(false);
                                 }}
-                                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 shadow-sm transition-colors"
+                                className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 shadow-sm transition-colors"
                             >
                                 <Save className="h-4 w-4" />
                                 Save Changes
@@ -57,7 +57,7 @@ export function PreferenceCardView({ card, onSave }: PreferenceCardViewProps) {
                     ) : (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="rounded-lg px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 border border-indigo-200 transition-colors"
+                            className="rounded-lg px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 border border-primary-200 transition-colors"
                         >
                             Edit Card
                         </button>
@@ -106,7 +106,7 @@ export function PreferenceCardView({ card, onSave }: PreferenceCardViewProps) {
                 ))}
 
                 {isEditing && (
-                    <button className="w-full py-3 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all flex items-center justify-center gap-2 mt-4">
+                    <button className="w-full py-3 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-500 hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50/50 transition-all flex items-center justify-center gap-2 mt-4">
                         <Plus className="h-4 w-4" />
                         Add New Item
                     </button>
@@ -117,7 +117,7 @@ export function PreferenceCardView({ card, onSave }: PreferenceCardViewProps) {
             {!isEditing && (
                 <div className="mt-6 rounded-lg bg-blue-50 p-4 border border-blue-100">
                     <div className="flex gap-3">
-                        <div className="p-2 bg-blue-100 rounded-full h-fit text-blue-600">
+                        <div className="p-2 bg-blue-100 rounded-full h-fit text-primary-600">
                             <TrendingDown className="h-5 w-5" />
                         </div>
                         <div>

@@ -164,7 +164,7 @@ export function ClinicalHub() {
                                 }
                             }
                         }}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm"
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm text-sm"
                     />
                 </div>
             )}
@@ -220,7 +220,7 @@ export function ClinicalHub() {
                                             {event.type === 'surgery' && (
                                                 <button
                                                     onClick={() => setSelectedCase({ patient: event.patientName, procedure: event.title, surgeon: event.surgeon || 'Dr. Chen' })}
-                                                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="text-xs font-semibold text-primary-600 hover:text-blue-800 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
                                                     View Cart <ChevronRight className="h-3 w-3" />
                                                 </button>
@@ -277,7 +277,7 @@ export function ClinicalHub() {
                             <div className="space-y-4">
                                 {recommendations.map((rec, i) => (
                                     <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-600">
                                             <TrendingDown className="h-4 w-4" />
                                         </div>
                                         <div className="flex-1">
@@ -290,7 +290,7 @@ export function ClinicalHub() {
                                             </p>
                                             <button
                                                 onClick={() => toast.success('Optimization applied to all future cases')}
-                                                className="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                                                className="mt-2 text-xs font-bold text-primary-600 hover:text-primary-800"
                                             >
                                                 Apply Recommendation
                                             </button>
@@ -325,7 +325,7 @@ export function ClinicalHub() {
                     <p className="mt-2 text-slate-500 max-w-md">Submit new product requests for clinical and financial review. Track usage trials and outcomes.</p>
                     <button
                         onClick={() => toast('VAC Request Form coming in next sprint', { icon: '📝' })}
-                        className="mt-8 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:scale-105"
+                        className="mt-8 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all hover:scale-105"
                     >
                         Start New Request
                     </button>

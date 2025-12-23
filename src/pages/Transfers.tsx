@@ -151,7 +151,7 @@ export function Transfers() {
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-primary-600">
                             <Truck className="h-6 w-6" />
                         </div>
                         <div>

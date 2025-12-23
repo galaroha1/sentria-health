@@ -8,30 +8,30 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#f0f5ff',
-          100: '#e0ebff',
-          200: '#c2d6ff',
-          300: '#94b8ff',
-          400: '#5c90ff',
-          500: '#2e66ff',
-          600: '#0044cc',
-          700: '#013399',
-          800: '#011f5b', // Penn Medicine Blue (Main)
-          900: '#011a4d',
-          950: '#000e33',
+          50: '#F2F6FC',  // Very light blue/grey
+          100: '#E1E9F7',
+          200: '#C5D6F2',
+          300: '#9ABBE8',
+          400: '#6495DB',
+          500: '#3D72CB', // Lighter accessible blue
+          600: '#011F5B', // **Penn Blue** (Primary/Brand Anchor) - Moved to 600 for common button usage
+          700: '#01194A',
+          800: '#011F5B', // Keeping 800 as anchor for text/bgs
+          900: '#001238',
+          950: '#000A21',
         },
         secondary: {
-          50: '#fff0f0',
-          100: '#ffe0e0',
-          200: '#ffc2c2',
-          300: '#ff9494',
-          400: '#ff5c5c',
-          500: '#ff2e2e',
-          600: '#cc0000',
-          700: '#990000', // Penn Medicine Red (Accent)
+          50: '#FEF2F2',
+          100: '#FDE6E6',
+          200: '#FBD0D0',
+          300: '#F7AAB0',
+          400: '#F27D87',
+          500: '#E84E5D',
+          600: '#D4263B',
+          700: '#990000', // **Penn Red** (Brand Anchor)
           800: '#800000',
-          900: '#660000',
-          950: '#400000',
+          900: '#6B0000',
+          950: '#3D0000',
         },
       },
       fontFamily: {

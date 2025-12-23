@@ -95,13 +95,13 @@ export function NetworkHub() {
                         <div className="flex rounded-lg bg-slate-100 p-1">
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                                className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow text-primary-600' : 'text-slate-500 hover:text-slate-900'}`}
                             >
                                 <List className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => setViewMode('map')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'map' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                                className={`p-2 rounded-md transition-all ${viewMode === 'map' ? 'bg-white shadow text-primary-600' : 'text-slate-500 hover:text-slate-900'}`}
                             >
                                 <MapIcon className="h-4 w-4" />
                             </button>
@@ -171,7 +171,7 @@ export function NetworkHub() {
                                     {item.type === 'Surplus' && (
                                         <button
                                             onClick={() => handleRequest(item)}
-                                            className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-100"
+                                            className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-primary-600 transition-colors hover:bg-blue-100"
                                         >
                                             Request
                                         </button>
@@ -203,7 +203,7 @@ export function NetworkHub() {
                             {partners.map((org) => (
                                 <div key={org.id} className="flex items-center justify-between p-6 transition-colors hover:bg-blue-50/30">
                                     <div className="flex items-center gap-5">
-                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-primary-600 shadow-sm ring-1 ring-blue-100">
                                             <Building2 className="h-7 w-7" />
                                         </div>
                                         <div>
@@ -225,7 +225,7 @@ export function NetworkHub() {
                                                 <span className="text-slate-300">•</span>
                                                 <span>{org.type}</span>
                                                 <span className="text-slate-300">•</span>
-                                                <span className="font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{org.trustLevel}</span>
+                                                <span className="font-medium text-primary-600 bg-blue-50 px-2 py-0.5 rounded-md">{org.trustLevel}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -255,7 +255,7 @@ export function NetworkHub() {
                         <div className="bg-slate-50 p-6 text-center border-t border-slate-100 mt-auto">
                             <button
                                 onClick={() => setShowInviteModal(true)}
-                                className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                                className="text-sm font-semibold text-primary-600 hover:text-blue-700 hover:underline"
                             >
                                 + Invite New Partner
                             </button>

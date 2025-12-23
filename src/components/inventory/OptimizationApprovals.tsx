@@ -69,7 +69,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                 key={type}
                                 onClick={() => setFilterType(type)}
                                 className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${filterType === type
-                                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+                                    ? 'bg-primary-100 text-primary-700 shadow-sm'
                                     : 'text-slate-600 hover:bg-slate-50'
                                     } capitalize`}
                             >
@@ -84,7 +84,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                     <select
                         value={sortType}
                         onChange={(e) => setSortType(e.target.value as any)}
-                        className="rounded-lg border-slate-200 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:ring-indigo-500"
+                        className="rounded-lg border-slate-200 text-xs font-medium text-slate-700 focus:border-primary-500 focus:ring-primary-500"
                     >
                         <option value="score_desc">Match Score (High-Low)</option>
                         <option value="cost_asc">Cost (Low-High)</option>
@@ -117,7 +117,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                         <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${proposal.transferSubType === 'inter_dept'
                                             ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' // Green for Internal
                                             : proposal.transferSubType === 'network_transfer'
-                                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20' // Blue for Network
+                                                ? 'bg-blue-50 text-blue-700 ring-primary-600/20' // Blue for Network
                                                 : 'bg-purple-50 text-purple-700 ring-purple-600/20' // Purple for Purchase
                                             }`}>
                                             {proposal.transferSubType === 'inter_dept'
@@ -161,12 +161,12 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
 
                                     {/* FDA Verification & Alternative Quotes */}
                                     {proposal.alternativeQuotes && proposal.alternativeQuotes.length > 0 && (
-                                        <div className="mt-4 rounded-lg bg-indigo-50 p-3 border border-indigo-100">
+                                        <div className="mt-4 rounded-lg bg-primary-50 p-3 border border-primary-100">
 
                                             {/* Header */}
                                             <div className="mb-2 flex items-center justify-between">
-                                                <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Live Supplier Intelligence</p>
-                                                <span className="flex items-center gap-1 text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-100 shadow-sm animate-pulse">
+                                                <p className="text-xs font-bold text-primary-900 uppercase tracking-wider">Live Supplier Intelligence</p>
+                                                <span className="flex items-center gap-1 text-[10px] text-primary-600 bg-white px-2 py-0.5 rounded-full border border-primary-100 shadow-sm animate-pulse">
                                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Live Feed
                                                 </span>
                                             </div>
@@ -174,7 +174,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                             {/* Quotes List */}
                                             <div className="space-y-2">
                                                 {proposal.alternativeQuotes.map((quote: any) => (
-                                                    <div key={quote.supplierId} className="flex items-center justify-between text-sm bg-white p-2 rounded border border-indigo-100 shadow-sm hover:border-indigo-300 transition-colors">
+                                                    <div key={quote.supplierId} className="flex items-center justify-between text-sm bg-white p-2 rounded border border-primary-100 shadow-sm hover:border-primary-300 transition-colors">
                                                         <div className="flex items-center gap-2">
                                                             <span className="font-bold text-slate-700 capitalize">{quote.supplierId}</span>
                                                             {quote.priceTrend === 'down' && (

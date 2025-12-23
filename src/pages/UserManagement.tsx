@@ -162,7 +162,7 @@ export function UserManagement() {
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                            <Users className="h-6 w-6 text-blue-600" />
+                            <Users className="h-6 w-6 text-primary-600" />
                         </div>
                         <div>
                             <p className="text-sm font-medium text-slate-500">Total Users</p>

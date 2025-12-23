@@ -69,7 +69,7 @@ export function Analytics() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {[
                     { label: 'Total Inventory Value', value: `$${(inventoryValue / 1000000).toFixed(2)}M`, change: '+1.2%', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-                    { label: 'Network Efficiency', value: '98.5%', change: '+2.1%', icon: Activity, color: 'text-blue-600', bg: 'bg-blue-100' },
+                    { label: 'Network Efficiency', value: '98.5%', change: '+2.1%', icon: Activity, color: 'text-primary-600', bg: 'bg-blue-100' },
                     { label: 'Active Requests', value: activerequests, change: '-5/hr', icon: Truck, color: 'text-purple-600', bg: 'bg-purple-100' },
                     { label: 'Pending Approvals', value: '12', change: '+2', icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-100' },
                 ].map((stat, i) => (
@@ -100,7 +100,7 @@ export function Analytics() {
                             <p className="text-sm text-slate-500">Live request transfers across all regions</p>
                         </div>
                         <div className="flex gap-2">
-                            <select className="text-sm border-slate-200 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <select className="text-sm border-slate-200 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 <option>Last 24 Hours</option>
                                 <option>Last 7 Days</option>
                             </select>
@@ -208,11 +208,11 @@ export function Analytics() {
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-start gap-4 rounded-lg bg-slate-50 p-4 border border-slate-100">
-                            <Package className="mt-1 h-5 w-5 text-indigo-600" />
+                            <Package className="mt-1 h-5 w-5 text-primary-600" />
                             <div>
                                 <p className="font-bold text-slate-900">DSCSA Verification Rate</p>
                                 <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
-                                    <div className="h-2 w-[98%] rounded-full bg-indigo-600"></div>
+                                    <div className="h-2 w-[98%] rounded-full bg-primary-600"></div>
                                 </div>
                                 <p className="mt-1 text-xs text-slate-600 text-right">98% Verified</p>
                             </div>

@@ -170,7 +170,7 @@ export function PredictiveAnalytics() {
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                         <div className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-blue-600" />
+                            <Calendar className="h-5 w-5 text-primary-600" />
                             <span className="font-medium text-slate-900">Next Recommended Order</span>
                         </div>
                         <p className="mt-2 text-2xl font-bold text-slate-900">

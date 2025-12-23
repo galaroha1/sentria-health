@@ -17,7 +17,7 @@ export function LocationActivity({ site, requests }: LocationActivityProps) {
         switch (status) {
             case 'pending': return 'bg-amber-100 text-amber-700';
             case 'approved': return 'bg-blue-100 text-blue-700';
-            case 'in_transit': return 'bg-indigo-100 text-indigo-700';
+            case 'in_transit': return 'bg-primary-100 text-primary-700';
             case 'completed': return 'bg-emerald-100 text-emerald-700';
             case 'denied': return 'bg-red-100 text-red-700';
             default: return 'bg-slate-100 text-slate-700';
@@ -39,7 +39,7 @@ export function LocationActivity({ site, requests }: LocationActivityProps) {
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                 <div className="flex items-center gap-3">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${type === 'inbound' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${type === 'inbound' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-primary-600'}`}>
                         {type === 'inbound' ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                     </div>
                     <h3 className="font-bold text-slate-900">{title}</h3>

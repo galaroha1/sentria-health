@@ -87,7 +87,7 @@ export function LogisticsTab() {
                         : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/50'
                         }`}
                 >
-                    <ArrowUpCircle className={`h-8 w-8 ${mode === 'check-out' ? 'text-blue-600' : 'text-slate-400'}`} />
+                    <ArrowUpCircle className={`h-8 w-8 ${mode === 'check-out' ? 'text-primary-600' : 'text-slate-400'}`} />
                     <div className="text-center">
                         <span className="block text-lg font-bold">Check Out</span>
                         <span className="text-xs opacity-80">Transfer Out, Dispense, Waste</span>
@@ -218,7 +218,7 @@ export function LogisticsTab() {
                                         ? 'cursor-not-allowed bg-slate-300'
                                         : mode === 'check-in'
                                             ? 'bg-emerald-600 hover:bg-emerald-700'
-                                            : 'bg-blue-600 hover:bg-blue-700'
+                                            : 'bg-primary-600 hover:bg-blue-700'
                                         }`}
                                 >
                                     Confirm {mode === 'check-in' ? 'Check In' : 'Check Out'}
@@ -232,7 +232,7 @@ export function LogisticsTab() {
                             <div className="space-y-4 text-sm">
                                 <div className="flex justify-between border-b border-slate-200 pb-2">
                                     <span className="text-slate-500">Action Type</span>
-                                    <span className={`font-medium ${mode === 'check-in' ? 'text-emerald-600' : 'text-blue-600'}`}>
+                                    <span className={`font-medium ${mode === 'check-in' ? 'text-emerald-600' : 'text-primary-600'}`}>
                                         {mode === 'check-in' ? 'Check In (Add)' : 'Check Out (Remove)'}
                                     </span>
                                 </div>

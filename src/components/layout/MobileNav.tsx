@@ -54,7 +54,7 @@ export function MobileNav() {
                     if (item.isFab) {
                         return (
                             <div key={item.name} className="relative -top-5">
-                                <button className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-transform active:scale-95">
+                                <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg shadow-primary-200 transition-transform active:scale-95">
                                     <Icon className="h-6 w-6" />
                                 </button>
                             </div>
@@ -67,7 +67,7 @@ export function MobileNav() {
                             to={item.href}
                             className={({ isActive }: { isActive: boolean }) =>
                                 `flex flex - col items - center gap - 1 p - 2 text - [10px] font - medium transition - colors ${isActive
-                                    ? 'text-indigo-600'
+                                    ? 'text-primary-600'
                                     : 'text-slate-500'
                                 } `
                             }
