@@ -99,22 +99,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
 
             const mappedPatients = data.map(sim => {
-                const age = sim.profile?.age || 45;
-                const birthYear = new Date().getFullYear() - age;
+                // Determine location strategy: Usage saved info -> Fallback to random -> Fallback to default
+                const fallbackLoc = !sim.assignedSiteId ? PatientService.assignLocation(sim.condition) : null;
+                const siteId = sim.assignedSiteId || fallbackLoc?.siteId;
+                const deptId = sim.assignedDepartmentId || fallbackLoc?.assignedDepartmentId;
 
                 return {
                     id: sim.id,
-                    mrn: `MRN-${sim.id.substring(0, 6).toUpperCase()}`,
+                    mrn: sim.mrn || `MRN-${Math.floor(10000 + Math.random() * 90000)}`,
                     name: sim.patientName,
-                    dateOfBirth: new Date(birthYear, 0, 1).toISOString().split('T')[0],
+                    dateOfBirth: sim.profile?.age ? new Date(new Date().getFullYear() - sim.profile.age, 0, 1).toISOString().split('T')[0] : '1980-01-01',
                     gender: sim.profile?.gender.toLowerCase() || 'male',
                     diagnosis: sim.condition,
-                    type: 'adult', // Could infer from age
+                    type: 'adult',
                     attendingPhysician: 'Dr. Auto',
-                    // Generate schedule on the fly based on the prescribed drug
-                    // Use the Service to ensure exact Drug Name/NDC alignment
                     treatmentSchedule: PatientService.generateSchedule(sim.condition),
-                    ...PatientService.assignLocation(sim.condition),
+
+                    // Location
+                    assignedSiteId: siteId,
+                    assignedDepartmentId: deptId,
+
                     biometrics: sim.biometrics || { // Fallback if old data
                         weight: 70,
                         height: 175,

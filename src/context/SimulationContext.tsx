@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 import { useApp } from './AppContext';
 import { FirestoreService } from '../services/firebase.service';
 import { SyntheaGenerator, type SyntheticBundle } from '../utils/syntheaGenerator';
+import { PatientService } from '../services/patient.service';
 import toast from 'react-hot-toast';
 
 export interface SimulationResult {
@@ -277,6 +278,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
             const prediction = predictTreatment(profile);
 
+            // Deterministic Location Assignment
+            const location = PatientService.assignLocation(conditionName || 'General');
+
             return {
                 id: patient.id,
                 date: new Date(),
@@ -292,7 +296,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 profile: profile,
                 aiPrediction: prediction,
                 rawBundle: bundle,
-                biometrics: biometrics // Persist for AppContext sync
+                biometrics: biometrics,
+                assignedSiteId: location.siteId,
+                assignedDepartmentId: location.assignedDepartmentId
             };
         });
 
