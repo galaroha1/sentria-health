@@ -18,7 +18,7 @@ const siteA: Site = {
 const invA: SiteInventory = {
     siteId: 'site-src', lastUpdated: new Date().toISOString(),
     drugs: [{
-        ndc: '0006-3026-02', drugName: 'Keytruda', quantity: 30, // 20 Surplus (assuming min 10)
+        ndc: '0006-3026-02', drugName: 'Keytruda', quantity: 60, // 60 > Max 50 => 10 Surplus available
         minLevel: 10, maxLevel: 50, status: 'overstocked'
     }]
 };
