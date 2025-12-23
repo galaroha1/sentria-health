@@ -14,7 +14,7 @@ export class ForecastingService {
      * Calculates specific dosage requirement for a patient based on biometrics and drug type.
      * Returns: quantity in units
      */
-    private static calculateDosage(patient: Patient, drugName: string): number {
+    public static calculateDosage(patient: Patient, drugName: string): number {
         const name = drugName.toLowerCase();
         let quantity = 1; // Default base unit
 

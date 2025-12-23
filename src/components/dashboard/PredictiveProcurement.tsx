@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { TrendingUp, AlertCircle, Package } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useApp } from '../../context/AppContext';
+import { ForecastingService } from '../../services/forecasting.service';
 import type { Treatment } from '../../types/patient';
 
 export function PredictiveProcurement() {
@@ -55,7 +56,8 @@ export function PredictiveProcurement() {
                     if (tx.ndc === TRACKED_DRUGS[0].ndc && tx.status === 'scheduled') {
                         const txDate = new Date(tx.date);
                         if (txDate >= week.start && txDate < week.end) {
-                            weeklyDemand += (parseInt(tx.dose) || 1);
+                            // USE SHARED FORECASTING LOGIC (Biometrics/BSA Awareness)
+                            weeklyDemand += ForecastingService.calculateDosage(p, TRACKED_DRUGS[0].name);
                         }
                     }
                 });
@@ -113,7 +115,7 @@ export function PredictiveProcurement() {
                     const drugDemand = patients.reduce((total, p) => {
                         return total + p.treatmentSchedule
                             .filter((tx: Treatment) => tx.ndc === drug.ndc && tx.status === 'scheduled')
-                            .reduce((sum: number, tx: Treatment) => sum + (parseInt(tx.dose) || 1), 0);
+                            .reduce((sum: number, tx: Treatment) => sum + ForecastingService.calculateDosage(p, drug.name), 0);
                     }, 0);
 
                     const currentLevel = currentStock[drug.ndc] || 0;
