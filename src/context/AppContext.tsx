@@ -7,7 +7,7 @@ import type { AuditLogEntry } from '../types/audit';
 import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
 import { FirestoreService } from '../services/firebase.service';
-import { OptimizationService } from '../services/optimization.service';
+// import { OptimizationService } from '../services/optimization.service';
 
 import { PatientService } from '../services/patient.service';
 
@@ -259,31 +259,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Recalculate metrics whenever Inventories or Requests change
     useEffect(() => {
-        if (sites.length === 0 || inventories.length === 0) return;
+        // Optimization: Do NOT auto-run. Wait for user trigger in DecisionsTab.
+        // We only calculate realized savings here based on requests.
+        const realized = requests
+            .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
+            .reduce((sum, _r) => sum + 4250, 0); // Mock avg savings per transfer
 
-        // Run the optimization algorithm to find solutions for low stock
-        const runOptimization = async () => {
-            const proposals = await OptimizationService.generateProposals(sites, inventories, patients);
-            const potentialSavings = proposals.reduce((sum, p) => sum + (p.costAnalysis.savings || 0), 0);
-            // ...
-
-            // 2. Calculate Realized Savings (Completed/Approved Transfers)
-            // We assume "savings" is stored on the request, or we re-calculate.
-            const realized = requests
-                .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
-                .reduce((sum, _r) => sum + 4250, 0); // Mock avg savings per transfer
-
-            setMetrics({
-                potentialSavings,
-                realizedSavings: realized,
-                optimizationCount: proposals.length,
-                activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
-            });
-            setCurrentProposals(proposals); // Update global state
-        };
-
-        runOptimization();
-    }, [inventories, sites, requests, patients]);
+        setMetrics(prev => ({
+            ...prev,
+            realizedSavings: realized,
+            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
+        }));
+    }, [requests]);
 
     // Sync across tabs
     useEffect(() => {
@@ -308,56 +295,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Check inventory levels and generate alerts using Optimization Service
     useEffect(() => {
-        if (sites.length === 0 || inventories.length === 0) return;
-
-        // Run the optimization algorithm to find solutions for low stock
-        const checkAlerts = async () => {
-            const proposals = await OptimizationService.generateProposals(sites, inventories, patients);
-
-            proposals.forEach(proposal => {
-                setNotifications(prevNotifications => {
-                    // Check if we already have an active notification for this item today
-                    const today = new Date().toISOString().split('T')[0];
-                    const hasNotification = prevNotifications.some(n =>
-                        n.title.includes(proposal.drugName) &&
-                        n.message.includes(proposal.targetSiteName) &&
-                        n.timestamp.startsWith(today)
-                    );
-
-                    if (!hasNotification) {
-                        const isTransfer = proposal.type === 'transfer';
-                        const title = isTransfer
-                            ? `Optimization: Transfer Available for ${proposal.drugName}`
-                            : `Low Stock: ${proposal.drugName}`;
-
-                        const message = isTransfer
-                            ? `${proposal.targetSiteName} needs ${proposal.quantity} units. ${proposal.reason}`
-                            : `${proposal.targetSiteName} is low on ${proposal.drugName}. ${proposal.reason}`;
-
-                        const actionUrl = isTransfer
-                            ? `/transfers?source=${proposal.sourceSiteId}&target=${proposal.targetSiteId}&drug=${proposal.ndc}&qty=${proposal.quantity}`
-                            : `/inventory`; // Or procurement tab
-
-                        return [{
-                            id: `opt-${proposal.id}`,
-                            type: isTransfer ? 'success' : 'warning', // Green for solution, Orange for warning
-                            category: 'alert',
-                            title,
-                            message,
-                            timestamp: new Date().toISOString(),
-                            read: false,
-                            link: '/inventory',
-                            actionUrl
-                        }, ...prevNotifications];
-                    }
-                    return prevNotifications;
-
-                });
-            });
-        };
-
-        checkAlerts();
-    }, [inventories, sites, patients]); // Run when inventories change
+        // Disabled auto-check to prevent "Magic" behavior. 
+        // Alerts will be generated when user runs optimization.
+    }, []);
 
     // Inventory Management
     const updateInventory = async (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {
