@@ -115,7 +115,7 @@ export function PredictiveProcurement() {
                     const drugDemand = patients.reduce((total, p) => {
                         return total + p.treatmentSchedule
                             .filter((tx: Treatment) => tx.ndc === drug.ndc && tx.status === 'scheduled')
-                            .reduce((sum: number, tx: Treatment) => sum + ForecastingService.calculateDosage(p, drug.name), 0);
+                            .reduce((sum: number, _tx: Treatment) => sum + ForecastingService.calculateDosage(p, drug.name), 0);
                     }, 0);
 
                     const currentLevel = currentStock[drug.ndc] || 0;
