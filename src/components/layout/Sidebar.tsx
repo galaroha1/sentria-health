@@ -40,8 +40,6 @@ export function Sidebar() {
             title: 'Governance',
             items: [
                 { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
-                { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
-                { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
                 { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
             ]
         },
