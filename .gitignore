@@ -29,3 +29,4 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+backend/train_log.txt
