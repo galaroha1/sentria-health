@@ -9,7 +9,7 @@ interface OptimizationApprovalsProps {
 }
 
 export function OptimizationApprovals({ proposals, onApprove, onReject }: OptimizationApprovalsProps) {
-    const [filterType, setFilterType] = useState<'all' | 'inter_dept' | 'network' | 'procurement'>('all');
+    const [filterType, setFilterType] = useState<'all' | 'inter_dept' | 'network' | 'procurement' | 'stock_refill' | 'other'>('all');
     const [sortType, setSortType] = useState<'score_desc' | 'cost_asc' | 'cost_desc' | 'urgency'>('score_desc');
 
     const filteredProposals = useMemo(() => {
@@ -23,9 +23,15 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
             } else if (filterType === 'network') {
                 // Network
                 result = result.filter(p => p.transferSubType === 'network_transfer');
-            } else {
+            } else if (filterType === 'procurement') {
                 // Procurement
-                result = result.filter(p => p.type === 'procurement');
+                result = result.filter(p => p.type === 'procurement' && (!p.trigger || p.trigger === 'patient_demand'));
+            } else if (filterType === 'stock_refill') {
+                // Stock Refill
+                result = result.filter(p => p.trigger && p.trigger !== 'patient_demand');
+            } else {
+                // Other
+                result = result.filter(p => !['inter_dept', 'network_transfer', 'procurement'].includes(p.transferSubType || '') && !p.trigger);
             }
         }
 
@@ -64,7 +70,7 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-slate-600">Filter:</span>
                     <div className="flex rounded-lg bg-white p-1 shadow-sm border border-slate-200">
-                        {(['all', 'inter_dept', 'network', 'procurement'] as const).map((type) => (
+                        {(['all', 'inter_dept', 'network', 'procurement', 'stock_refill', 'other'] as const).map((type) => (
                             <button
                                 key={type}
                                 onClick={() => setFilterType(type)}
@@ -144,8 +150,8 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
                                     {/* Trigger Marker */}
                                     <div className="mt-2 flex items-center gap-2">
                                         <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium border ${(proposal.trigger || 'patient_demand') === 'patient_demand'
-                                                ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                            : 'bg-amber-50 text-amber-700 border-amber-200'
                                             }`}>
                                             {(proposal.trigger || 'patient_demand') === 'patient_demand' ? 'Target: Patient Demand' : 'Target: Stock Refill'}
                                         </span>

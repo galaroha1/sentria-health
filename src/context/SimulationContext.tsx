@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
 import { predictTreatment, type PatientProfile, type PredictionResult } from '../utils/aiPrediction';
 import { MEDICAL_DATABASE } from '../data/medicalDatabase';
 import { useAuth } from './AuthContext';
@@ -60,6 +60,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     const [progress, setProgress] = useState(0);
     const [eta, setEta] = useState<string>('--:--');
     const [logs, setLogs] = useState<string[]>([]);
+    // Ref to track training state instantly inside async loops
+    const isTrainingRef = useRef(false);
+
     const [stats, setStats] = useState({
         totalPatients: 0,
         conditionsIdentified: 0,
@@ -153,6 +156,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         if (!user) return;
 
         setIsTraining(true);
+        isTrainingRef.current = true;
         setProgress(0);
         setEta('--:--');
         setLogs([
@@ -161,7 +165,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         ]);
 
         // Capture initial count to add to
-        const initialCount = stats.totalPatients;
+        // We use functional updates for stats so we don't need to capture this, but 
+        // for the progress calculation we just need to know how many we added in *this* session.
 
         try {
             // 1. Fetch Data First (Async & Chunked)
@@ -197,7 +202,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     setEta(formatTime(remaining));
 
                     setStats(prev => ({
-                        totalPatients: initialCount + processed, // Add to initial count
+                        totalPatients: prev.totalPatients + batchSize, // Increment incrementally
                         conditionsIdentified: conditions,
                         accuracy: Math.min(99.2, prev.accuracy + 0.1)
                     }));
@@ -208,7 +213,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family}`);
                 }
 
-                if (processed < data.length && isTraining) {
+                if (processed < data.length && isTrainingRef.current) {
                     setTimeout(processBatch, 0);
                 } else {
                     addLog('Training Complete. Model weights updated.');
@@ -216,6 +221,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     // 3. Save to Firestore (Batched)
                     await saveToDatabase(data);
                     setIsTraining(false);
+                    isTrainingRef.current = false;
 
                     // Refresh the view and stats
                     fetchSimulations();
@@ -227,6 +233,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
         } catch (error: any) {
             setIsTraining(false);
+            isTrainingRef.current = false;
             addLog(`ERROR: Data fetch failed - ${error.message}`);
             toast.error(`Simulation failed: ${error.message}`);
             console.error(error);
