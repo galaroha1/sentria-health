@@ -31,15 +31,7 @@ export default defineConfig({
       '/api/box-data': {
         target: 'https://api.box.com/2.0/folders/0/items',
         changeOrigin: true,
-        rewrite: () => '',
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
-            // Inject Token from .env
-            if (process.env.BOX_DEVELOPER_TOKEN) {
-              proxyReq.setHeader('Authorization', `Bearer ${process.env.BOX_DEVELOPER_TOKEN}`);
-            }
-          });
-        }
+        rewrite: () => ''
       },
       // PYTHON BACKEND PROXY
       '/api/ai': {

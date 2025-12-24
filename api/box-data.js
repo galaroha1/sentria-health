@@ -2,10 +2,8 @@ export default async function handler(req, res) {
     // 1. Authenticate (Vercel manages the Secret Key)
     const boxToken = process.env.BOX_DEVELOPER_TOKEN;
 
-    // 2. Safety Check
-    if (!boxToken) {
-        return res.status(500).json({ error: 'Server misconfigured: Missing Box Token' });
-    }
+    // 2. Safety Check - REMOVED per user request (Box API is filler)
+    // if (!boxToken) { ... }
 
     try {
         // 3. Request Data from Box (Server-to-Server)
