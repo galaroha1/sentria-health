@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import { RecommendationEngine, type PatientProfile } from '../services/recommendation.engine';
 import { PatientService } from '../services/patient.service';
-import { useAuth } from '../context/AuthContext';
-import { FirestoreService } from '../services/firebase.service';
+
 import { Brain, Database, RefreshCw, Zap, Server, Activity } from 'lucide-react';
 
 export default function RoroTrial() {
