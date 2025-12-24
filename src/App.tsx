@@ -22,7 +22,7 @@ import { NetworkHub } from './pages/NetworkHub';
 import { DataGeneration } from './pages/DataGeneration';
 import { Vendors } from './pages/Vendors';
 import { CommandCenter } from './components/simulation/CommandCenter';
-import RoroTrial from './pages/RoroTrial';
+
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -143,8 +143,7 @@ function AppContent() {
           <Route path="vendors" element={<Vendors />} />
           <Route path="locations" element={<Navigate to="/logistics" replace />} />
 
-          {/* Roro AI Trial */}
-          <Route path="roro" element={<RoroTrial />} />
+
         </Route>
       </Routes>
     </BrowserRouter >

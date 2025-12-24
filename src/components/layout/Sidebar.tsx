@@ -34,7 +34,7 @@ export function Sidebar() {
                 { name: 'Vendors', href: '/vendors', icon: Store, permission: 'inventory' },
                 // { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
                 { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
-                { name: 'Roro AI Trial', href: '/roro', icon: Brain, permission: 'dashboard' },
+
             ]
         },
         {
