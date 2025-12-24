@@ -29,8 +29,8 @@ export function ModelTraining() {
     }, [logs]);
 
     const handleStart = () => {
-        if (patientCount > 100) {
-            toast.error('Maximum limit is 100 patients per simulation.', {
+        if (patientCount > 10000) {
+            toast.error('Maximum limit is 10,000 patients per simulation.', {
                 icon: '⚠️',
                 style: {
                     borderRadius: '10px',
@@ -74,7 +74,7 @@ export function ModelTraining() {
                         <input
                             type="number"
                             min="1"
-                            max="100"
+                            max="10000"
                             value={patientCount}
                             onChange={(e) => setPatientCount(Number(e.target.value))}
                             className="w-20 rounded border border-slate-200 px-2 py-1 text-sm font-medium focus:border-purple-500 focus:outline-none"
