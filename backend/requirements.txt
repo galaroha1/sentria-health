@@ -1,0 +1,10 @@
+torch
+fastapi
+uvicorn
+pandas
+numpy
+python-multipart
+requests
+python-dotenv
+boxsdk==3.9.2
+tqdm

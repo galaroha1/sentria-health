@@ -1,5 +1,6 @@
 import type { Site, SiteInventory } from '../types/location';
 import type { ProcurementProposal } from '../types/procurement';
+import { RecommendationEngine } from './recommendation.engine';
 
 export class OptimizationService {
 
@@ -58,38 +59,78 @@ export class OptimizationService {
         const demandMap = new Map<string, Map<string, number>>();
         const drugDetailsMap = new Map<string, { name: string }>(); // Helper to keep names
 
-        patients.forEach(patient => {
-            if (!patient.treatmentSchedule) return;
+        // NDC Lookup for AI-Predicted Drugs
+        const AI_DRUG_MAP: Record<string, string> = {
+            'Keytruda (Pembrolizumab)': '00006-3026-02',
+            'Opdivo (Nivolumab)': '00003-3772-11',
+            'Metformin Hydrochloride TABLET': '00093-7212-98',
+            'Insulin': '00002-7510-01',
+            'Morphine Sulfate': '00406-0523-01',
+            'Ampicillin Sodium': '00143-9880-01',
+            'Amoxicillin CAPSULE': '00093-0036-01',
+            'Lisinopril TABLET': '00006-3916-01',
+            'Atorvastatin Calcium TABLET': '00071-1015-68',
+            'Gabapentin TABLET': '00071-0803-24',
+            'Antibiotics': '00093-0036-01', // Fallback
+            'Unknown': '00000-0000-00'
+        };
 
+        // Use Loop instead of forEach to wait for Async AI
+        for (const patient of patients) {
             // Get Patient's Assigned Site (Demand Location)
             const siteId = patient.assignedSiteId || 'unknown';
-            if (siteId === 'unknown') return;
+            if (siteId === 'unknown') continue;
 
-            patient.treatmentSchedule.forEach((treatment: any) => {
-                const txDate = new Date(treatment.date);
+            // STRATEGY A: Static Treatment Schedule (Legacy)
+            if (patient.treatmentSchedule && patient.treatmentSchedule.length > 0) {
+                patient.treatmentSchedule.forEach((treatment: any) => {
+                    const txDate = new Date(treatment.date);
+                    if (txDate > now) {
+                        const qtyStr = treatment.dose || '1';
+                        const qty = parseInt(qtyStr.match(/\d+/)?.[0] || '1', 10);
 
-                // DECISION 1: IF treatment.date > now() THEN Include
-                if (txDate > now) {
-                    // Extract Quantity (Rough parsing of "30 units" -> 30)
-                    const qtyStr = treatment.dose || '1';
-                    const qty = parseInt(qtyStr.match(/\d+/)?.[0] || '1', 10);
+                        if (!demandMap.has(siteId)) demandMap.set(siteId, new Map());
+                        const siteDemand = demandMap.get(siteId)!;
+                        const currentDemand = siteDemand.get(treatment.ndc) || 0;
+                        siteDemand.set(treatment.ndc, currentDemand + qty);
 
-                    // DECISION 2: Aggregate Demand
-                    if (!demandMap.has(siteId)) {
-                        demandMap.set(siteId, new Map());
+                        if (!drugDetailsMap.has(treatment.ndc)) {
+                            drugDetailsMap.set(treatment.ndc, { name: treatment.drugName });
+                        }
                     }
-                    const siteDemand = demandMap.get(siteId)!;
-                    const currentDemand = siteDemand.get(treatment.ndc) || 0;
-                    siteDemand.set(treatment.ndc, currentDemand + qty);
+                });
+            }
+            // STRATEGY B: AI-Driven Demand (The New Engine)
+            else {
+                // "Ask the AI"
+                try {
+                    // We only predict 1 'Need' per patient for this simulation
+                    // In reality, this would be a full care plan prediction
+                    const recs = await RecommendationEngine.recommend(patient);
+                    if (recs && recs.length > 0) {
+                        const topRec = recs[0]; // Highest confidence drug
+                        if (topRec.confidenceScore > 60) { // Only trust high confidence
+                            const drugName = topRec.drugName;
+                            const ndc = AI_DRUG_MAP[drugName] || '99999-9999-99'; // Fallback
+                            // AI-PREDICTED QUANTITY
+                            const qty = topRec.predictedQuantity || 30;
 
-                    // Store metadata
-                    if (!drugDetailsMap.has(treatment.ndc)) {
-                        drugDetailsMap.set(treatment.ndc, { name: treatment.drugName });
+                            // Add to Demand
+                            if (!demandMap.has(siteId)) demandMap.set(siteId, new Map());
+                            const siteDemand = demandMap.get(siteId)!;
+                            const currentDemand = siteDemand.get(ndc) || 0;
+                            siteDemand.set(ndc, currentDemand + qty);
+
+                            if (!drugDetailsMap.has(ndc)) {
+                                drugDetailsMap.set(ndc, { name: drugName });
+                            }
+                        }
                     }
+                } catch (e) {
+                    console.warn(`AI Inference failed for patient ${patient.id}`, e);
                 }
-                // ELSE Ignore (past care)
-            });
-        });
+            }
+        }
 
         // Iterate through aggregated demand to find Deficits
         // (Iterate Sites -> Drugs)
