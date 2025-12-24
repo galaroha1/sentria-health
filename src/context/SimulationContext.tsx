@@ -4,7 +4,7 @@ import { MEDICAL_DATABASE } from '../data/medicalDatabase';
 import { useAuth } from './AuthContext';
 import { useApp } from './AppContext';
 import { FirestoreService } from '../services/firebase.service';
-import { SyntheaGenerator, type SyntheticBundle } from '../utils/syntheaGenerator';
+import { DiseaseGenerator, type SyntheticBundle } from '../utils/diseaseGenerator';
 import { PatientService } from '../services/patient.service';
 import toast from 'react-hot-toast';
 
@@ -170,7 +170,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
         try {
             // 1. Fetch Data First (Async & Chunked)
-            const data = await SyntheaGenerator.generateBatch(patientCount, (p) => {
+            const data = await DiseaseGenerator.generateBatch(patientCount, (p) => {
                 // Throttle progress updates
                 if (p % 10 === 0) setProgress(p * 0.4);
             });

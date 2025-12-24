@@ -102,7 +102,7 @@ export interface SyntheticBundle {
     procedures: FHIRProcedure[];
 }
 
-export class SyntheaGenerator {
+export class DiseaseGenerator {
 
     static async generateBatch(count: number, onProgress?: (progress: number) => void): Promise<SyntheticBundle[]> {
         const MAX_API_FETCH = 200; // Threshold for switching to local generation for speed
