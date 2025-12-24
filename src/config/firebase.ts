@@ -1,6 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
+import { getAnalytics, type Analytics } from 'firebase/analytics';
 
 // Use environment variables for configuration
 const firebaseConfig = {
@@ -16,6 +17,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let db: Firestore;
 let auth: Auth;
+let analytics: Analytics;
 let initializationError: string | null = null;
 
 try {
@@ -34,6 +36,10 @@ try {
     // Initialize services
     db = getFirestore(app);
     auth = getAuth(app);
+    // Analytics is only supported in browser environments
+    if (typeof window !== 'undefined') {
+        analytics = getAnalytics(app);
+    }
 
 } catch (error: any) {
     console.error('Firebase Initialization Error:', error);
@@ -44,7 +50,8 @@ try {
     app = {} as any;
     db = {} as any;
     auth = {} as any;
+    analytics = {} as any;
 }
 
-export { app, db, auth, initializationError };
+export { app, db, auth, analytics, initializationError };
 export default app;
