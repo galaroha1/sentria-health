@@ -9,35 +9,33 @@ interface OptimizationApprovalsProps {
 }
 
 export function OptimizationApprovals({ proposals, onApprove, onReject }: OptimizationApprovalsProps) {
-    const [filterType, setFilterType] = useState<'all' | 'inter_dept' | 'network' | 'procurement' | 'stock_refill' | 'other'>('all');
-    const [sortType, setSortType] = useState<'score_desc' | 'cost_asc' | 'cost_desc' | 'urgency'>('score_desc');
+    const [filterType, setFilterType] = useState<'all'>('all'); // Simplified, unused effectively for now
+    const [sortType, setSortType] = useState<'score_desc' | 'cost_asc' | 'cost_desc' | 'urgency' | 'demand_first' | 'refill_first'>('demand_first');
 
     const filteredProposals = useMemo(() => {
         let result = [...proposals];
 
-        // Filter
-        if (filterType !== 'all') {
-            if (filterType === 'inter_dept') {
-                // Inter-Dept
-                result = result.filter(p => p.transferSubType === 'inter_dept');
-            } else if (filterType === 'network') {
-                // Network
-                result = result.filter(p => p.transferSubType === 'network_transfer');
-            } else if (filterType === 'procurement') {
-                // Procurement
-                result = result.filter(p => p.type === 'procurement' && (!p.trigger || p.trigger === 'patient_demand'));
-            } else if (filterType === 'stock_refill') {
-                // Stock Refill
-                result = result.filter(p => p.trigger && p.trigger !== 'patient_demand');
-            } else {
-                // Other
-                result = result.filter(p => !['inter_dept', 'network_transfer', 'procurement'].includes(p.transferSubType || '') && !p.trigger);
-            }
-        }
-
         // Sort
         result.sort((a, b) => {
+            const getTriggerScore = (p: ProcurementProposal) => (p.trigger === 'patient_demand' ? 1 : 0);
+
             switch (sortType) {
+                case 'demand_first':
+                    // 1. Demand First
+                    if (getTriggerScore(b) !== getTriggerScore(a)) {
+                        return getTriggerScore(b) - getTriggerScore(a);
+                    }
+                    // 2. Then by Score
+                    return (b.score || 0) - (a.score || 0);
+
+                case 'refill_first':
+                    // 1. Refill First (Inverse of Demand First)
+                    if (getTriggerScore(b) !== getTriggerScore(a)) {
+                        return getTriggerScore(a) - getTriggerScore(b);
+                    }
+                    // 2. Then by Score
+                    return (b.score || 0) - (a.score || 0);
+
                 case 'score_desc':
                     return (b.score || 0) - (a.score || 0);
                 case 'cost_asc':
@@ -66,32 +64,16 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
             </div>
 
             {/* Filter & Sort Controls */}
-            <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-end">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-600">Filter:</span>
-                    <div className="flex rounded-lg bg-white p-1 shadow-sm border border-slate-200">
-                        {(['all', 'inter_dept', 'network', 'procurement', 'stock_refill', 'other'] as const).map((type) => (
-                            <button
-                                key={type}
-                                onClick={() => setFilterType(type)}
-                                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${filterType === type
-                                    ? 'bg-primary-100 text-primary-700 shadow-sm'
-                                    : 'text-slate-600 hover:bg-slate-50'
-                                    } capitalize`}
-                            >
-                                {type === 'network' ? 'Penn Network' : type.replace('_', '-')}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-600">Sort:</span>
+                    <span className="text-sm font-medium text-slate-600">Sort Priority:</span>
                     <select
                         value={sortType}
                         onChange={(e) => setSortType(e.target.value as any)}
-                        className="rounded-lg border-slate-200 text-xs font-medium text-slate-700 focus:border-primary-500 focus:ring-primary-500"
+                        className="rounded-lg border-slate-200 text-sm font-medium text-slate-700 focus:border-primary-500 focus:ring-primary-500 min-w-[200px]"
                     >
+                        <option value="demand_first">Target: Patient Demand First</option>
+                        <option value="refill_first">Target: Stock Refill First</option>
                         <option value="score_desc">Match Score (High-Low)</option>
                         <option value="cost_asc">Cost (Low-High)</option>
                         <option value="cost_desc">Cost (High-Low)</option>
