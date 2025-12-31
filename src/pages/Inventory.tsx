@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Truck, Package, Syringe, ShieldCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { StockLocatorModal } from '../components/inventory/StockLocatorModal';
-import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
-import { BarcodeScanner } from '../components/common/BarcodeScanner';
+import { StockLocatorModal } from '../features/inventory/components/StockLocatorModal';
+import { NetworkRequestForm } from '../features/logistics/components/location/NetworkRequestForm';
+import { BarcodeScanner } from '../core/components/common/BarcodeScanner';
 import type { Site } from '../types/location';
-import { useSimulation } from '../context/SimulationContext';
+import { useSimulation } from '../features/clinical/context/SimulationContext';
 
-import { OperationsTab } from '../components/inventory/OperationsTab';
-import { StockTab } from '../components/inventory/StockTab';
-import { AdministrationTab } from '../components/inventory/AdministrationTab';
-import { ComplianceTab } from '../components/inventory/ComplianceTab';
+import { OperationsTab } from '../features/inventory/components/OperationsTab';
+import { StockTab } from '../features/inventory/components/StockTab';
+import { AdministrationTab } from '../features/inventory/components/AdministrationTab';
+import { ComplianceTab } from '../features/inventory/components/ComplianceTab';
 
-import { PatientDetailsModal } from '../components/inventory/PatientDetailsModal';
+import { PatientDetailsModal } from '../features/inventory/components/PatientDetailsModal';
 
 type TabType = 'operations' | 'stock' | 'admin' | 'compliance';
 

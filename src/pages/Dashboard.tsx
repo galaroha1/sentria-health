@@ -4,7 +4,7 @@ import { TrendingUp, DollarSign, Package, Truck, Brain } from 'lucide-react';
 import { InventoryAlerts } from '../components/dashboard/InventoryAlerts';
 import { PredictiveAnalytics } from '../components/dashboard/PredictiveAnalytics';
 import { SavingsProjection } from '../components/dashboard/SavingsProjection';
-import { ModelTraining } from '../components/admin/ModelTraining';
+import { ModelTraining } from '../features/admin/components/ModelTraining';
 import { MorningBriefing } from '../components/dashboard/MorningBriefing';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';

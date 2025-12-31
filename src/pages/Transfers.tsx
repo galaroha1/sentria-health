@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Plus, Clock, CheckCircle2, TrendingUp, FileText, Truck } from 'lucide-react';
 import { auditLog } from '../data/transfers/mockData';
-import { TransferRequestForm } from '../components/transfers/TransferRequestForm';
+import { TransferRequestForm } from '../features/logistics/components/transfers/TransferRequestForm';
 import { useApp } from '../context/AppContext';
-import { TransferApprovalCard } from '../components/transfers/TransferApprovalCard';
-import { TransferStatusTimeline } from '../components/transfers/TransferStatusTimeline';
-import { SuggestedTransfers } from '../components/transfers/SuggestedTransfers';
-import { AuditLogTable } from '../components/transfers/AuditLogTable';
+import { TransferApprovalCard } from '../features/logistics/components/transfers/TransferApprovalCard';
+import { TransferStatusTimeline } from '../features/logistics/components/transfers/TransferStatusTimeline';
+import { SuggestedTransfers } from '../features/logistics/components/transfers/SuggestedTransfers';
+import { AuditLogTable } from '../features/logistics/components/transfers/AuditLogTable';
 import type { NetworkRequest } from '../types/location';
 import type { TransferRequest } from '../types/transfer';
 

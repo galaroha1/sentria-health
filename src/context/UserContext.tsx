@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type User, UserStatus } from '../types';
-import { FirestoreService } from '../services/firebase.service';
+import { FirestoreService } from '../core/services/firebase.service';
 
 interface UserContextType {
     users: User[];

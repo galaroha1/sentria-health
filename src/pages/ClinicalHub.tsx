@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { ClipboardList, Stethoscope, TrendingDown, Calendar, Syringe, User, ChevronRight, Search } from 'lucide-react';
-import { clinicalService } from '../services/clinicalService';
-import type { PreferenceCard, UsageReport } from '../services/clinicalService';
-import { CaseCartModal } from '../components/clinical/CaseCartModal';
-import { PreferenceCardView } from '../components/clinical/PreferenceCardView';
-import { CalendarGrid } from '../components/clinical/CalendarGrid';
+import { clinicalService } from '../features/clinical/services/clinicalService';
+import type { PreferenceCard, UsageReport } from '../features/clinical/services/clinicalService';
+import { CaseCartModal } from '../features/clinical/components/CaseCartModal';
+import { PreferenceCardView } from '../features/clinical/components/PreferenceCardView';
+import { CalendarGrid } from '../features/clinical/components/CalendarGrid';
 import toast from 'react-hot-toast';
 import { useApp } from '../context/AppContext';
 

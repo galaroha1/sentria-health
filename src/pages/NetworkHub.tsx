@@ -4,7 +4,7 @@ import { MapPin, Search, ArrowUpRight, ArrowDownLeft, Building2, Activity, Users
 import { networkService } from '../services/networkService';
 import type { Organization, SharedInventoryItem } from '../services/networkService';
 import type { Site } from '../types/location';
-import { InteractiveMap } from '../components/location/InteractiveMap';
+import { InteractiveMap } from '../features/logistics/components/location/InteractiveMap';
 import { PartnerProfileModal } from '../components/network/PartnerProfileModal';
 import { InvitePartnerModal } from '../components/network/InvitePartnerModal';
 import toast from 'react-hot-toast';

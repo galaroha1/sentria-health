@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Users, Search, UserPlus, Edit2, Ban, RotateCw, Eye } from 'lucide-react';
 import { UserStatus, type User } from '../types';
 import { useUsers } from '../context/UserContext';
-import { UserModal } from '../components/users/UserModal';
-import { UserActivityModal } from '../components/users/UserActivityModal';
+import { UserModal } from '../features/admin/components/users/UserModal';
+import { UserActivityModal } from '../features/admin/components/users/UserActivityModal';
 
 export function UserManagement() {
     const { users, addUser, updateUser, toggleUserStatus } = useUsers();

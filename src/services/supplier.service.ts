@@ -6,7 +6,7 @@ import { CardinalService } from './integration/cardinal.service';
 import { FdaService } from './integration/fda.service';
 import { NadacService } from './integration/nadac.service';
 import { RxNavService } from './integration/rxnav.service';
-import { FirestoreService } from './firebase.service';
+import { FirestoreService } from '../core/services/firebase.service';
 
 // Export needed for UI or other parts? For now, we are dynamically fetching, 
 // but UI might need list of "Available Suppliers".

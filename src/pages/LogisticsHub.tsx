@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { MapPin, Plus, Search, Building2, LayoutList, Map as MapIcon } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { LocationActivity } from '../components/logistics/LocationActivity';
-import { TransferRequestForm } from '../components/transfers/TransferRequestForm';
-import { InteractiveMap } from '../components/location/InteractiveMap';
+import { LocationActivity } from '../features/logistics/components/LocationActivity';
+import { TransferRequestForm } from '../features/logistics/components/transfers/TransferRequestForm';
+import { InteractiveMap } from '../features/logistics/components/location/InteractiveMap';
 import type { Site, NetworkRequest } from '../types/location';
 
 export function LogisticsHub() {

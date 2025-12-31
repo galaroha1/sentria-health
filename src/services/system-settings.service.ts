@@ -1,4 +1,4 @@
-import { FirestoreService } from './firebase.service';
+import { FirestoreService } from '../core/services/firebase.service';
 
 export interface SystemSettings {
     id: string; // 'config'

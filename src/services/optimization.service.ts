@@ -1,6 +1,6 @@
 import type { Site, SiteInventory } from '../types/location';
 import type { ProcurementProposal } from '../types/procurement';
-import { RecommendationEngine } from './recommendation.engine';
+import { RecommendationEngine } from '../features/clinical/services/recommendation.engine';
 
 export class OptimizationService {
 

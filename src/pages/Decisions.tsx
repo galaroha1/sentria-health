@@ -1,4 +1,4 @@
-import { DecisionsTab } from '../components/inventory/DecisionsTab';
+import { DecisionsTab } from '../features/inventory/components/DecisionsTab';
 
 export function Decisions() {
     return (

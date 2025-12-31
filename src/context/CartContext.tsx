@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { FirestoreService } from '../services/firebase.service';
+import { FirestoreService } from '../core/services/firebase.service';
 import { useAuth } from './AuthContext';
 
 interface CartItem {

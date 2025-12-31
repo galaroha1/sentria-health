@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FirestoreService } from '../services/firebase.service';
+import { FirestoreService } from '../core/services/firebase.service';
 import { QueryConstraint } from 'firebase/firestore';
 
 /**

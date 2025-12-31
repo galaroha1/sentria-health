@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ModelTraining } from '../components/admin/ModelTraining';
-import { NetworkConfig } from '../components/admin/NetworkConfig';
-import { SystemSettings } from '../components/admin/SystemSettings';
+import { ModelTraining } from '../features/admin/components/ModelTraining';
+import { NetworkConfig } from '../features/admin/components/NetworkConfig';
+import { SystemSettings } from '../features/admin/components/SystemSettings';
 import { Brain, Shield, Network } from 'lucide-react';
 
 export function Admin() {

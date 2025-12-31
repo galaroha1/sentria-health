@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Users, Zap } from 'lucide-react';
-import { AdvancedTab } from '../components/inventory/AdvancedTab';
-import { PatientDataTab } from '../components/inventory/PatientDataTab';
+import { AdvancedTab } from '../features/inventory/components/AdvancedTab';
+import { PatientDataTab } from '../features/inventory/components/PatientDataTab';
 
 type TabType = 'patients' | 'advanced';
 

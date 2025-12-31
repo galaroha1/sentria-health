@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { User, Bell, Lock, Globe, Shield, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { ApiManager } from '../components/admin/ApiManager';
+import { ApiManager } from '../features/admin/components/ApiManager';
 import { UserRole } from '../types';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { InviteUserModal } from '../components/admin/InviteUserModal';
+import { InviteUserModal } from '../features/admin/components/InviteUserModal';
 
 export function Settings() {
     const { user } = useAuth();

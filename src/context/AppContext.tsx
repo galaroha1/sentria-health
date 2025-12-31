@@ -5,38 +5,43 @@ import type { NetworkRequest, Site, SiteInventory } from '../types/location';
 import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
 import type { ProcurementProposal } from '../types/procurement';
-import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
-import { FirestoreService, orderBy, limit } from '../services/firebase.service';
-import { db } from '../config/firebase'; // Direct DB access for transactions
-import { doc } from 'firebase/firestore';
-// import { OptimizationService } from '../services/optimization.service';
+import { FirestoreService, orderBy, limit } from '../core/services/firebase.service';
+import { PatientService } from '../features/clinical/services/patient.service';
 
-import { PatientService } from '../services/patient.service';
+// Modular Contexts
+import { useInventory } from '../features/inventory/context/InventoryContext';
+import { useLogistics } from '../features/logistics/context/LogisticsContext';
 
 interface AppContextType {
-    // Location & Requests
+    // Location & Requests (Delegated)
     requests: NetworkRequest[];
     sites: Site[];
-    patients: any[]; // Using any to avoid circular deps or complex type imports for now, ideally 'Patient[]'
-    addPatient: (patient: any) => void;
-    addSite: (site: Site) => void;
     inventories: SiteInventory[];
+    addSite: (site: Site) => void; // Promise<void> in InventoryContext, but void here per legacy interface? Check calling code.
+    // Calling code awaits? If interface says void, await is fine (void ignores return).
+    // But let's check if we break 'await addSite()'.
+    // Original: `addSite = async ...` implies Promise.
+    // Interface: `addSite: (site: Site) => void;` -> In TS `=> void` allows returning Promise.
+    // So strict compatibility is fine.
+
     addRequest: (request: NetworkRequest) => void;
     updateRequestStatus: (id: string, status: NetworkRequest['status'], approvedBy?: string) => void;
-
-    // Inventory Management
     updateInventory: (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => Promise<void>;
 
-    // Notifications
+    // Patients (Kept Here)
+    patients: any[];
+    addPatient: (patient: any) => void;
+
+    // Notifications (Kept Here)
     notifications: Notification[];
     addNotification: (notification: Notification) => void;
     markNotificationAsRead: (id: string) => void;
     markAllNotificationsAsRead: () => void;
 
-    // Audit Logs
+    // Audit Logs (Kept Here)
     auditLogs: AuditLogEntry[];
 
-    // Metrics
+    // Metrics (Aggregated)
     metrics: {
         potentialSavings: number;
         realizedSavings: number;
@@ -57,51 +62,51 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Helper function inlined to avoid import issues in CI
-
-
-
 export function AppProvider({ children }: { children: ReactNode }) {
-    // Initialize with localStorage or mock data
-    const [requests, setRequests] = useState<NetworkRequest[]>([]);
+    const { user } = useAuth();
+
+    // Delegate to Modular Contexts
+    const {
+        sites,
+        inventories,
+        addSite: inventoryAddSite,
+        updateInventory: inventoryUpdate,
+        resetInventoryData,
+        loading: inventoryLoading
+    } = useInventory();
+
+    const {
+        requests,
+        addRequest: logisticsAddRequest,
+        updateRequestStatus: logisticsUpdateStatus
+    } = useLogistics();
+
+    // Local State
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+    const [patients, setPatients] = useState<any[]>([]);
+    const [currentProposals, setCurrentProposals] = useState<ProcurementProposal[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Persisted Optimization State
-    const [currentProposals, setCurrentProposals] = useState<ProcurementProposal[]>([]);
+    // Sync Loading State
+    useEffect(() => {
+        setIsLoading(inventoryLoading);
+    }, [inventoryLoading]);
 
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-
-    const [sites, setSites] = useState<Site[]>([]);
-    const [inventories, setInventories] = useState<SiteInventory[]>([]);
-
-    // Global Patient State (Unified Source of Truth)
-    const [patients, setPatients] = useState<any[]>([]);
-
-    const { user } = useAuth(); // Now accessible because AppProvider is inside AuthProvider
-
-
-
-    const addPatient = (patient: any) => {
-        setPatients(prev => [patient, ...prev]);
-    };
-
-    // SYNC PATIENTS FROM SIMULATION DATABASE (Single Source of Truth)
+    // ------------------------------------------------------------------
+    // PATIENT SYNC (Legacy Logic)
+    // ------------------------------------------------------------------
     useEffect(() => {
         if (!user) {
             setPatients([]);
             return;
         }
-
-        // Subscribe to the simulation results
         const unsubscribePatients = FirestoreService.subscribe<any>(`users/${user.id}/simulations`, async (data) => {
             if (data.length === 0) {
-                // Database cleared -> Clear local state
                 setPatients([]);
                 return;
             }
-
             const mappedPatients = data.map(sim => {
-                // Determine location strategy: Usage saved info -> Fallback to random -> Fallback to default
                 const fallbackLoc = !sim.assignedSiteId ? PatientService.assignLocation(sim.condition) : null;
                 const siteId = sim.assignedSiteId || fallbackLoc?.siteId;
                 const deptId = sim.assignedDepartmentId || fallbackLoc?.assignedDepartmentId;
@@ -116,130 +121,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     type: 'adult',
                     attendingPhysician: 'Dr. Auto',
                     treatmentSchedule: PatientService.generateSchedule(sim.condition),
-
-                    // Location
                     assignedSiteId: siteId,
                     assignedDepartmentId: deptId,
-
-                    biometrics: sim.biometrics || { // Fallback if old data
-                        weight: 70,
-                        height: 175,
-                        bsa: 1.73
-                    }
+                    biometrics: sim.biometrics || { weight: 70, height: 175, bsa: 1.73 }
                 };
             });
-
             console.log(`AppContext: Synced ${mappedPatients.length} patients from Firestore.`);
             setPatients(mappedPatients);
         });
-
         return () => unsubscribePatients();
     }, [user]);
 
-    // Legacy manual seed removed - we strictly follow DB now.
-
-
-    const addSite = async (site: Site) => {
-        // Optimistic update
-        setSites(prev => [...prev, site]);
-
-        // Persist Site
-        await FirestoreService.set('sites', site.id, site);
-
-        // Also initialize empty inventory for the new site
-        const newInventory: SiteInventory = {
-            siteId: site.id,
-            lastUpdated: new Date().toISOString(),
-            drugs: []
-        };
-        // Persist Inventory
-        await FirestoreService.set('inventoryItems', site.id, newInventory);
+    const addPatient = (patient: any) => {
+        setPatients(prev => [patient, ...prev]);
     };
 
-    const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-
-    const resetSimulation = async () => {
-        setIsLoading(true);
-        try {
-            // 1. Clear Existing Data
-            console.log("Resetting simulation data...");
-            // We could clear existing collections here if we wanted a truly clean slate
-            // await FirestoreService.deleteAllDocuments('inventoryItems');
-
-            // 2. Reseed from Mock Data
-            const { siteInventories } = await import('../data/location/mockData');
-            for (const inv of siteInventories) {
-                await FirestoreService.set('inventoryItems', inv.siteId, inv);
-            }
-            console.log("Simulation Data Reset Complete.");
-            window.location.reload(); // Refresh to reflect changes
-        } catch (error) {
-            console.error("Failed to reset simulation:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Subscribe to Firestore collections
+    // ------------------------------------------------------------------
+    // NOTIFICATIONS & AUDIT LOGS
+    // ------------------------------------------------------------------
     useEffect(() => {
         if (!user) {
-            // Clear global state if logged out
-            setRequests([]);
             setNotifications([]);
             setAuditLogs([]);
-            // Don't clear sites/inventories necessarily as they might be public? No, secure app.
-            // setSites([]);
-            // setInventories([]);
             return;
         }
 
-        console.log('AppContext: User authenticated. Subscribing to global collections with limits...');
-
-        // 1. SITES Subscription (Keep Full)
-        const unsubscribeSites = FirestoreService.subscribe<Site>('sites', (data) => {
-            if (data.length === 0 && initialSites.length > 0) {
-                // Seed Sites if Firestore is empty
-                console.log('Seeding sites...');
-                initialSites.forEach(s => {
-                    FirestoreService.set('sites', s.id, s);
-                });
-            } else {
-                // STRICTLY FILTER: Only allow known Penn System sites (Purge legacy/zombie data)
-                const validIds = new Set(initialSites.map(s => s.id));
-                const cleanSites = data.filter(s => validIds.has(s.id));
-
-                if (cleanSites.length !== data.length) {
-                    console.log(`Purged ${data.length - cleanSites.length} non-Penn sites from state.`);
-                }
-                setSites(cleanSites);
-            }
-        });
-
-        // 2. REQUESTS Subscription (Limited to 50 recent)
-        const unsubscribeRequests = FirestoreService.subscribe<NetworkRequest>(
-            'transfers',
-            (data) => { setRequests(data); },
-            orderBy('requestedAt', 'desc'),
-            limit(50)
-        );
-
-        // 3. INVENTORY Subscription
-        const unsubscribeInventories = FirestoreService.subscribe<SiteInventory>('inventoryItems', (data) => {
-            if (data.length === 0 && initialInventories.length > 0) {
-                // Seed inventory if Firestore is empty
-                console.log('Seeding inventory data...');
-                initialInventories.forEach(inv => {
-                    FirestoreService.set('inventoryItems', inv.siteId, inv);
-                });
-            } else {
-                const validIds = new Set(initialSites.map(s => s.id));
-                const cleanInventories = data.filter(inv => validIds.has(inv.siteId));
-                setInventories(cleanInventories);
-            }
-            setIsLoading(false); // Data loaded
-        });
-
-        // 4. NOTIFICATIONS Subscription
         const unsubscribeNotifications = FirestoreService.subscribe<Notification>(
             'notifications',
             (data) => { setNotifications(data); },
@@ -247,7 +153,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             limit(50)
         );
 
-        // 5. AUDIT LOGS Subscription
         const unsubscribeAuditLogs = FirestoreService.subscribe<AuditLogEntry>(
             'auditLogs',
             (data) => { setAuditLogs(data); },
@@ -256,224 +161,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
 
         return () => {
-            unsubscribeSites();
-            unsubscribeRequests();
-            unsubscribeInventories();
             unsubscribeNotifications();
             unsubscribeAuditLogs();
         };
     }, [user]);
 
-    // ------------------------------------------------------------------
-    // AMIOP METRICS ENGINE
-    // ------------------------------------------------------------------
-    const [metrics, setMetrics] = useState({
-        potentialSavings: 0,
-        realizedSavings: 0,
-        optimizationCount: 0,
-        activeTransfers: 0
-    });
-
-    // Recalculate metrics whenever Inventories or Requests change
-    useEffect(() => {
-        // Optimization: Do NOT auto-run. Wait for user trigger in DecisionsTab.
-        // We only calculate realized savings here based on requests.
-        const realized = requests
-            .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
-            .reduce((sum, _r) => sum + 4250, 0); // Mock avg savings per transfer
-
-        setMetrics(prev => ({
-            ...prev,
-            realizedSavings: realized,
-            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
-        }));
-    }, [requests]);
-
-    // Sync across tabs
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'sentria_requests' && e.newValue) {
-                setRequests(JSON.parse(e.newValue));
-            }
-            if (e.key === 'sentria_notifications' && e.newValue) {
-                setNotifications(JSON.parse(e.newValue));
-            }
-            if (e.key === 'sentria_inventories' && e.newValue) {
-                setInventories(JSON.parse(e.newValue));
-            }
-            if (e.key === 'sentria_audit_logs' && e.newValue) {
-                setAuditLogs(JSON.parse(e.newValue));
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
-
-    // Check inventory levels and generate alerts using Optimization Service
-    useEffect(() => {
-        // Disabled auto-check to prevent "Magic" behavior. 
-        // Alerts will be generated when user runs optimization.
-    }, []);
-
-    // Inventory Management (TRANSACTIONAL)
-    const updateInventory = async (siteId: string, ndc: string, quantityChange: number, reason: string, userId: string, userName: string) => {
-        try {
-            await FirestoreService.runTransaction(async (transaction) => {
-                // 1. Read Current Inventory
-                const invRef = doc(db, 'inventoryItems', siteId);
-                const invDoc = await transaction.get(invRef);
-
-                if (!invDoc.exists()) {
-                    throw new Error("Inventory site not found");
-                }
-
-                const inventory = invDoc.data() as SiteInventory;
-
-                // 2. Calculate New State
-                let updatedDrugName = '';
-                let newQuantity = 0;
-
-                const updatedDrugs = inventory.drugs.map(drug => {
-                    if (drug.ndc !== ndc) return drug;
-
-                    updatedDrugName = drug.drugName;
-                    newQuantity = Math.max(0, drug.quantity + quantityChange);
-
-                    // Recalculate status
-                    let status: 'well_stocked' | 'low' | 'critical' | 'overstocked' = 'well_stocked';
-                    if (newQuantity <= drug.minLevel / 2) status = 'critical';
-                    else if (newQuantity <= drug.minLevel) status = 'low';
-                    else if (newQuantity >= drug.maxLevel * 1.2) status = 'overstocked';
-
-                    return {
-                        ...drug,
-                        quantity: newQuantity,
-                        status
-                    };
-                });
-
-                const updatedInventory = {
-                    ...inventory,
-                    lastUpdated: new Date().toISOString(),
-                    drugs: updatedDrugs
-                };
-
-                // 3. Write Updates
-                transaction.set(invRef, updatedInventory);
-
-                // 4. Create Audit Log (Atomic)
-                // Use a deterministic ID based on timestamp to allow regeneration if retried? No, random is fine for logs.
-                const logId = `audit-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                const logRef = doc(db, 'auditLogs', logId);
-
-                // Get Site Name for log (Read from memory or DB? Memory is safer inside transaction if unrelated to logic, 
-                // but strictly we should read site. For now, using passed in args or context state is tricky in transaction 
-                // unless we read site doc too. We'll skip reading Site doc to save reads and rely on UI provided context/params or simple failover).
-                // Actually, 'sites' state is available in closure! But closure might be stale? 
-                // Transaction retries might use stale closure variables.
-                // It's safer to read 'sites' from DB if critical. 
-                // For 'Audit Log Name', it's non-critical. We will assume 'sites' state is fresh enough or just log ID.
-
-                const logEntry: AuditLogEntry = {
-                    id: logId,
-                    action: quantityChange > 0 ? 'add' : 'remove',
-                    drugName: updatedDrugName,
-                    ndc,
-                    quantityChange,
-                    newQuantity,
-                    siteId,
-                    siteName: 'Resolved by ID lookup', // Placeholder, fixing below
-                    userId,
-                    userName,
-                    timestamp: new Date().toISOString(),
-                    reason
-                };
-
-                transaction.set(logRef, logEntry);
-            });
-            console.log("Transaction Committed: Inventory Update + Audit Log");
-        } catch (e) {
-            console.error("Transaction Failed:", e);
-            // toast.error? We let caller handle or toast here.
-        }
-    };
-
-    // Request Handlers
-    const addRequest = async (request: NetworkRequest) => {
-        // Optimistic update
-        setRequests(prev => [...prev, request]);
-
-        await FirestoreService.set('transfers', request.id, request);
-
-        // Add corresponding notification
-        const newNotification: Notification = {
-            id: `notif-${Date.now()}`,
-            type: 'info',
-            category: 'alert',
-            title: 'New Transfer Request',
-            message: `${request.requestedBySite.name} requested ${request.drug.quantity} units of ${request.drug.name}`,
-            timestamp: new Date().toISOString(),
-            read: false,
-            link: '/transfers'
-        };
-
-        await FirestoreService.set('notifications', newNotification.id, newNotification);
-    };
-
-    const updateRequestStatus = async (id: string, status: NetworkRequest['status'], approvedBy?: string) => {
-        const updates: Partial<NetworkRequest> = { status };
-        if (approvedBy) {
-            updates.approvedBy = approvedBy;
-            updates.approvedAt = new Date().toISOString();
-        }
-        if (status === 'in_transit') updates.inTransitAt = new Date().toISOString();
-        if (status === 'completed') updates.completedAt = new Date().toISOString();
-
-        await FirestoreService.update('transfers', id, updates);
-
-        const request = requests.find(r => r.id === id);
-        if (!request) return;
-
-        const title = status === 'in_transit' ? 'Transfer Approved' :
-            status === 'denied' ? 'Request Denied' : 'Status Updated';
-
-        const newNotification: Notification = {
-            id: `notif-${Date.now()}`,
-            type: status === 'denied' ? 'warning' : 'success',
-            category: 'approval',
-            title,
-            message: `Request for ${request.drug.name} has been ${status === 'in_transit' ? 'approved' : status}`,
-            timestamp: new Date().toISOString(),
-            read: false,
-            link: '/transfers'
-        };
-        await FirestoreService.set('notifications', newNotification.id, newNotification);
-
-        if (status === 'completed') {
-            // 1. Add to Requesting Site (Receiver)
-            await updateInventory(
-                request.requestedBySite.id,
-                request.drug.ndc,
-                request.drug.quantity, // ADD
-                `Transfer received from ${request.targetSite.name}`,
-                'System',
-                'System'
-            );
-
-            // 2. Remove from Target Site (Sender)
-            await updateInventory(
-                request.targetSite.id,
-                request.drug.ndc,
-                -request.drug.quantity, // REMOVE
-                `Transfer sent to ${request.requestedBySite.name}`,
-                'System',
-                'System'
-            );
-        }
-    };
-
-    // Notification Handlers
     const addNotification = async (notification: Notification) => {
         await FirestoreService.set('notifications', notification.id, notification);
     };
@@ -487,25 +179,72 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await Promise.all(batch);
     };
 
+    // ------------------------------------------------------------------
+    // METRICS
+    // ------------------------------------------------------------------
+    const [metrics, setMetrics] = useState({
+        potentialSavings: 0,
+        realizedSavings: 0,
+        optimizationCount: 0,
+        activeTransfers: 0
+    });
+
+    useEffect(() => {
+        const realized = requests
+            .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
+            .reduce((sum, _r) => sum + 4250, 0);
+
+        setMetrics(prev => ({
+            ...prev,
+            realizedSavings: realized,
+            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
+        }));
+    }, [requests]);
+
+    // ------------------------------------------------------------------
+    // WRAPPERS / FACADE METHODS
+    // ------------------------------------------------------------------
+    const resetSimulation = async () => {
+        setIsLoading(true);
+        try {
+            await resetInventoryData();
+            // We could wipe audit logs/notifications here too if desired
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to reset simulation:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Sync Storage (Legacy support for other tabs updates?) 
+    // New modular contexts don't have this. If we want it, we should add it there.
+    // For now, removing to cleaner code, assuming Firestore realtime is sufficient.
+
     return (
         <AppContext.Provider value={{
             requests,
             sites,
+            inventories,
+            addSite: inventoryAddSite,
+            addRequest: logisticsAddRequest,
+            updateRequestStatus: logisticsUpdateStatus,
+            updateInventory: inventoryUpdate,
+
             patients,
             addPatient,
-            addSite,
-            inventories,
-            addRequest,
-            updateRequestStatus,
-            updateInventory,
+
             notifications,
             addNotification,
             markNotificationAsRead,
             markAllNotificationsAsRead,
+
             auditLogs,
             metrics,
+
             currentProposals,
             setCurrentProposals,
+
             resetSimulation,
             isLoading
         }}>
@@ -514,7 +253,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
     const context = useContext(AppContext);
     if (context === undefined) {
@@ -522,4 +260,3 @@ export function useApp() {
     }
     return context;
 }
-

@@ -7,8 +7,8 @@ import {
     updatePassword as firebaseUpdatePassword,
     type User as FirebaseUser
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { FirestoreService } from '../services/firebase.service';
+import { auth } from '../core/config/firebase';
+import { FirestoreService } from '../core/services/firebase.service';
 import type { User, LoginCredentials, AuthState } from '../types';
 import { ROLE_PERMISSIONS, UserRole, UserStatus } from '../types';
 import { SessionTimeoutModal } from '../components/auth/SessionTimeoutModal';

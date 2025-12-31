@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import { MapPin, Bell, Network } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { InteractiveMap } from '../components/location/InteractiveMap';
-import { SiteDetailPanel } from '../components/location/SiteDetailPanel';
-import { NetworkRequestForm } from '../components/location/NetworkRequestForm';
-import { CentralManagerDashboard } from '../components/location/CentralManagerDashboard';
+import { InteractiveMap } from '../features/logistics/components/location/InteractiveMap';
+import { SiteDetailPanel } from '../features/logistics/components/location/SiteDetailPanel';
+import { NetworkRequestForm } from '../features/logistics/components/location/NetworkRequestForm';
+import { CentralManagerDashboard } from '../features/logistics/components/location/CentralManagerDashboard';
 import { sites, siteInventories } from '../data/location/mockData';
 import type { Site, NetworkRequest } from '../types/location';
 

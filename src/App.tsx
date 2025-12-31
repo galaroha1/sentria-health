@@ -21,19 +21,21 @@ import { ClinicalHub } from './pages/ClinicalHub';
 import { NetworkHub } from './pages/NetworkHub';
 import { DataGeneration } from './pages/DataGeneration';
 import { Vendors } from './pages/Vendors';
-import { CommandCenter } from './components/simulation/CommandCenter';
+import { CommandCenter } from './features/clinical/components/CommandCenter';
 
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppProvider } from './context/AppContext';
+import { InventoryProvider } from './features/inventory/context/InventoryContext';
+import { LogisticsProvider } from './features/logistics/context/LogisticsContext';
 import { UserProvider } from './context/UserContext';
-import { SimulationProvider } from './context/SimulationContext';
+import { SimulationProvider } from './features/clinical/context/SimulationContext';
 
-import { initializationError } from './config/firebase';
+import { initializationError } from './core/config/firebase';
 import { Sidebar } from './components/layout/Sidebar';
-import { CommandPalette } from './components/common/CommandPalette';
+import { CommandPalette } from './core/components/common/CommandPalette';
 import { MobileNav } from './components/layout/MobileNav';
 import { Header } from './components/layout/Header';
 // import { FullScreenLoader } from './components/layout/FullScreenLoader';
@@ -179,13 +181,17 @@ function App() {
   return (
     <UserProvider>
       <AuthProvider>
-        <AppProvider>
-          <SimulationProvider>
-            <CartProvider>
-              <AppContent />
-            </CartProvider>
-          </SimulationProvider>
-        </AppProvider>
+        <InventoryProvider>
+          <LogisticsProvider>
+            <AppProvider>
+              <SimulationProvider>
+                <CartProvider>
+                  <AppContent />
+                </CartProvider>
+              </SimulationProvider>
+            </AppProvider>
+          </LogisticsProvider>
+        </InventoryProvider>
       </AuthProvider>
     </UserProvider>
   );
