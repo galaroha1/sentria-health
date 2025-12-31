@@ -45,7 +45,8 @@ export class RecommendationEngine {
 
     private static async loadSynonyms() {
         try {
-            const res = await fetch('/ai_model/synonym_map.json');
+            const baseUrl = import.meta.env.BASE_URL;
+            const res = await fetch(`${baseUrl}ai_model/synonym_map.json`);
             if (res.ok) {
                 const map = await res.json();
                 console.log(`[DeepEngine] Loaded ${Object.keys(map).length} synonyms.`);
@@ -58,19 +59,24 @@ export class RecommendationEngine {
 
         try {
             console.log("[DeepEngine] Loading V2 Clinical Model...");
+            // Resolve base path for Vite (handles /sentria-health/ prefix)
+            const baseUrl = import.meta.env.BASE_URL;
 
             // 1. Load Vocabulary
-            const vacabRes = await fetch('/ai_model/drug_vocabulary.json');
+            const vacabRes = await fetch(`${baseUrl}ai_model/drug_vocabulary.json`);
+            if (!vacabRes.ok) throw new Error(`Vocab fetch failed: ${vacabRes.statusText}`);
             const vacabData = await vacabRes.json();
             this.drugVocab = vacabData.drugs || vacabData;
 
             // 2. Load Topology
-            const modelRes = await fetch('/ai_model/model_final.json');
+            const modelRes = await fetch(`${baseUrl}ai_model/model_final.json`);
+            if (!modelRes.ok) throw new Error(`Model fetch failed: ${modelRes.statusText}`);
             const modelJson = await modelRes.json();
             this.model = await tf.models.modelFromJSON({ modelTopology: modelJson });
 
             // 3. Load Weights (Manual Reshape Strategy)
-            const weightsRes = await fetch('/ai_model/weights_final.json');
+            const weightsRes = await fetch(`${baseUrl}ai_model/weights_final.json`);
+            if (!weightsRes.ok) throw new Error(`Weights fetch failed: ${weightsRes.statusText}`);
             const weightsData = await weightsRes.json();
 
             const originalWeights = this.model.getWeights();
