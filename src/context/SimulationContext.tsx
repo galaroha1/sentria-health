@@ -1,11 +1,13 @@
+
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
 import { predictTreatment, type PatientProfile, type PredictionResult } from '../utils/aiPrediction';
 import { MEDICAL_DATABASE } from '../data/medicalDatabase';
 import { useAuth } from './AuthContext';
 import { useApp } from './AppContext';
 import { FirestoreService } from '../services/firebase.service';
-import { DiseaseGenerator, type SyntheticBundle } from '../utils/diseaseGenerator';
+import type { SyntheticBundle } from '../utils/diseaseGenerator';
 import { PatientService } from '../services/patient.service';
+import { RecommendationEngine } from '../services/recommendation.engine';
 import toast from 'react-hot-toast';
 
 export interface SimulationResult {
@@ -23,6 +25,7 @@ export interface SimulationResult {
     profile?: PatientProfile; // Detailed profile
     aiPrediction?: PredictionResult; // AI analysis
     rawBundle?: any; // Full FHIR-like bundle
+    manualOverride?: string; // Doctor's override
 }
 
 interface SimulationContextType {
@@ -169,78 +172,119 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         // for the progress calculation we just need to know how many we added in *this* session.
 
         try {
-            // 1. Fetch Data First (Async & Chunked)
-            const data = await DiseaseGenerator.generateBatch(patientCount, (p) => {
-                // Throttle progress updates
-                if (p % 10 === 0) setProgress(p * 0.4);
-            });
+            let data: SyntheticBundle[] = [];
 
-            addLog(`Successfully fetched ${data.length} unique patient profiles.`);
-            addLog('Starting Clinical Analysis & Model Training...');
+            // 1. Generate Synthetic Patients (New Case Flow)
+            addLog(`Generating ${patientCount} new patient cases...`);
+            data = await import('../utils/diseaseGenerator').then(m => m.DiseaseGenerator.generateBatch(patientCount, (pct) => {
+                setProgress(pct * 0.4); // First 40% is generation
+            }));
 
-            // 2. Simulate Training on the Data (Non-blocking loop)
-            let processed = 0;
-            let conditions = 0;
-            const batchSize = Math.max(10, Math.ceil(patientCount / 20)); // Larger batches for UI responsiveness
-            const trainingStartTime = Date.now();
+            addLog(`✓ Generated ${data.length} unique patient profiles.`);
+            setProgress(40);
 
-            const processBatch = async () => {
-                const batch = data.slice(processed, processed + batchSize);
-                processed += batch.length;
-                conditions += batch.reduce((acc, b) => acc + b.conditions.length, 0);
+            // 2. AI Inference (V2 Clinical Model)
+            addLog('Initializing V2 Clinical Model (TensorFlow.js)...');
+            try {
+                await RecommendationEngine.loadModel();
+                addLog('✓ V2 Model Loaded. Running inference...');
+            } catch (e) {
+                addLog('⚠️ Model Load Failed. Using Rule-Based fallback.');
+                console.error(e);
+            }
 
-                const trainingProgress = processed / patientCount;
+            const inferenceStartTime = Date.now();
+            const totalPatients = data.length;
 
-                // Throttle UI updates - only update every 5% or on completion
-                if (processed >= data.length || processed % (Math.ceil(patientCount / 20)) === 0) {
-                    const totalProgress = 40 + (trainingProgress * 40);
-                    setProgress(totalProgress);
+            // We'll prepare results in memory then batch save
+            // This replaces the "Training Loop" with an "Inference Loop"
 
-                    const elapsed = Date.now() - trainingStartTime;
-                    const rate = trainingProgress / elapsed;
-                    const remaining = (1 - trainingProgress) / rate;
+            // We reuse the existing save logic, but we need to inject the AI prediction *before* saving.
+            // But saveToDatabase creates the profile and calls prediction internally? 
+            // Let's check saveToDatabase logic below. 
+            // It calls `predictTreatment(profile)`. We should update predictTreatment to use the Engine?
+            // "predictTreatment" in this file (line 3) imports from utils/aiPrediction. 
+            // We should change saveToDatabase to use RecommendationEngine.recommend directly? 
+            // Or update predictTreatment?
+            // Let's update `saveToDatabase` to accept pre-calculated predictions or call the async engine.
+
+            // Since `predictTreatment` is synchronous and likely rule-based, we'll perform async inference here
+            // and pass the result to the saver, OR we modify `saveToDatabase` to handle it.
+            // Let's run inference here to show progress.
+
+            const enrichedData: { bundle: SyntheticBundle; prediction: any }[] = [];
+
+            for (let i = 0; i < totalPatients; i++) {
+                const bundle = data[i];
+                // Extract profile (simplified logic duplicate from saveToDatabase, could be refactored)
+                const patient = bundle.patient;
+                const conditionName = bundle.conditions[0]?.code.coding[0].display;
+                const birthDate = new Date(patient.birthDate);
+                const age = new Date().getFullYear() - birthDate.getFullYear();
+
+                const profile: PatientProfile = {
+                    name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
+                    age: age,
+                    gender: patient.gender === 'male' ? 'Male' : 'Female',
+                    conditionId: 'unknown', // resolved later or now
+                    medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
+                    vitals: { weight: 70, height: 170 }, // Mock
+                    allergies: []
+                };
+
+                // Async Prediction
+                const recommendations = await RecommendationEngine.recommend(profile);
+                const topRec = recommendations[0];
+
+                enrichedData.push({
+                    bundle,
+                    prediction: topRec
+                        ? {
+                            recommendedDrug: topRec.drugName,
+                            confidenceScore: topRec.confidenceScore,
+                            reasoning: [topRec.reasoning],
+                            contraindicated: false,
+                            dosage: 'Standard',
+                            frequency: 'Daily',
+                            price: 10 + Math.random() * 50,
+                            acquisitionMethod: 'Clear Bag'
+                        }
+                        : null
+                });
+
+                if (i % 50 === 0) {
+                    const pct = 40 + ((i / totalPatients) * 40); // 40% -> 80%
+                    setProgress(pct);
+                    const elapsed = Date.now() - inferenceStartTime;
+                    const rate = (i + 1) / elapsed;
+                    const remaining = (totalPatients - i) / rate;
                     setEta(formatTime(remaining));
-
-                    setStats(prev => ({
-                        totalPatients: prev.totalPatients + batchSize, // Increment incrementally
-                        conditionsIdentified: conditions,
-                        accuracy: Math.min(99.2, prev.accuracy + 0.1)
-                    }));
+                    addLog(`Analyzed Patient ${i + 1}/${totalPatients} - Pred: ${topRec?.drugName || 'None'}`);
                 }
+            }
 
-                if (batch.length > 0 && Math.random() < 0.05) { // Log less frequently
-                    const sample = batch[0];
-                    addLog(`Analyzing: ${sample.patient.name[0].given[0]} ${sample.patient.name[0].family}`);
-                }
+            addLog('Inference Complete. Syncing to database...');
 
-                if (processed < data.length && isTrainingRef.current) {
-                    setTimeout(processBatch, 0);
-                } else {
-                    addLog('Training Complete. Model weights updated.');
+            // 3. Save (Modified to use our enriched predictions)
+            await saveToDatabase(data, enrichedData); // Need to update signature
 
-                    // 3. Save to Firestore (Batched)
-                    await saveToDatabase(data);
-                    setIsTraining(false);
-                    isTrainingRef.current = false;
+            // Refresh
+            fetchSimulations();
+            fetchCount();
 
-                    // Refresh the view and stats
-                    fetchSimulations();
-                    fetchCount();
-                }
-            };
-
-            setTimeout(processBatch, 0);
+            setIsTraining(false);
+            isTrainingRef.current = false;
 
         } catch (error: any) {
             setIsTraining(false);
             isTrainingRef.current = false;
-            addLog(`ERROR: Data fetch failed - ${error.message}`);
-            toast.error(`Simulation failed: ${error.message}`);
+            addLog(`ERROR: Workflow failed - ${error.message}`);
+            toast.error(`Workflow failed: ${error.message}`);
             console.error(error);
         }
     };
 
-    const saveToDatabase = async (data: SyntheticBundle[]) => {
+    const saveToDatabase = async (data: SyntheticBundle[], enrichedPredictions?: any[]) => {
         if (!user) return;
         addLog('Syncing generated patients to database...');
 
@@ -249,10 +293,10 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
 
         // Prepare all data first to avoid computation during write loop
-        const allResults: SimulationResult[] = data.map(bundle => {
+        const allResults: SimulationResult[] = data.map((bundle, i) => {
             const patient = bundle.patient;
-            const conditionName = bundle.conditions[0]?.code.coding[0].display;
-            const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
+            const _conditionName = bundle.conditions[0]?.code.coding[0].display;
+            const conditionEntry = conditionEntries.find(([_, c]) => c.name === _conditionName);
             const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc';
             const birthDate = new Date(patient.birthDate);
             const age = new Date().getFullYear() - birthDate.getFullYear();
@@ -283,7 +327,13 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 allergies: []
             };
 
-            const prediction = predictTreatment(profile);
+            // Use Enriched V2 Prediction if available, else Fallback
+            let prediction;
+            if (enrichedPredictions && enrichedPredictions[i] && enrichedPredictions[i].prediction) {
+                prediction = enrichedPredictions[i].prediction;
+            } else {
+                prediction = predictTreatment(profile);
+            }
 
             // Deterministic Location Assignment
             const location = PatientService.assignLocation(conditionName || 'General');
