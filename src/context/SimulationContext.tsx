@@ -218,7 +218,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 const bundle = data[i];
                 // Extract profile (simplified logic duplicate from saveToDatabase, could be refactored)
                 const patient = bundle.patient;
-                const conditionName = bundle.conditions[0]?.code.coding[0].display;
+                // const conditionName = bundle.conditions[0]?.code.coding[0].display; // Unused
                 const birthDate = new Date(patient.birthDate);
                 const age = new Date().getFullYear() - birthDate.getFullYear();
 
@@ -226,9 +226,15 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                     name: `${patient.name[0].given.join(' ')} ${patient.name[0].family}`,
                     age: age,
                     gender: patient.gender === 'male' ? 'Male' : 'Female',
-                    conditionId: 'unknown', // resolved later or now
+                    conditionId: 'unknown',
                     medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
-                    vitals: { weight: 70, height: 170 }, // Mock
+                    vitals: {
+                        weight: 70,
+                        bpSystolic: 120,
+                        bpDiastolic: 80,
+                        heartRate: 72,
+                        temperature: 98.6
+                    }, // Mock
                     allergies: []
                 };
 
@@ -295,8 +301,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         // Prepare all data first to avoid computation during write loop
         const allResults: SimulationResult[] = data.map((bundle, i) => {
             const patient = bundle.patient;
-            const _conditionName = bundle.conditions[0]?.code.coding[0].display;
-            const conditionEntry = conditionEntries.find(([_, c]) => c.name === _conditionName);
+            const conditionName = bundle.conditions[0]?.code.coding[0].display;
+            const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
             const conditionId = conditionEntry ? conditionEntry[0] : 'oncology_lung_nsclc';
             const birthDate = new Date(patient.birthDate);
             const age = new Date().getFullYear() - birthDate.getFullYear();
@@ -318,7 +324,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 conditionId: conditionId,
                 medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
                 vitals: {
-                    bpSystolic: 120 + Math.floor(Math.random() * 20),
+                    bpSystolic: 120 + Math.floor(Math.random() * 20), // Mock
                     bpDiastolic: 80 + Math.floor(Math.random() * 10),
                     heartRate: 60 + Math.floor(Math.random() * 40),
                     temperature: 98.6,
