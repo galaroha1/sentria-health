@@ -271,4 +271,5 @@ export class FirestoreService {
 
 
 // Export common query helpers
-export { where, orderBy, query };
+import { limit } from 'firebase/firestore';
+export { where, orderBy, query, limit };

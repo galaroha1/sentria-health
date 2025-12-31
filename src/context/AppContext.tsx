@@ -6,7 +6,7 @@ import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
 import type { ProcurementProposal } from '../types/procurement';
 import { sites as initialSites, siteInventories as initialInventories } from '../data/location/mockData';
-import { FirestoreService, query, where, orderBy } from '../services/firebase.service';
+import { FirestoreService, orderBy, limit } from '../services/firebase.service';
 import { db } from '../config/firebase'; // Direct DB access for transactions
 import { doc } from 'firebase/firestore';
 // import { OptimizationService } from '../services/optimization.service';
@@ -216,26 +216,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
 
         // 2. REQUESTS Subscription (Limited to 50 recent)
-        // Scalability Fix: Don't load all history
-        // const { limit } = require('firebase/firestore'); 
-        // Note: Using dynamic require or just assume checking service import. 
-        // The service helper doesn't expose limit(). Let's use generic constraints if available or just full for now? 
-        // Wait, FirestoreService.subscribe accepts constraints.
-        // We need to import 'limit' from firebase/firestore properly.
-
-        // Dynamic import workaround for now to avoid top-level issues if not used elsewhere, 
-        // OR better: Just assume for MVP we load limited set via logical limit but Service API requires QueryConstraint objects.
-        // I will rely on the service to just not crash. 
-        // Actually, to implement Limit, I need to pass `limit(50)` which comes from SDK.
-        // I will trust that for this step I can't easily add the import without potentially breaking other things if not careful.
-        // Let's Skip Limit for this exact block to avoid Import Hell in this tool call and do it in a separate cleanup or just proceed with transaction fix which is more critical.
-        // ACTUALLY, I added 'limit' to the imports in my head but not the file replacement.
-        // I'll stick to full implementation of Transactions now, and Scalability separately or if I can verify imports.
-        // I'll just stick to existing subscribe for now but FIX the Transaction.
-
-        const unsubscribeRequests = FirestoreService.subscribe<NetworkRequest>('transfers', (data) => {
-            setRequests(data);
-        });
+        const unsubscribeRequests = FirestoreService.subscribe<NetworkRequest>(
+            'transfers',
+            (data) => { setRequests(data); },
+            orderBy('requestedAt', 'desc'),
+            limit(50)
+        );
 
         // 3. INVENTORY Subscription
         const unsubscribeInventories = FirestoreService.subscribe<SiteInventory>('inventoryItems', (data) => {
@@ -254,14 +240,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
 
         // 4. NOTIFICATIONS Subscription
-        const unsubscribeNotifications = FirestoreService.subscribe<Notification>('notifications', (data) => {
-            setNotifications(data);
-        });
+        const unsubscribeNotifications = FirestoreService.subscribe<Notification>(
+            'notifications',
+            (data) => { setNotifications(data); },
+            orderBy('timestamp', 'desc'),
+            limit(50)
+        );
 
         // 5. AUDIT LOGS Subscription
-        const unsubscribeAuditLogs = FirestoreService.subscribe<AuditLogEntry>('auditLogs', (data) => {
-            setAuditLogs(data);
-        });
+        const unsubscribeAuditLogs = FirestoreService.subscribe<AuditLogEntry>(
+            'auditLogs',
+            (data) => { setAuditLogs(data); },
+            orderBy('timestamp', 'desc'),
+            limit(50)
+        );
 
         return () => {
             unsubscribeSites();
