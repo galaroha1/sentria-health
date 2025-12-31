@@ -180,7 +180,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to Firestore collections
     useEffect(() => {
-        // 1. SITES Subscription
+        if (!user) {
+            // Clear global state if logged out
+            setRequests([]);
+            setNotifications([]);
+            setAuditLogs([]);
+            // Don't clear sites/inventories necessarily as they might be public? No, secure app.
+            // setSites([]);
+            // setInventories([]);
+            return;
+        }
+
+        console.log('AppContext: User authenticated. Subscribing to global collections...');
+
         // 1. SITES Subscription
         const unsubscribeSites = FirestoreService.subscribe<Site>('sites', (data) => {
             if (data.length === 0 && initialSites.length > 0) {
@@ -245,7 +257,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             unsubscribeNotifications();
             unsubscribeAuditLogs();
         };
-    }, []);
+    }, [user]);
 
     // ------------------------------------------------------------------
     // AMIOP METRICS ENGINE
