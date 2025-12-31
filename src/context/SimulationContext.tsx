@@ -96,7 +96,10 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
     // Initial Load
     useEffect(() => {
-        fetchCount();
+        if (user) {
+            fetchCount();
+            fetchSimulations(20); // Load initial page so UI isn't empty
+        }
     }, [user]);
 
     const fetchSimulations = async (pageSize: number = 20, startAfterDoc: any = null, sortField: string = 'date', sortDirection: 'asc' | 'desc' = 'desc') => {
