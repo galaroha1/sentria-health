@@ -253,6 +253,20 @@ export class FirestoreService {
             return false;
         }
     }
+    /**
+     * Run a transaction
+     */
+    static async runTransaction<T>(
+        updateFunction: (transaction: any) => Promise<T>
+    ): Promise<T> {
+        try {
+            const { runTransaction } = await import('firebase/firestore');
+            return await runTransaction(db, updateFunction);
+        } catch (error) {
+            console.error("Transaction failed:", error);
+            throw error;
+        }
+    }
 }
 
 
