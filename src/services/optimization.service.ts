@@ -109,7 +109,9 @@ export class OptimizationService {
                     const recs = await RecommendationEngine.recommend(patient);
                     if (recs && recs.length > 0) {
                         const topRec = recs[0]; // Highest confidence drug
-                        if (topRec.confidenceScore > 60) { // Only trust high confidence
+                        // console.log(`[Optimization] Patient ${patient.id} - ${topRec.drugName} (${topRec.confidenceScore}%)`);
+
+                        if (topRec.confidenceScore > 20) { // LOWERED THRESHOLD FOR V2 MODEL
                             const drugName = topRec.drugName;
                             const ndc = AI_DRUG_MAP[drugName] || '99999-9999-99'; // Fallback
                             // AI-PREDICTED QUANTITY
