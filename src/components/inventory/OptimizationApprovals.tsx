@@ -9,11 +9,22 @@ interface OptimizationApprovalsProps {
 }
 
 export function OptimizationApprovals({ proposals, onApprove, onReject }: OptimizationApprovalsProps) {
-    const [filterType, setFilterType] = useState<'all'>('all'); // Simplified, unused effectively for now
+    const [filterType, setFilterType] = useState<'all' | 'inter_dept' | 'network' | 'procurement'>('all');
     const [sortType, setSortType] = useState<'score_desc' | 'cost_asc' | 'cost_desc' | 'urgency' | 'demand_first' | 'refill_first'>('demand_first');
 
     const filteredProposals = useMemo(() => {
         let result = [...proposals];
+
+        // Filter
+        if (filterType !== 'all') {
+            if (filterType === 'inter_dept') {
+                result = result.filter(p => p.transferSubType === 'inter_dept');
+            } else if (filterType === 'network') {
+                result = result.filter(p => p.transferSubType === 'network_transfer');
+            } else if (filterType === 'procurement') {
+                result = result.filter(p => p.type === 'procurement');
+            }
+        }
 
         // Sort
         result.sort((a, b) => {
@@ -64,7 +75,25 @@ export function OptimizationApprovals({ proposals, onApprove, onReject }: Optimi
             </div>
 
             {/* Filter & Sort Controls */}
-            <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-end">
+            <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-600">Filter:</span>
+                    <div className="flex rounded-lg bg-white p-1 shadow-sm border border-slate-200">
+                        {(['all', 'inter_dept', 'network', 'procurement'] as const).map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${filterType === type
+                                    ? 'bg-primary-100 text-primary-700 shadow-sm'
+                                    : 'text-slate-600 hover:bg-slate-50'
+                                    } capitalize`}
+                            >
+                                {type === 'network' ? 'Penn Network' : type === 'inter_dept' ? 'Inter-Dept' : type}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-slate-600">Sort Priority:</span>
                     <select
