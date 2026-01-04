@@ -28,17 +28,22 @@ export function Dashboard() {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+            <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] bg-primary-300/20 rounded-full blur-3xl animate-pulse-slow"></div>
+            <div className="absolute bottom-0 left-0 -z-10 h-[500px] w-[500px] bg-secondary-300/20 rounded-full blur-3xl animate-float"></div>
+
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-                    <p className="text-sm text-slate-500">Intelligent insights and real-time metrics for your hospital network.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                        <span className="text-gradient">Sentria</span> Dashboard
+                    </h1>
+                    <p className="text-sm text-slate-500 mt-1">Intelligent insights and real-time metrics for your hospital network.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {user?.role === UserRole.SUPER_ADMIN && (
                         <button
                             onClick={resetSimulation}
-                            className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                            className="text-sm text-secondary-600 hover:text-secondary-700 font-medium px-3 py-1 rounded-md hover:bg-secondary-50 transition-colors"
                         >
                             Reset Demo
                         </button>
@@ -70,34 +75,35 @@ export function Dashboard() {
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }}
-                        className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                        className="glass-card px-4 py-2 text-sm font-medium text-slate-700 hover:text-primary-600 hover:border-primary-200"
                     >
                         Export Report
                     </button>
                     <button
                         onClick={() => navigate('/marketplace')}
-                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 active:bg-primary-800 transition-colors"
+                        className="rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-2.5 text-sm font-bold text-white shadow-glow-md hover:shadow-glow-lg transition-all hover:-translate-y-0.5"
                     >
-                        New Order
+                        + New Order
                     </button>
                 </div>
             </div>
 
             {/* Tab Navigation */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex gap-2 border-b border-slate-200 p-2 overflow-x-auto">
+            <div className="glass-panel rounded-2xl p-2">
+                <div className="flex gap-2 overflow-x-auto">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-slate-900 text-white'
-                                    : 'text-slate-600 hover:bg-slate-100'
+                                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap ${isActive
+                                    ? 'bg-slate-900 text-white shadow-lg scale-105'
+                                    : 'text-slate-600 hover:bg-slate-50'
                                     }`}
                             >
-                                <Icon className="h-4 w-4" />
+                                <Icon className={`h-4 w-4 ${isActive ? 'text-primary-300' : 'text-slate-400'}`} />
                                 {tab.label}
                             </button>
                         );

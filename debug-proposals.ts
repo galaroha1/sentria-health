@@ -1,6 +1,6 @@
 
 import { OptimizationService } from './src/services/optimization.service';
-import { PatientService } from './src/services/patient.service';
+import { PatientService } from './src/features/clinical/services/patient.service';
 import { sites, siteInventories } from './src/data/location/mockData';
 import { Patient } from './src/types/patient';
 

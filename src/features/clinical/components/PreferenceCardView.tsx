@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Save, Trash2, Plus, TrendingDown } from 'lucide-react';
-import type { PreferenceCard, UsageReport } from '../../../services/clinicalService';
+import type { PreferenceCard, UsageReport } from '../services/clinicalService';
 
 interface PreferenceCardViewProps {
     card: PreferenceCard;
@@ -73,7 +73,7 @@ export function PreferenceCardView({ card, onSave }: PreferenceCardViewProps) {
                     {isEditing && <span className="w-10"></span>}
                 </div>
 
-                {items.map((item, i) => (
+                {items.map((item: any, i: number) => (
                     <div
                         key={item.itemId}
                         className={`flex items-center justify-between py-3 border-b border-slate-50 last:border-0 ${isEditing ? 'cursor-pointer hover:bg-slate-50 rounded-lg px-2 -mx-2' : ''}`}

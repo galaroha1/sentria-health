@@ -1,5 +1,5 @@
 import { ArrowRight, TrendingUp, Clock, DollarSign, ShoppingCart } from 'lucide-react';
-import type { TransferSuggestion, Site } from '../../types/location';
+import type { TransferSuggestion, Site } from '../../../types/location';
 
 interface SmartTransferCardProps {
     suggestion: TransferSuggestion;
@@ -73,7 +73,7 @@ export function SmartTransferCard({ suggestion, sourceSite, targetSite, onApprov
                         <span>{suggestion.sourceDepartmentName || sourceSite?.name || suggestion.sourceSiteId}</span>
                     )}
                 </div>
-                {suggestion.reason.map((reason, i) => (
+                {suggestion.reason.map((reason: string, i: number) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-slate-600 bg-slate-50/50 p-1.5 rounded">
                         <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-primary-500 shrink-0" />
                         {reason}

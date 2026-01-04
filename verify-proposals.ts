@@ -6,7 +6,7 @@ if (typeof import.meta === 'undefined') (global as any).import = { meta: { env: 
 if (!import.meta.env) (import.meta as any).env = { VITE_GOOGLE_MAPS_API_KEY: 'mock-key' };
 
 import { OptimizationService } from './src/services/optimization.service';
-import { PatientService } from './src/services/patient.service';
+import { PatientService } from './src/features/clinical/services/patient.service';
 import { sites, siteInventories } from './src/data/location/mockData';
 import { Patient } from './src/types/patient';
 
@@ -45,7 +45,7 @@ async function verifyProposals() {
     // The generator already does this.
 
     console.log("Running Optimization...");
-    const proposals = await OptimizationService.generateProposals(sites, siteInventories, patients, []);
+    const proposals = await OptimizationService.generateProposals(sites, siteInventories, patients);
 
     // 3. Inspect Results
     console.log("\n--- RESULTS ---");
@@ -62,7 +62,7 @@ async function verifyProposals() {
     // Check Scaling again briefly
     console.log("\n--- QUICK SCALING CHECK ---");
     const bulkPatients = PatientService.generateMockPatients(50);
-    const bulkProposals = await OptimizationService.generateProposals(sites, siteInventories, bulkPatients, []);
+    const bulkProposals = await OptimizationService.generateProposals(sites, siteInventories, bulkPatients);
     const totalQty = bulkProposals.reduce((sum, p) => sum + p.quantity, 0);
     console.log(`50 Random Patients -> ${bulkProposals.length} Proposals, ${totalQty} Total Units.`);
 }

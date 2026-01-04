@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, Truck, AlertCircle } from 'lucide-react';
-import type { NetworkRequest, Site } from '../../types/location';
+import type { NetworkRequest, Site } from '../../../types/location';
 
 interface LocationActivityProps {
     site: Site;

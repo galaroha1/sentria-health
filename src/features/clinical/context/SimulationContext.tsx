@@ -9,6 +9,8 @@ import type { SyntheticBundle } from '../../../utils/diseaseGenerator';
 import { PatientService } from '../services/patient.service';
 import { RecommendationEngine } from '../services/recommendation.engine';
 import toast from 'react-hot-toast';
+import { SecureLogger } from '../../../services/logger.service';
+
 
 export interface SimulationResult {
     id: string;
@@ -90,7 +92,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 totalPatients: count
             }));
         } catch (error) {
-            console.error("Failed to fetch patient count:", error);
+            SecureLogger.error("Failed to fetch patient count:", error);
         }
     };
 

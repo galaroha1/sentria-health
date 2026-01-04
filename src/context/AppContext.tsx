@@ -6,7 +6,10 @@ import type { Notification } from '../types/notification';
 import type { AuditLogEntry } from '../types/audit';
 import type { ProcurementProposal } from '../types/procurement';
 import { FirestoreService, orderBy, limit } from '../core/services/firebase.service';
+import { SystemMemoryService } from '../services/memory.service';
 import { PatientService } from '../features/clinical/services/patient.service';
+import { SecureLogger } from '../services/logger.service';
+
 
 // Modular Contexts
 import { useInventory } from '../features/inventory/context/InventoryContext';
@@ -17,12 +20,11 @@ interface AppContextType {
     requests: NetworkRequest[];
     sites: Site[];
     inventories: SiteInventory[];
-    addSite: (site: Site) => void; // Promise<void> in InventoryContext, but void here per legacy interface? Check calling code.
-    // Calling code awaits? If interface says void, await is fine (void ignores return).
-    // But let's check if we break 'await addSite()'.
-    // Original: `addSite = async ...` implies Promise.
-    // Interface: `addSite: (site: Site) => void;` -> In TS `=> void` allows returning Promise.
-    // So strict compatibility is fine.
+    /**
+     * Adds a new physical location (Hospital/Clinic) to the network.
+     * Delegated to `InventoryContext`.
+     */
+    addSite: (site: Site) => void;
 
     addRequest: (request: NetworkRequest) => void;
     updateRequestStatus: (id: string, status: NetworkRequest['status'], approvedBy?: string) => void;
@@ -51,7 +53,9 @@ interface AppContextType {
 
     // Optimization State (Persisted)
     currentProposals: ProcurementProposal[];
-    setCurrentProposals: React.Dispatch<React.SetStateAction<ProcurementProposal[]>>;
+    // setCurrentProposals: React.Dispatch<React.SetStateAction<ProcurementProposal[]>>;
+    setCurrentProposals: (proposals: ProcurementProposal[]) => Promise<void>;
+
 
     // Loading State
     isLoading: boolean;
@@ -85,8 +89,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
     const [patients, setPatients] = useState<any[]>([]);
-    const [currentProposals, setCurrentProposals] = useState<ProcurementProposal[]>([]);
+    const [currentProposals, _setProposalsLocal] = useState<ProcurementProposal[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Load System Memory (Proposals)
+    useEffect(() => {
+        if (!user) return;
+        const loadMemory = async () => {
+            const saved = await SystemMemoryService.load<ProcurementProposal[]>('currentProposals');
+            if (saved) {
+                _setProposalsLocal(saved);
+                console.log(`🧠 Loaded ${saved.length} proposals from System Memory`);
+            }
+        };
+        loadMemory();
+    }, [user]);
+
+    const setCurrentProposals = async (proposals: ProcurementProposal[]) => {
+        _setProposalsLocal(proposals);
+        await SystemMemoryService.save('currentProposals', proposals);
+    };
+
 
     // Sync Loading State
     useEffect(() => {
@@ -106,6 +129,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 setPatients([]);
                 return;
             }
+
+
+
+
             const mappedPatients = data.map(sim => {
                 const fallbackLoc = !sim.assignedSiteId ? PatientService.assignLocation(sim.condition) : null;
                 const siteId = sim.assignedSiteId || fallbackLoc?.siteId;
@@ -126,7 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     biometrics: sim.biometrics || { weight: 70, height: 175, bsa: 1.73 }
                 };
             });
-            console.log(`AppContext: Synced ${mappedPatients.length} patients from Firestore.`);
+            SecureLogger.log(`AppContext: Synced ${mappedPatients.length} patients from Firestore.`);
             setPatients(mappedPatients);
         });
         return () => unsubscribePatients();

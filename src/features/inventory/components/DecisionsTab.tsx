@@ -223,7 +223,8 @@ export function DecisionsTab() {
             }
         }
         // Remove from local list (Actioned)
-        setCurrentProposals(prev => prev.filter(p => p.id !== proposal.id));
+        // Remove from local list (Actioned)
+        setCurrentProposals(currentProposals.filter(p => p.id !== proposal.id));
     };
 
     return (

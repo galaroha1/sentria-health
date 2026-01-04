@@ -1,6 +1,6 @@
 
 import { OptimizationService } from './src/services/optimization.service';
-import { PatientService } from './src/services/patient.service';
+import { PatientService } from './src/features/clinical/services/patient.service';
 import { Site, SiteInventory } from './src/types/location';
 import { Patient } from './src/types/patient';
 
@@ -9,9 +9,10 @@ const site: Site = {
     id: 'site-test', name: 'Test Site', type: 'hospital',
     coordinates: { lat: 0, lng: 0 }, address: '123 Test',
     status: 'operational', capacity: 100, currentUtilization: 50,
-    departments: [{ id: 'dept-1', name: 'Oncology', type: 'medical', capacity: 20, occupancy: 5 }],
-    regulatoryProfile: { is340B: true, deaLicense: [], dscsaCompliant: true, stateLicense: 'PA-123', licenseType: 'hospital' },
-    classOfTrade: 'acute'
+    departments: [{ id: 'dept-1', name: 'Oncology', type: 'clinical' }],
+    regulatoryProfile: { is340B: true, deaLicense: [], dscsaCompliant: true, stateLicense: 'PA-123', orphanDrugExclusion: false, gpoProhibition: false },
+    classOfTrade: 'acute',
+    parentEntity: 'HealthSystem', phone: '555-0000', manager: 'Test Manager', regulatoryAvatar: 'hospital_340b'
 };
 
 const inventory: SiteInventory = {
@@ -37,10 +38,10 @@ const patient: Patient = {
 // 3. Run Optimization
 async function test() {
     console.log("[TEST] Running Optimization with 1 Patient (Demand: Keytruda) vs Empty Inventory...");
-    const plan = await OptimizationService.selectOrderPlan([site], [inventory], [patient]);
+    const plan = await OptimizationService.generateProposals([site], [inventory], [patient]);
 
-    console.log(`[TEST] Generated Items: ${plan.items.length}`);
-    if (plan.items.length === 0) {
+    console.log(`[TEST] Generated Items: ${plan.length}`);
+    if (plan.length === 0) {
         console.log("FAIL: Patient demand was IGNORED because drug is not in inventory.");
     } else {
         console.log("SUCCESS: Patient demand triggered procurement for new item.");

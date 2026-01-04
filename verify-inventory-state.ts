@@ -1,5 +1,5 @@
 
-import { FirestoreService } from './src/services/firebase.service';
+import { FirestoreService } from './src/core/services/firebase.service';
 import { sites } from './src/data/location/mockData';
 
 async function checkInventory() {

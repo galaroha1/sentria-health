@@ -2,6 +2,7 @@ import * as tf from '@tensorflow/tfjs';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as zlib from 'zlib'; // Built-in
+// @ts-ignore
 import tar from 'tar-stream'; // "tar-stream": "^3.1.7"
 import * as glob from 'glob';
 
@@ -88,14 +89,15 @@ async function main() {
 
     const extract = tar.extract();
 
-    extract.on('entry', async (header, stream, next) => {
+    // @ts-ignore
+    extract.on('entry', async (header: any, stream: any, next: any) => {
         processedFiles++;
         if (processedFiles <= 10) console.log(`[DEBUG] Entry: ${header.name} | Type: ${header.type}`);
 
         // Only process JSON files in fhir/ directory
         if (header.type === 'file' && header.name.endsWith('.json')) {
             const chunks: any[] = [];
-            stream.on('data', chunk => chunks.push(chunk));
+            stream.on('data', (chunk: any) => chunks.push(chunk));
             stream.on('end', async () => {
                 try {
                     const content = Buffer.concat(chunks).toString('utf-8');

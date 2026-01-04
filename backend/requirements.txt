@@ -8,3 +8,4 @@ requests
 python-dotenv
 boxsdk==3.9.2
 tqdm
+cryptography

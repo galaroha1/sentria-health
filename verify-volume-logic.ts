@@ -1,7 +1,7 @@
 
 import { OptimizationService } from './src/services/optimization.service';
-import { PatientService } from './src/services/patient.service';
-import { definitions } from './src/types/location'; // Verify imports
+import { PatientService } from './src/features/clinical/services/patient.service';
+// import { definitions } from './src/types/location'; // Removed: No longer exists
 import { Site, SiteInventory } from './src/types/location';
 import { Patient } from './src/types/patient';
 
@@ -11,30 +11,32 @@ import { Patient } from './src/types/patient';
 const siteA: Site = {
     id: 'site-src', name: 'Source Hosp', type: 'hospital',
     coordinates: { lat: 0, lng: 0 }, address: 'A', status: 'operational', capacity: 100, currentUtilization: 50,
-    departments: [{ id: 'dept-a', name: 'Pharmacy', type: 'pharmacy', capacity: 100, occupancy: 50 }],
-    regulatoryProfile: { is340B: true, deaLicense: [], dscsaCompliant: true, stateLicense: 'PA-1', licenseType: 'hospital' },
-    classOfTrade: 'acute'
+    departments: [{ id: 'dept-a', name: 'Pharmacy', type: 'pharmacy' }],
+    regulatoryProfile: { is340B: true, deaLicense: [], dscsaCompliant: true, stateLicense: 'PA-1', orphanDrugExclusion: false, gpoProhibition: false },
+    classOfTrade: 'acute',
+    parentEntity: 'HealthSystem', phone: '555-0000', manager: 'Alice Doe', regulatoryAvatar: 'hospital_340b'
 };
 const invA: SiteInventory = {
     siteId: 'site-src', lastUpdated: new Date().toISOString(),
     drugs: [{
         ndc: '0006-3026-02', drugName: 'Keytruda', quantity: 60, // 60 > Max 50 => 10 Surplus available
-        minLevel: 10, maxLevel: 50, status: 'overstocked'
+        minLevel: 10, maxLevel: 50, status: 'overstocked', expirationWarnings: 0
     }]
 };
 
 const siteB: Site = {
     id: 'site-dst', name: 'Dest Hosp', type: 'hospital',
     coordinates: { lat: 0.1, lng: 0.1 }, address: 'B', status: 'operational', capacity: 100, currentUtilization: 50,
-    departments: [{ id: 'dept-b', name: 'Oncology', type: 'medical', capacity: 100, occupancy: 50 }],
-    regulatoryProfile: { is340B: true, deaLicense: [], dscsaCompliant: true, stateLicense: 'PA-2', licenseType: 'hospital' },
-    classOfTrade: 'acute'
+    departments: [{ id: 'dept-b', name: 'Oncology', type: 'clinical' }],
+    regulatoryProfile: { is340B: true, deaLicense: [], dscsaCompliant: true, stateLicense: 'PA-2', orphanDrugExclusion: false, gpoProhibition: false },
+    classOfTrade: 'acute',
+    parentEntity: 'HealthSystem', phone: '555-0001', manager: 'Bob Smith', regulatoryAvatar: 'hospital_340b'
 };
 const invB: SiteInventory = {
     siteId: 'site-dst', lastUpdated: new Date().toISOString(),
     drugs: [{
         ndc: '0006-3026-02', drugName: 'Keytruda', quantity: 5, // Low stock
-        minLevel: 10, maxLevel: 50, status: 'low'
+        minLevel: 10, maxLevel: 50, status: 'low', expirationWarnings: 0
     }]
 };
 

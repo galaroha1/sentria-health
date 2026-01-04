@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { LogisticsService } from '../services/logistics.service';
 import { MapPin, Search, ArrowUpRight, ArrowDownLeft, Building2, Activity, Users, Map as MapIcon, List } from 'lucide-react';
 import { networkService } from '../services/networkService';
 import type { Organization, SharedInventoryItem } from '../services/networkService';
@@ -20,7 +21,26 @@ export function NetworkHub() {
 
     const refreshData = () => {
         networkService.getNearbyOrganizations().then(setPartners);
-        networkService.getNetworkActivity().then(setActivity);
+        // networkService.getNetworkActivity().then(setActivity); // Old Mock
+
+        // Use Real Backend
+        LogisticsService.getNetworkActivity().then(realShipments => {
+            // Adapt backend model to frontend 'SharedInventoryItem' for now (or update state type)
+            // For this step, I'll map it to look like activity items
+            const adapted = realShipments.map(s => ({
+                id: s.id,
+                name: `Shipment #${s.tracking_number.substring(0, 6)}`,
+                quantity: 1, // Placeholder
+                expiryDate: s.estimated_delivery, // Use ETA as a date ref
+                orgName: s.origin, // Origin
+                type: 'Surplus' as const, // Treat meaningful movement as transfer
+                // Mapped Fields to satisfy SharedInventoryItem
+                orgId: 'network-hub', // Virtual ID
+                ndc: '00000-0000-00', // Placeholder
+                postedAt: new Date().toISOString()
+            }));
+            setActivity(adapted);
+        });
     };
 
     useEffect(() => {

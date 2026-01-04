@@ -1,5 +1,5 @@
 
-import { PatientService } from './src/services/patient.service';
+import { PatientService } from './src/features/clinical/services/patient.service';
 
 // Mock Patient Data from Firestore (Simulated)
 const mockSimResult = {

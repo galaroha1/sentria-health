@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { FirestoreService } from '../core/services/firebase.service';
 import { useAuth } from './AuthContext';
+import { LogisticsService } from '../services/logistics.service';
 
 interface CartItem {
     id: number;
@@ -67,26 +68,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (!user) throw new Error('User not authenticated');
         if (items.length === 0) throw new Error('Cart is empty');
 
-        const orderId = `ORD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        const orderData = {
-            id: orderId,
-            items: items,
-            total: total + 150, // Including shipping
-            status: 'processing',
-            createdAt: new Date().toISOString(),
-            shipping: {
-                method: 'Cold Chain Express',
-                cost: 150
-            }
-        };
+        try {
+            // Call the Real Backend
+            const result = await LogisticsService.placeOrder(
+                user.id,
+                items,
+                total + 150,
+                'Cold Chain Express'
+            );
 
-        // Save order to history
-        await FirestoreService.set(`users/${user.id}/orders`, orderId, orderData);
+            // Save order metadata to local history for UI purposes if needed, 
+            // but the SOURCE OF TRUTH is now the Backend SQLite DB.
+            const orderData = {
+                id: result.order_id,
+                items: items,
+                total: total + 150,
+                status: 'processing',
+                createdAt: new Date().toISOString(),
+                trackingNumber: result.tracking_number, // Real tracking number
+                shipping: {
+                    method: 'Cold Chain Express',
+                    cost: 150
+                }
+            };
 
-        // Clear cart
-        await clearCart();
+            await FirestoreService.set(`users/${user.id}/orders`, result.order_id, orderData);
+            await clearCart();
 
-        return orderId;
+            return result.order_id;
+        } catch (error) {
+            console.error("Checkout failed:", error);
+            throw error;
+        }
     };
 
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);

@@ -1,6 +1,6 @@
 
 import { OptimizationService } from './src/services/optimization.service';
-import { PatientService } from './src/services/patient.service';
+import { PatientService } from './src/features/clinical/services/patient.service';
 import { sites, siteInventories } from './src/data/location/mockData';
 import { Patient } from './src/types/patient';
 
@@ -10,7 +10,7 @@ async function verifyIncrementalScaling() {
     let currentPatients: Patient[] = [];
 
     // Baseline
-    const baselineProposals = await OptimizationService.generateProposals(sites, siteInventories, currentPatients, []);
+    const baselineProposals = await OptimizationService.generateProposals(sites, siteInventories, currentPatients);
     console.log(`[0 Patients] Proposals: ${baselineProposals.length} | Units: ${baselineProposals.reduce((s, p) => s + p.quantity, 0)}`);
 
     // Add 50
@@ -18,7 +18,7 @@ async function verifyIncrementalScaling() {
     const batch1 = PatientService.generateMockPatients(50);
     currentPatients = [...currentPatients, ...batch1];
 
-    const prop50 = await OptimizationService.generateProposals(sites, siteInventories, currentPatients, []);
+    const prop50 = await OptimizationService.generateProposals(sites, siteInventories, currentPatients);
     const units50 = prop50.reduce((s, p) => s + p.quantity, 0);
     console.log(`[50 Patients] Proposals: ${prop50.length} | Units: ${units50}`);
 
@@ -27,7 +27,7 @@ async function verifyIncrementalScaling() {
     const batch2 = PatientService.generateMockPatients(50);
     currentPatients = [...currentPatients, ...batch2];
 
-    const prop100 = await OptimizationService.generateProposals(sites, siteInventories, currentPatients, []);
+    const prop100 = await OptimizationService.generateProposals(sites, siteInventories, currentPatients);
     const units100 = prop100.reduce((s, p) => s + p.quantity, 0);
     console.log(`[100 Patients] Proposals: ${prop100.length} | Units: ${units100}`);
 

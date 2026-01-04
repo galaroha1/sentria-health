@@ -1,5 +1,5 @@
 
-import { PatientService } from './src/services/patient.service';
+import { PatientService } from './src/features/clinical/services/patient.service';
 import { ForecastingService } from './src/services/forecasting.service';
 import { Patient } from './src/types/patient';
 
