@@ -87,11 +87,11 @@ export function Login() {
 
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-slate-50 to-secondary-50 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 px-4">
             <div className="w-full max-w-md">
                 <div className="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <img src={`${import.meta.env.BASE_URL}penn_logo.png`} alt="Penn Medicine" className="h-16 mx-auto mb-4 object-contain" />
-                    {/* <h1 className="text-3xl font-bold text-primary-800">Penn Medicine</h1> */}
+                    {/* <h1 className="text-3xl font-bold text-blue-800">Penn Medicine</h1> */}
                     <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">
                         Supply Chain Intelligence Platform
                     </p>
@@ -117,7 +117,7 @@ export function Login() {
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     placeholder="John Doe"
                                 />
                             </div>
@@ -133,7 +133,7 @@ export function Login() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 placeholder="you@pennmedicine.upenn.edu"
                             />
                         </div>
@@ -148,7 +148,7 @@ export function Login() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -160,14 +160,14 @@ export function Login() {
                                         type="checkbox"
                                         checked={rememberMe}
                                         onChange={(e) => setRememberMe(e.target.checked)}
-                                        className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     />
                                     <span className="text-sm text-slate-600">Remember me</span>
                                 </label>
                             )}
                             <Link
                                 to="/forgot-password"
-                                className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-700"
                             >
                                 Forgot password?
                             </Link>
@@ -176,7 +176,7 @@ export function Login() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full rounded-lg bg-primary-800 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-800 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isLoading ? (isLogin ? 'Signing in...' : 'Creating Account...') : (isLogin ? 'Sign In' : 'Create Account')}
                         </button>
@@ -188,7 +188,7 @@ export function Login() {
                                     setIsLogin(!isLogin);
                                     setError('');
                                 }}
-                                className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-700"
                             >
                                 {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
                             </button>
