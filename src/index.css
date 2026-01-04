@@ -14,15 +14,15 @@
   }
 
   .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/30 shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 hover:bg-white/80;
+    @apply bg-white/60 backdrop-blur-md border border-white/30 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:bg-white/80;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500;
   }
 
   .text-gradient-dark {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-primary-800 to-slate-900;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900;
   }
 
   .modern-scroll::-webkit-scrollbar {
@@ -35,7 +35,7 @@
   }
 
   .modern-scroll::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full hover:bg-primary-400 transition-colors;
+    @apply bg-slate-300 rounded-full hover:bg-blue-400 transition-colors;
   }
 }
 
