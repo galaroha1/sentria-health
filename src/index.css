@@ -14,7 +14,9 @@
   }
 
   .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/30 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:bg-white/80;
+    @apply bg-white/60 backdrop-blur-md border border-white/30 transition-all duration-300 hover:-translate-y-1 hover:bg-white/80;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    /* Premium Glass Shadow */
   }
 
   .text-gradient {
