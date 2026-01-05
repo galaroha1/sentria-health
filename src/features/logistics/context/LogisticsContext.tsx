@@ -48,7 +48,7 @@ export function LogisticsProvider({ children }: { children: ReactNode }) {
             message: `${request.requestedBySite.name} requested ${request.drug.quantity} units of ${request.drug.name}`,
             timestamp: new Date().toISOString(),
             read: false,
-            link: '/transfers'
+            link: '/logistics'
         };
         await FirestoreService.set('notifications', newNotification.id, newNotification);
     };
@@ -81,7 +81,7 @@ export function LogisticsProvider({ children }: { children: ReactNode }) {
             message: `Request for ${request.drug.name} has been ${status === 'in_transit' ? 'approved' : status}`,
             timestamp: new Date().toISOString(),
             read: false,
-            link: '/transfers'
+            link: '/logistics'
         };
         await FirestoreService.set('notifications', newNotification.id, newNotification);
 
