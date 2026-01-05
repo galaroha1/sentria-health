@@ -6,7 +6,7 @@ import { CardinalService } from './integration/cardinal.service';
 import { FdaService } from './integration/fda.service';
 import { NadacService } from './integration/nadac.service';
 import { RxNavService } from './integration/rxnav.service';
-import { FirestoreService } from '../core/services/firebase.service';
+
 
 // Export needed for UI or other parts? For now, we are dynamically fetching, 
 // but UI might need list of "Available Suppliers".
@@ -27,14 +27,11 @@ export class SupplierService {
             FdaService.getDrugDetails(ndc),
             RxNavService.getClinicalData(ndc),
             NadacService.getPriceBenchmark(ndc),
-            FdaService.getDrugDetails(ndc),
-            RxNavService.getClinicalData(ndc),
-            NadacService.getPriceBenchmark(ndc),
             // Fetch Encrypted Keys from Backend (Decrypted on retrieval)
             fetch('/api/ai/memory/get/system_settings_global')
                 .then(res => res.json())
-                .catch(() => ({})) // Fallback to empty if fails
-        ]);
+                .catch(() => ({})) as Promise<{ mckesson_api_key?: string; cardinal_api_key?: string }>
+        ] as const);
 
         // 2. Fetch Real Distributor Quotes (Parallel)
         const quotePromises = [
