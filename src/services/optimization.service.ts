@@ -1,6 +1,18 @@
 import type { Site, SiteInventory } from '../types/location';
 import type { ProcurementProposal } from '../types/procurement';
 import { RecommendationEngine } from '../features/clinical/services/recommendation.engine';
+import realDrugCatalog from '../data/real-drug-catalog.json';
+
+// Create a lookup map for real drug prices
+const PRICE_MAP = new Map<string, number>();
+const NDC_TO_NAME_MAP = new Map<string, string>();
+
+realDrugCatalog.forEach((drug: any) => {
+    if (drug.ndc) {
+        PRICE_MAP.set(drug.ndc, drug.price || 500); // Default to $500 if missing
+        NDC_TO_NAME_MAP.set(drug.ndc, drug.name);
+    }
+});
 
 export class OptimizationService {
 
@@ -59,7 +71,8 @@ export class OptimizationService {
         const demandMap = new Map<string, Map<string, number>>();
         const drugDetailsMap = new Map<string, { name: string }>(); // Helper to keep names
 
-        // NDC Lookup for AI-Predicted Drugs
+        // NDC Lookup for AI-Predicted Drugs (Mapping known names to real NDCs if possible, or common ones)
+        // In a real system, the RecommendationEngine returns valid NDCs.
         const AI_DRUG_MAP: Record<string, string> = {
             'Keytruda (Pembrolizumab)': '00006-3026-02',
             'Opdivo (Nivolumab)': '00003-3772-11',
@@ -194,6 +207,9 @@ export class OptimizationService {
                 // NetDeficit is the amount we need to acquire.
                 let netDeficit = targetQty;
 
+                // Lookup Real Price
+                const unitPrice = PRICE_MAP.get(ndc) || 500; // Fallback to $500
+
                 // =============================================================================
                 // DECISION 8: Can the deficit be filled internally?
                 // =============================================================================
@@ -218,6 +234,11 @@ export class OptimizationService {
                             const transferQty = Math.min(surplus, netDeficit);
 
                             if (transferQty > 0) {
+                                // Cost Logic for Transfers
+                                const transferFee = 45; // Flat fee for internal courier
+                                const purchaseCostAvoided = transferQty * unitPrice;
+                                const totalSavings = purchaseCostAvoided - transferFee;
+
                                 // Create TRANSFER Proposal
                                 proposals.push({
                                     id: `prop-${Date.now()}-${Math.random()}`,
@@ -234,10 +255,10 @@ export class OptimizationService {
                                     score: 0.95,
                                     costAnalysis: {
                                         distanceKm: 50, // Mock
-                                        transportCost: 50,
-                                        itemCost: 0,
-                                        totalCost: 50,
-                                        savings: 5000 // Mock savings vs Purchase
+                                        transportCost: transferFee,
+                                        itemCost: 0, // No new item cost (already owned)
+                                        totalCost: transferFee,
+                                        savings: totalSavings // REAL SAVINGS
                                     },
                                     fulfillmentNode: 'Internal',
                                     vendorName: otherSite.name,
@@ -257,7 +278,14 @@ export class OptimizationService {
                 // =============================================================================
                 // IF NetDeficit > 0 AFTER all transfers
                 if (netDeficit > 0) {
-                    const estimatedCost = netDeficit * 150;
+                    const estimatedCost = netDeficit * unitPrice;
+
+                    // Predictive Logic: Buying NOW prevents Emergency shipment later
+                    // Emergency Cost assumes 1.5x Multiplier for rushed shipping/spot buying
+                    const emergencyMultiplier = 1.5;
+                    const emergencyCost = estimatedCost * emergencyMultiplier;
+                    const predictiveSavings = emergencyCost - estimatedCost;
+
                     // Create PURCHASE Proposal
                     proposals.push({
                         id: `prop-buy-${Date.now()}-${Math.random()}`,
@@ -277,7 +305,7 @@ export class OptimizationService {
                             transportCost: 15,
                             itemCost: estimatedCost,
                             totalCost: estimatedCost + 15,
-                            savings: 0
+                            savings: predictiveSavings // REAL PREDICTIVE SAVINGS
                         },
                         fulfillmentNode: 'External',
                         regulatoryJustification: { passed: true, details: ['Vendor Approved'] },
@@ -308,6 +336,7 @@ export class OptimizationService {
 
                     let netDeficit = refillQty;
                     const drugName = item.drugName;
+                    const unitPrice = PRICE_MAP.get(ndc) || 500;
 
                     // --- Internal Transfer Logic (Refill) ---
                     for (const otherSite of sites) {
@@ -322,6 +351,9 @@ export class OptimizationService {
                             const transferQty = Math.min(surplus, netDeficit);
 
                             if (transferQty > 0) {
+                                const transferFee = 45;
+                                const savings = (transferQty * unitPrice) - transferFee;
+
                                 proposals.push({
                                     id: `prop-refill-${Date.now()}-${Math.random()}`,
                                     type: 'transfer',
@@ -335,7 +367,7 @@ export class OptimizationService {
                                     quantity: transferQty,
                                     reason: `Stock Refill: Level fell below min (${item.minLevel}). Sourced from surplus.`,
                                     score: 0.90,
-                                    costAnalysis: { distanceKm: 50, transportCost: 50, itemCost: 0, totalCost: 50, savings: 5000 },
+                                    costAnalysis: { distanceKm: 50, transportCost: transferFee, itemCost: 0, totalCost: transferFee, savings: savings },
                                     fulfillmentNode: 'Internal',
                                     vendorName: otherSite.name,
                                     regulatoryJustification: { passed: true, details: ['Internal Approved'] },
@@ -348,7 +380,10 @@ export class OptimizationService {
 
                     // --- Procurement Logic (Refill) ---
                     if (netDeficit > 0) {
-                        const estimatedCost = netDeficit * 150;
+                        const estimatedCost = netDeficit * unitPrice;
+                        // Avoided stockout cost (mock heuristic)
+                        const predictiveSavings = estimatedCost * 0.2; // 20% savings for planned refill vs urgent buy
+
                         proposals.push({
                             id: `prop-refill-buy-${Date.now()}-${Math.random()}`,
                             type: 'procurement',
@@ -361,7 +396,7 @@ export class OptimizationService {
                             vendorName: 'McKesson',
                             score: 0.80,
                             channel: 'WAC',
-                            costAnalysis: { distanceKm: 0, transportCost: 15, itemCost: estimatedCost, totalCost: estimatedCost + 15, savings: 0 },
+                            costAnalysis: { distanceKm: 0, transportCost: 15, itemCost: estimatedCost, totalCost: estimatedCost + 15, savings: predictiveSavings },
                             fulfillmentNode: 'External',
                             regulatoryJustification: { passed: true, details: ['Vendor Approved'] },
                             trigger: 'stock_refill'

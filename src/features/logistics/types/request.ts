@@ -17,6 +17,8 @@ export interface NetworkRequest {
     };
     reason: string;
     urgency: 'routine' | 'urgent' | 'emergency';
+    type?: 'transfer' | 'procurement'; // Added to track request nature
+    savings?: number; // Added to track realized savings
     status: 'pending' | 'approved' | 'denied' | 'in_transit' | 'completed';
     requestedAt: string;
     approvedBy?: string;

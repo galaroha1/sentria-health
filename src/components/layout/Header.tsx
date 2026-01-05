@@ -28,14 +28,9 @@ export function Header({ onMenuClick }: HeaderProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate('/login');
-        } catch (error) {
-            console.error('Logout failed', error);
-            navigate('/login'); // Force navigation anyway
-        }
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
     };
 
     return (

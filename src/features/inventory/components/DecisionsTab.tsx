@@ -195,19 +195,15 @@ export function DecisionsTab() {
                             },
                             reason: `AI Optimized: ${proposal.reason}`,
                             urgency: 'urgent',
-                            status: 'pending', // Starts as Pending - Requires Human Logistics Approval
+                            status: 'pending',
+                            type: 'transfer',
+                            savings: proposal.costAnalysis?.savings || 0,
                             requestedAt: new Date().toISOString()
                         });
                         toast.success(`Transfer Initiated: Flowing to Logistics Queue`);
                     }
                 } else {
                     // WORKFLOW B: PROCUREMENT / PURCHASE ORDER
-                    // "Add to Cart" Logic - In a real app, this adds to a PO for the Purchasing Manager.
-                    // For now, we simulate placing the order with a clear notification.
-
-                    // Note: We do NOT auto-update inventory here anymore. We wait for the "Order" to be received.
-                    // But to keep the demo feeling responsive, we'll simulate a "Quick Order" success.
-
                     await updateInventory(
                         proposal.targetSiteId,
                         proposal.ndc,
@@ -217,7 +213,38 @@ export function DecisionsTab() {
                         'System AI'
                     );
 
-                    // In the future, this should redirect to /procurement or open a Cart modal.
+                    // Track Financials via a "Completed" Request Record
+                    const targetSite = sites.find(s => s.id === proposal.targetSiteId);
+                    if (targetSite) {
+                        // Mock Vendor Site for the record
+                        const vendorSite = {
+                            ...targetSite, // Clone structure
+                            id: `vendor-${proposal.vendorName}`,
+                            name: proposal.vendorName || 'External Vendor',
+                            type: 'warehouse' as const,
+                            address: 'External Vendor'
+                        };
+
+                        await addRequest({
+                            id: `po-${Date.now()}`,
+                            requestedBy: 'System AI',
+                            requestedBySite: targetSite,
+                            targetSite: vendorSite,
+                            drug: {
+                                name: proposal.drugName,
+                                ndc: proposal.ndc,
+                                quantity: proposal.quantity
+                            },
+                            reason: `External Purchase: ${proposal.reason}`,
+                            urgency: 'routine',
+                            status: 'completed', // Auto-completed
+                            type: 'procurement',
+                            savings: proposal.costAnalysis?.savings || 0,
+                            requestedAt: new Date().toISOString(),
+                            completedAt: new Date().toISOString()
+                        });
+                    }
+
                     toast.success(`Added to Purchase Order: ${proposal.vendorName}`, {
                         icon: '🛒',
                         duration: 4000

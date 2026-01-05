@@ -74,6 +74,11 @@ export function SavingsProjection() {
         { month: 'Nov', transferSavings: totalTransferSavings, vendorOptimization: vendorOptimization, bulkDiscounts: bulkDiscounts },
     ];
 
+    const PLATFORM_COST = 15000; // Monthly subscription cost assumption
+    const roiPercentage = totalSavings > 0
+        ? Math.round(((totalSavings - PLATFORM_COST) / PLATFORM_COST) * 100)
+        : 0;
+
     return (
         <div className="space-y-6">
             {/* Total Savings Overview */}
@@ -105,7 +110,7 @@ export function SavingsProjection() {
                         </div>
                     </div>
                     <div className="mt-4 text-sm text-slate-600">
-                        <span className="font-medium">ROI:</span> 287% on platform investment
+                        <span className="font-medium">ROI:</span> {roiPercentage}% on platform investment
                     </div>
                 </div>
             </div>

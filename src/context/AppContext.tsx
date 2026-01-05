@@ -243,12 +243,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const realized = requests
             .filter(r => r.status === 'approved' || r.status === 'in_transit' || r.status === 'completed')
-            .reduce((sum, _r) => sum + 4250, 0);
+            .reduce((sum, r) => sum + (r.savings || 0), 0);
 
         setMetrics(prev => ({
             ...prev,
             realizedSavings: realized,
-            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status)).length
+            activeTransfers: requests.filter(r => ['pending', 'approved', 'in_transit'].includes(r.status) && r.type !== 'procurement').length
         }));
     }, [requests]);
 
