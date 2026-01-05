@@ -234,8 +234,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const resetSimulation = async () => {
         setIsLoading(true);
         try {
+            console.log("🔥 RESETTING SIMULATION...");
             await resetInventoryData();
-            // We could wipe audit logs/notifications here too if desired
+
+            // Clear Transfers
+            await FirestoreService.deleteAllDocuments('transfers');
+            setRequests([]); // Clear local state
+
+            // Clear Notifications
+            await FirestoreService.deleteAllDocuments('notifications');
+            setNotifications([]);
+
+            // Clear Audit Logs
+            await FirestoreService.deleteAllDocuments('auditLogs');
+            setAuditLogs([]);
+
+            // Clear System Memory (Proposals)
+            await SystemMemoryService.save('currentProposals', []);
+            _setProposalsLocal([]);
+
+            console.log("✅ RESET COMPLETE. Reloading...");
             window.location.reload();
         } catch (error) {
             console.error("Failed to reset simulation:", error);
