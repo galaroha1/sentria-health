@@ -93,13 +93,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     // Load System Memory (Proposals)
+    // Load System Memory (Proposals)
+    // Strategy: Try Backend (Primary) -> LocalStorage (Backup)
     useEffect(() => {
         if (!user) return;
         const loadMemory = async () => {
-            const saved = await SystemMemoryService.load<ProcurementProposal[]>('currentProposals');
-            if (saved) {
+            let saved = await SystemMemoryService.load<ProcurementProposal[]>('currentProposals');
+
+            // Backup: Try LocalStorage if Backend missed
+            if (!saved || saved.length === 0) {
+                const localBackup = localStorage.getItem('sentria_proposals_backup');
+                if (localBackup) {
+                    try {
+                        saved = JSON.parse(localBackup);
+                        console.log('Using LocalStorage Backup for Proposals');
+                    } catch (e) {
+                        console.error('Failed to parse local backup', e);
+                    }
+                }
+            }
+
+            if (saved && saved.length > 0) {
                 _setProposalsLocal(saved);
-                console.log(`🧠 Loaded ${saved.length} proposals from System Memory`);
+                console.log(`🧠 Loaded ${saved.length} proposals from Memory`);
+                // toast.success(`Restored ${saved.length} active proposals`);
             }
         };
         loadMemory();
@@ -107,7 +124,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const setCurrentProposals = async (proposals: ProcurementProposal[]) => {
         _setProposalsLocal(proposals);
+        // 1. Sync to Backend (Secure)
         await SystemMemoryService.save('currentProposals', proposals);
+        // 2. Sync to LocalStorage (Redundancy)
+        if (proposals.length > 0) {
+            localStorage.setItem('sentria_proposals_backup', JSON.stringify(proposals));
+        } else {
+            localStorage.removeItem('sentria_proposals_backup');
+        }
     };
 
 
