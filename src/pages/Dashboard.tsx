@@ -6,16 +6,13 @@ import { PredictiveAnalytics } from '../components/dashboard/PredictiveAnalytics
 import { SavingsProjection } from '../components/dashboard/SavingsProjection';
 import { MorningBriefing } from '../components/dashboard/MorningBriefing';
 import { useApp } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
 import { PageTransition } from '../components/layout/PageTransition';
-import { UserRole } from '../types';
 
 type TabType = 'overview' | 'analytics' | 'savings' | 'training';
 
 export function Dashboard() {
     const navigate = useNavigate();
-    const { requests, resetSimulation } = useApp();
-    const { user } = useAuth();
+    const { requests } = useApp();
     const activeTransfersCount = requests.filter(r => r.status === 'in_transit').length;
     const [activeTab, setActiveTab] = useState<TabType>('overview');
 
