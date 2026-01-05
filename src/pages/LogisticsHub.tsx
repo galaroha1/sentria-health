@@ -120,11 +120,15 @@ export function LogisticsHub() {
                             </div>
                             <div className="mt-3 flex items-center gap-4 text-xs text-slate-500 px-1">
                                 <div className="flex items-center gap-1.5" title="Site has critical stockouts">
-                                    <div className="h-2 w-2 rounded-full bg-red-500 shadow-sm" />
+                                    <div className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-sm" />
                                     <span>Critical</span>
                                 </div>
+                                <div className="flex items-center gap-1.5" title="Transfers inbound">
+                                    <div className="h-2.5 w-2.5 rounded-full bg-purple-500 shadow-sm" />
+                                    <span>Resolving</span>
+                                </div>
                                 <div className="flex items-center gap-1.5" title="All systems normal">
-                                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm" />
+                                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" />
                                     <span>Operational</span>
                                 </div>
                             </div>
@@ -132,9 +136,28 @@ export function LogisticsHub() {
                         <div className="p-2 space-y-1 overflow-y-auto">
                             {filteredSites.map((site) => {
                                 const isSelected = selectedSiteId === site.id;
-                                // REAL LOGIC: Check if this site has any critical inventory items
+                                // REAL LOGIC: Check status + incoming fixes
                                 const siteInventory = inventories.find(inv => inv.siteId === site.id);
-                                const hasIssues = siteInventory?.drugs.some(d => d.status === 'critical' || d.quantity === 0) || false;
+                                const hasCritical = siteInventory?.drugs.some(d => d.status === 'critical' || d.quantity === 0) || false;
+
+                                // Check for incoming transfers to this site
+                                const hasIncoming = requests.some(r =>
+                                    r.targetSite.id === site.id &&
+                                    ['pending', 'approved', 'in_transit'].includes(r.status)
+                                );
+
+                                let statusColor = 'bg-emerald-500';
+                                let statusTitle = 'Status: Operational';
+
+                                if (hasCritical) {
+                                    if (hasIncoming) {
+                                        statusColor = 'bg-purple-500'; // Resolving
+                                        statusTitle = 'Status: Resolving (Transfers Inbound)';
+                                    } else {
+                                        statusColor = 'bg-red-500'; // Ignored/Unaddressed
+                                        statusTitle = 'Action Required: Critical Stockouts';
+                                    }
+                                }
 
                                 return (
                                     <button
@@ -156,8 +179,8 @@ export function LogisticsHub() {
                                                 </p>
                                                 {/* Status Dot with Tooltip */}
                                                 <div
-                                                    className={`h-2.5 w-2.5 rounded-full ${hasIssues ? 'bg-red-500 ring-2 ring-red-100' : 'bg-emerald-500 ring-2 ring-emerald-100'}`}
-                                                    title={hasIssues ? "Action Required: Stockouts Detected" : "Status: Operational"}
+                                                    className={`h-2.5 w-2.5 rounded-full ${statusColor} ${hasCritical ? 'ring-2 ring-opacity-50' : ''} ${statusColor.replace('bg-', 'ring-')}`}
+                                                    title={statusTitle}
                                                 />
                                             </div>
                                             <p className="text-xs text-slate-500 truncate capitalize">{site.type}</p>
