@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, AlertTriangle, TrendingUp, CheckCircle2, User } from 'lucide-react';
+import { Search, AlertTriangle, TrendingUp, CheckCircle2, User } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { UserRole } from '../../../types';
 
@@ -122,8 +122,8 @@ export function ClinicalAdminDashboard() {
                                 <td className="px-6 py-4 text-center font-medium">{doc.cardsCount}</td>
                                 <td className="px-6 py-4 text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${doc.complianceScore > 90 ? 'bg-emerald-100 text-emerald-700' :
-                                            doc.complianceScore > 75 ? 'bg-blue-100 text-blue-700' :
-                                                'bg-amber-100 text-amber-700'
+                                        doc.complianceScore > 75 ? 'bg-blue-100 text-blue-700' :
+                                            'bg-amber-100 text-amber-700'
                                         }`}>
                                         {doc.complianceScore}%
                                     </span>

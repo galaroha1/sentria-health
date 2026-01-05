@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Save, Search, TrendingDown, Stethoscope, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus, Save, Search, TrendingDown, Stethoscope, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { UserRole } from '../../../types';
 
