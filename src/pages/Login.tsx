@@ -10,8 +10,11 @@ export function Login() {
     const location = useLocation();
 
     // Redirect if already authenticated
+    // Redirect if already authenticated
     if (isAuthenticated) {
-        const from = (location.state as any)?.from?.pathname || '/dashboard';
+        // Priority: 1. State (Direct Redirect) 2. LocalStorage (Reload Restoration) 3. Dashboard (Default)
+        const savedRoute = localStorage.getItem('sentria_last_route');
+        const from = (location.state as any)?.from?.pathname || savedRoute || '/dashboard';
         return <Navigate to={from} replace />;
     }
 
@@ -87,7 +90,7 @@ export function Login() {
 
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
             <div className="w-full max-w-md">
                 <div className="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <img src={`${import.meta.env.BASE_URL}penn_logo.png`} alt="Penn Medicine" className="h-16 mx-auto mb-4 object-contain" />

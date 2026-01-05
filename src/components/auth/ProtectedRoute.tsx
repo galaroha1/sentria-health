@@ -11,6 +11,11 @@ export function ProtectedRoute({ children, requirePermission }: ProtectedRoutePr
     const { isAuthenticated, isLoading, hasPermission } = useAuth();
     const location = useLocation();
 
+    // Persist current location for reload restoration
+    if (!isLoading && isAuthenticated) {
+        localStorage.setItem('sentria_last_route', location.pathname);
+    }
+
     if (isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
