@@ -172,15 +172,26 @@ export function Settings() {
                                         <p className="font-medium text-slate-900">Session Timeout</p>
                                         <p className="text-sm text-slate-500">Automatically lock screen after inactivity.</p>
                                     </div>
-                                    <select
-                                        value={security.sessionTimeout}
-                                        onChange={(e) => setSecurity(prev => ({ ...prev, sessionTimeout: e.target.value }))}
-                                        className="rounded-md border-slate-200 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    >
-                                        <option value="15m">15 minutes</option>
-                                        <option value="30m">30 minutes</option>
-                                        <option value="1h">1 hour</option>
-                                    </select>
+                                    {(() => {
+                                        const { updateSessionDuration } = useAuth();
+                                        const currentTimeout = localStorage.getItem('sentria_session_duration') || '1800000';
+
+                                        return (
+                                            <select
+                                                defaultValue={currentTimeout}
+                                                onChange={(e) => {
+                                                    updateSessionDuration(parseInt(e.target.value, 10));
+                                                    toast.success('Global session policy updated');
+                                                }}
+                                                className="rounded-md border-slate-200 text-sm focus:border-blue-500 focus:ring-blue-500"
+                                            >
+                                                <option value="900000">15 minutes</option>
+                                                <option value="1800000">30 minutes</option>
+                                                <option value="3600000">1 hour</option>
+                                                <option value="86400000">24 hours</option>
+                                            </select>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}
