@@ -4,6 +4,7 @@ import { useApp } from '../../../context/AppContext';
 import { useSimulation } from '../../clinical/context/SimulationContext';
 import { OptimizationService } from '../../../services/optimization.service';
 import { SupplierService } from '../../../services/supplier.service';
+import { SystemMemoryService } from '../../../services/memory.service';
 import type { ProcurementProposal } from '../../../types/procurement';
 import { OptimizationApprovals } from './OptimizationApprovals';
 import { LogTerminal } from '../../../core/components/common/LogTerminal';
@@ -140,6 +141,7 @@ export function DecisionsTab() {
 
             setExecutionStep('complete');
             setCurrentProposals(enrichedProposals);
+            await SystemMemoryService.save('currentProposals', enrichedProposals); // PERSISTENCE FIX
             await addLog('> OPTIMIZATION_COMPLETE.');
             await addLog(`> GENERATED ${enrichedProposals.length} ACTIONABLE INSIGHTS.`);
 
@@ -224,7 +226,9 @@ export function DecisionsTab() {
         }
         // Remove from local list (Actioned)
         // Remove from local list (Actioned)
-        setCurrentProposals(currentProposals.filter(p => p.id !== proposal.id));
+        const updatedProposals = currentProposals.filter(p => p.id !== proposal.id);
+        setCurrentProposals(updatedProposals);
+        await SystemMemoryService.save('currentProposals', updatedProposals); // PERSISTENCE FIX
     };
 
     return (
