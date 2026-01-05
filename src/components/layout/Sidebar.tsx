@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, Brain, Store } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, Brain, Store, Calendar, FileText, Shield } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -32,15 +32,16 @@ export function Sidebar() {
                 { name: 'Inventory', href: '/inventory', icon: Package, permission: 'inventory' },
                 { name: 'Logistics', href: '/logistics', icon: Truck, permission: 'transfers' },
                 { name: 'Vendors', href: '/vendors', icon: Store, permission: 'inventory' },
-                // { name: 'Network', href: '/network', icon: Share2, permission: 'inventory' },
                 { name: 'AI Optimizer', href: '/decisions', icon: Brain, permission: 'dashboard' },
-
             ]
         },
         {
             title: 'Governance',
             items: [
-                { name: 'Clinical', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
+                { name: 'Clinical Hub', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
+                { name: 'Surgical Schedule', href: '/clinical/schedule', icon: Calendar, permission: 'clinical' },
+                { name: 'My Preference Cards', href: '/clinical/my-cards', icon: FileText, permission: 'clinical' },
+                { name: 'Clinical Admin', href: '/clinical/admin', icon: Shield, permission: 'manage_users' },
                 { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
             ]
         },

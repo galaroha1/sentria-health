@@ -22,6 +22,9 @@ import { NetworkHub } from './pages/NetworkHub';
 import { DataGeneration } from './pages/DataGeneration';
 import { Vendors } from './pages/Vendors';
 import { CommandCenter } from './features/clinical/components/CommandCenter';
+import { DoctorSchedule } from './features/clinical/components/DoctorSchedule';
+import { DoctorPreferenceBuilder } from './features/clinical/components/DoctorPreferenceBuilder';
+import { ClinicalAdminDashboard } from './features/clinical/components/ClinicalAdminDashboard';
 
 
 import { CartProvider } from './context/CartContext';
@@ -110,6 +113,11 @@ function AppContent() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
           <Route path="clinical" element={<ClinicalHub />} />
+
+          {/* New Clinical Routes */}
+          <Route path="clinical/schedule" element={<DoctorSchedule />} />
+          <Route path="clinical/my-cards" element={<DoctorPreferenceBuilder />} />
+          <Route path="clinical/admin" element={<ClinicalAdminDashboard />} />
 
           <Route path="network" element={<NetworkHub />} />
           <Route path="command-center" element={<CommandCenter />} />

@@ -6,6 +6,10 @@ export interface Treatment {
     status: 'scheduled' | 'completed' | 'cancelled';
     dose: string;
     notes?: string;
+    preferenceCardOverride?: {
+        cardId: string;
+        items: { ndc: string; quantity: number }[];
+    };
 }
 
 export interface Patient {

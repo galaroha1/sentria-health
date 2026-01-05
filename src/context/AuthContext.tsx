@@ -157,7 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 'admin@sentria.health': { role: UserRole.SUPER_ADMIN, name: 'Super Admin', department: 'Administration' },
                 'super@penn.edu': { role: UserRole.SUPER_ADMIN, name: 'Penn Super Admin', department: 'Administration' },
                 'pharmacy@sentria.health': { role: UserRole.PHARMACY_MANAGER, name: 'Pharmacy Manager', department: 'Pharmacy' },
-                'procurement@sentria.health': { role: UserRole.PROCUREMENT_OFFICER, name: 'Procurement Officer', department: 'Procurement' }
+                'procurement@sentria.health': { role: UserRole.PROCUREMENT_OFFICER, name: 'Procurement Officer', department: 'Procurement' },
+                'doctor@sentria.health': { role: UserRole.DOCTOR, name: 'Dr. Emily Carter', department: 'Surgery' }
             };
 
             const demoAccount = DEMO_ACCOUNTS[credentials.email.toLowerCase()];

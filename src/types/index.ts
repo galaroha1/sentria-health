@@ -4,6 +4,7 @@ export const UserRole = {
     PROCUREMENT_OFFICER: 'Procurement Officer',
     CLINICAL_DIRECTOR: 'Clinical Director',
     INVENTORY_SPECIALIST: 'Inventory Specialist',
+    DOCTOR: 'Doctor',
 } as const;
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];
@@ -49,6 +50,7 @@ export const ROLE_PERMISSIONS = {
     [UserRole.PROCUREMENT_OFFICER]: ['dashboard', 'marketplace', 'cart', 'reports'],
     [UserRole.CLINICAL_DIRECTOR]: ['dashboard', 'clinical', 'reports', 'analytics'],
     [UserRole.INVENTORY_SPECIALIST]: ['dashboard', 'inventory', 'logistics', 'reports'],
+    [UserRole.DOCTOR]: ['dashboard', 'clinical'], // Limited access
 };
 
 // Mock user database
@@ -64,6 +66,32 @@ export const MOCK_USERS: Record<string, { password: string; user: User }> = {
             avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
             phone: '+1 (555) 123-4567',
             createdAt: '2023-01-15',
+            status: UserStatus.ACTIVE,
+        },
+    },
+    'super@penn.edu': {
+        password: 'penn',
+        user: {
+            id: '0',
+            email: 'super@penn.edu',
+            name: 'Penn Super Admin',
+            role: UserRole.SUPER_ADMIN,
+            department: 'Administration',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Penn',
+            createdAt: '2023-01-01',
+            status: UserStatus.ACTIVE,
+        },
+    },
+    'doctor@sentria.health': {
+        password: 'doctor',
+        user: {
+            id: 'doc-1',
+            email: 'doctor@sentria.health',
+            name: 'Dr. Emily Carter',
+            role: UserRole.DOCTOR,
+            department: 'Surgery',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
+            createdAt: '2023-06-01',
             status: UserStatus.ACTIVE,
         },
     },

@@ -14,8 +14,22 @@ export class ForecastingService {
      * Calculates specific dosage requirement for a patient based on biometrics and drug type.
      * Returns: quantity in units
      */
-    public static calculateDosage(patient: Patient, drugName: string): number {
+    public static calculateDosage(patient: Patient, drugName: string, treatment?: any): number {
         const name = drugName.toLowerCase();
+
+        // 0. OVERRIDE: Check for Preference Card (Strict Demand)
+        if (treatment && treatment.preferenceCardOverride) {
+            // In a real app, we would match by NDC. For this mock, we assume the card applies.
+            // Check if items in the override match the drugName
+            const overrideItem = treatment.preferenceCardOverride.items.find((i: any) =>
+                i.name?.toLowerCase() === name || name.includes(i.name?.toLowerCase())
+            );
+
+            if (overrideItem) {
+                return overrideItem.quantity;
+            }
+        }
+
         let quantity = 1; // Default base unit
 
         // 1. ONCOLOGY: BSA-Based Dosing (mg/m2) -> Converted to Vials
@@ -88,8 +102,8 @@ export class ForecastingService {
                     txDate >= today &&
                     txDate <= forecastHorizon
                 ) {
-                    // CALCULATE TRUE PATIENT NEED
-                    const specificQty = this.calculateDosage(patient, drugName);
+                    // CALCULATE TRUE PATIENT NEED (Passing treatment for override check)
+                    const specificQty = this.calculateDosage(patient, drugName, treatment);
 
                     // Patient Risk Factor (Adherence/No-Show)
                     // Older patients > 70 might miss appointments? Or be more compliant?
