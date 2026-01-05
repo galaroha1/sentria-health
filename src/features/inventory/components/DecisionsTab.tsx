@@ -51,8 +51,13 @@ export function DecisionsTab() {
 
     // Initial Data Fetch
     useEffect(() => {
-        fetchSimulations(10000); // Fetch up to 10,000 patients to support scale testing
-    }, []);
+        fetchSimulations(10000);
+
+        // Auto-switch tab if we have restored proposals but no pending approvals
+        if (currentProposals.length > 0 && requests.filter(r => r.status === 'pending').length === 0) {
+            setActiveSection('optimization');
+        }
+    }, [currentProposals.length]); // React to load completion
 
     // Log State
     const [logs, setLogs] = useState<string[]>([]);
