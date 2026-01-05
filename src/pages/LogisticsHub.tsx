@@ -143,7 +143,7 @@ export function LogisticsHub() {
                                 // Check for incoming transfers to this site
                                 const hasIncoming = requests.some(r =>
                                     r.targetSite.id === site.id &&
-                                    ['pending', 'approved', 'in_transit'].includes(r.status)
+                                    ['approved', 'in_transit'].includes(r.status)
                                 );
 
                                 let statusColor = 'bg-emerald-500';
