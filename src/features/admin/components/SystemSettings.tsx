@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Key, Save, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export function SystemSettings() {
