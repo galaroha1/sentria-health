@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { User, Bell, Lock, Globe, Shield, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { ApiManager } from '../features/admin/components/ApiManager';
+import { SystemSettings } from '../features/admin/components/SystemSettings';
 import { UserRole } from '../types';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -62,10 +62,10 @@ export function Settings() {
                 )}
             </div>
 
-            {/* SUPER ADMIN ONLY: System API Manager */}
+            {/* SUPER ADMIN ONLY: System API Manager & Danger Zone */}
             {user?.role === UserRole.SUPER_ADMIN && (
                 <div className="animate-fade-in-up">
-                    <ApiManager />
+                    <SystemSettings />
                 </div>
             )}
 
