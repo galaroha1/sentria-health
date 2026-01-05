@@ -27,7 +27,13 @@ export class SupplierService {
             FdaService.getDrugDetails(ndc),
             RxNavService.getClinicalData(ndc),
             NadacService.getPriceBenchmark(ndc),
-            FirestoreService.getById<{ mckesson_api_key?: string, cardinal_api_key?: string }>('system_settings', 'global')
+            FdaService.getDrugDetails(ndc),
+            RxNavService.getClinicalData(ndc),
+            NadacService.getPriceBenchmark(ndc),
+            // Fetch Encrypted Keys from Backend (Decrypted on retrieval)
+            fetch('/api/ai/memory/get/system_settings_global')
+                .then(res => res.json())
+                .catch(() => ({})) // Fallback to empty if fails
         ]);
 
         // 2. Fetch Real Distributor Quotes (Parallel)

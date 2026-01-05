@@ -41,31 +41,39 @@ export class SystemSettingsService {
     }
 
     static async updateSettings(keys: Partial<SystemSettings['apiKeys']>, userId: string): Promise<void> {
-        const update: Partial<SystemSettings> = {
-            apiKeys: {
-                ...this.cache?.apiKeys,
-                ...keys
-            },
-            lastUpdated: new Date().toISOString(),
-            updatedBy: userId
-        };
-
-        await FirestoreService.set('system_settings', this.DOC_ID, update);
-
-        // Refresh cache
-        await this.loadSettings();
+        // Proxy to Backend for Secure Storage
+        // NOTE: The UI typically handles this, but if called programmatically:
+        try {
+            await fetch('/api/ai/memory/set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    key: 'system_settings_global',
+                    value: {
+                        mckesson_api_key: keys.mckessonApiKey,
+                        cardinal_api_key: keys.cardinalApiKey,
+                        updatedBy: userId
+                    }
+                })
+            });
+            // Refresh cache
+            await this.loadSettings();
+        } catch (e) {
+            console.error("Failed to updates secure settings", e);
+        }
     }
 
     private static async loadSettings() {
         try {
-            const settings = await FirestoreService.getById<SystemSettings>('system_settings', this.DOC_ID);
-            if (settings) {
-                this.cache = settings;
-            } else {
-                // Init empty
+            const res = await fetch('/api/ai/memory/get/system_settings_global');
+            if (res.ok) {
+                const data = await res.json();
                 this.cache = {
                     id: this.DOC_ID,
-                    apiKeys: {},
+                    apiKeys: {
+                        mckessonApiKey: data.mckesson_api_key,
+                        cardinalApiKey: data.cardinal_api_key
+                    },
                     lastUpdated: new Date().toISOString(),
                     updatedBy: 'system'
                 };
