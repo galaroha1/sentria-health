@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, DollarSign, Package, Truck, Brain } from 'lucide-react';
+import { TrendingUp, DollarSign, Package, Truck } from 'lucide-react';
 import { InventoryAlerts } from '../components/dashboard/InventoryAlerts';
 import { PredictiveAnalytics } from '../components/dashboard/PredictiveAnalytics';
 import { SavingsProjection } from '../components/dashboard/SavingsProjection';
-import { ModelTraining } from '../features/admin/components/ModelTraining';
 import { MorningBriefing } from '../components/dashboard/MorningBriefing';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,7 +23,6 @@ export function Dashboard() {
         { id: 'overview' as TabType, label: 'Overview', icon: Package },
         { id: 'analytics' as TabType, label: 'Predictive Analytics', icon: TrendingUp },
         { id: 'savings' as TabType, label: 'Savings & ROI', icon: DollarSign },
-        { id: 'training' as TabType, label: 'AI Model Training', icon: Brain },
     ];
 
     return (
@@ -150,11 +148,7 @@ export function Dashboard() {
                         </PageTransition>
                     )}
 
-                    {activeTab === 'training' && (
-                        <PageTransition>
-                            <ModelTraining />
-                        </PageTransition>
-                    )}
+
                 </div>
             </div>
         </div>
