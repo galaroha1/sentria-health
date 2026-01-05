@@ -8,10 +8,24 @@ export function SavingsProjection() {
     // 1. Transfer Savings: STRICTLY REAL (User Actions)
     const totalTransferSavings = metrics.realizedSavings;
 
+    // Standard Cost Map (since Inventory doesn't track acquisition cost yet)
+    // Prices based on nominal Average Wholesale Price (AWP)
+    const ESTIMATED_UNIT_COSTS: Record<string, number> = {
+        '0006-3026-02': 4800, // Keytruda
+        '57894-030-01': 1100, // Remicade
+        '0074-3799-02': 2800, // Humira
+        '0003-3772-11': 4200, // Opdivo
+        '63020-052-01': 3600, // Herceptin
+        'default': 150 // Generic fallback
+    };
+
     // 2. Vendor Optimization: Derived Heuristic
     // Logic: 5% of Total Inventory Value is addressable via AI negotiation
     const totalInventoryValue = inventories.reduce((sum, site) =>
-        sum + site.drugs.reduce((dSum, d) => dSum + (d.quantity * d.unitPrice), 0), 0
+        sum + site.drugs.reduce((dSum, d) => {
+            const price = ESTIMATED_UNIT_COSTS[d.ndc] || ESTIMATED_UNIT_COSTS['default'];
+            return dSum + (d.quantity * price);
+        }, 0), 0
     );
     const vendorOptimization = Math.floor(totalInventoryValue * 0.05);
 
