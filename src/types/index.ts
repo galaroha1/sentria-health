@@ -50,7 +50,7 @@ export const ROLE_PERMISSIONS = {
     [UserRole.PROCUREMENT_OFFICER]: ['dashboard', 'marketplace', 'cart', 'reports'],
     [UserRole.CLINICAL_DIRECTOR]: ['dashboard', 'clinical', 'reports', 'analytics'],
     [UserRole.INVENTORY_SPECIALIST]: ['dashboard', 'inventory', 'logistics', 'reports'],
-    [UserRole.DOCTOR]: ['dashboard', 'clinical'], // Limited access
+    [UserRole.DOCTOR]: ['dashboard', 'clinical'], // Limited access to Dashboard + Clinical Hub
 };
 
 // Mock user database

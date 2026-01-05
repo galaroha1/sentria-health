@@ -179,7 +179,7 @@ export function LogisticsHub() {
                                                 </p>
                                                 {/* Status Dot with Tooltip */}
                                                 <div
-                                                    className={`h-2.5 w-2.5 rounded-full ${statusColor} ${hasCritical ? 'ring-2 ring-opacity-50' : ''} ${statusColor.replace('bg-', 'ring-')}`}
+                                                    className={`h-2.5 w-2.5 rounded-full ${statusColor}`}
                                                     title={statusTitle}
                                                 />
                                             </div>

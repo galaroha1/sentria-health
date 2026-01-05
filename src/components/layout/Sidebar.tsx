@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, Brain, Store, Calendar, FileText, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, Truck, BarChart3, Stethoscope, Brain, Store, Shield } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -38,9 +38,7 @@ export function Sidebar() {
         {
             title: 'Governance',
             items: [
-                { name: 'Clinical Hub', href: '/clinical', icon: Stethoscope, permission: 'inventory' },
-                { name: 'Surgical Schedule', href: '/clinical/schedule', icon: Calendar, permission: 'clinical' },
-                { name: 'My Preference Cards', href: '/clinical/my-cards', icon: FileText, permission: 'clinical' },
+                { name: 'Clinical Hub', href: '/clinical', icon: Stethoscope, permission: 'clinical' },
                 { name: 'Clinical Admin', href: '/clinical/admin', icon: Shield, permission: 'manage_users' },
                 { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: 'reports' },
             ]
