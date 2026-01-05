@@ -161,14 +161,25 @@ export function SystemSettings() {
 function ResetButton() {
     // Import locally to avoid circular dependencies if possible, or use hook
     const { resetSimulation, isLoading } = useSystemReset();
+    const [confirming, setConfirming] = useState(false);
+
+    const handleClick = () => {
+        if (confirming) {
+            resetSimulation();
+            setConfirming(false);
+        } else {
+            setConfirming(true);
+            setTimeout(() => setConfirming(false), 3000); // Reset timeout
+        }
+    };
 
     return (
         <button
-            onClick={resetSimulation}
+            onClick={handleClick}
             disabled={isLoading}
-            className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            className={`px-4 py-2 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50 ${confirming ? 'bg-red-800 hover:bg-red-900' : 'bg-red-600 hover:bg-red-700'}`}
         >
-            {isLoading ? 'Resetting...' : 'Reset Demo'}
+            {isLoading ? 'Resetting...' : confirming ? 'Are you sure?' : 'Reset Demo'}
         </button>
     );
 }
