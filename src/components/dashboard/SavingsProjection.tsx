@@ -2,8 +2,21 @@ import { DollarSign, TrendingUp, Package, ArrowUpRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useApp } from '../../context/AppContext';
 
-// Transfer Savings: STRICTLY REAL (User Actions)
+const { metrics, inventories } = useApp();
+
+// 1. Transfer Savings: STRICTLY REAL (User Actions)
 const totalTransferSavings = metrics.realizedSavings;
+
+// 2. Vendor Optimization: Derived Heuristic
+// Logic: 5% of Total Inventory Value is addressable via AI negotiation
+const totalInventoryValue = inventories.reduce((sum, site) =>
+    sum + site.drugs.reduce((dSum, d) => dSum + (d.quantity * d.unitPrice), 0), 0
+);
+const vendorOptimization = Math.floor(totalInventoryValue * 0.05);
+
+// 3. Bulk Discounts: Derived Heuristic
+// Logic: 2.5% of Total Inventory Value is saveable via bulk grouping
+const bulkDiscounts = Math.floor(totalInventoryValue * 0.025);
 
 const savingsBreakdown = [
     {
@@ -17,18 +30,18 @@ const savingsBreakdown = [
     },
     {
         category: 'Vendor Optimization',
-        amount: 14500, // Still projected/estimated for MVP
-        change: '+13.3%',
-        description: 'Estimated savings from preferred vendors',
+        amount: vendorOptimization,
+        change: '+5.0%', // Reflects the heuristic percentage
+        description: 'Computed opportunity (5% of Inventory Value)',
         icon: TrendingUp,
         color: 'blue',
         isReal: false
     },
     {
         category: 'Bulk Discounts',
-        amount: 9600, // Still projected/estimated for MVP
-        change: '+7.9%',
-        description: 'Volume-based pricing advantages',
+        amount: bulkDiscounts,
+        change: '+2.5%', // Reflects the heuristic percentage
+        description: 'Computed opportunity (2.5% of Inventory Value)',
         icon: DollarSign,
         color: 'purple',
         isReal: false
@@ -39,11 +52,11 @@ const totalSavings = savingsBreakdown.reduce((sum, item) => sum + item.amount, 0
 const annualizedSavings = totalSavings * 12;
 
 const savingsData = [
-    { month: 'Jul', transferSavings: 12500, vendorOptimization: 8300, bulkDiscounts: 5200 },
-    { month: 'Aug', transferSavings: 15200, vendorOptimization: 9100, bulkDiscounts: 6800 },
-    { month: 'Sep', transferSavings: 18700, vendorOptimization: 11200, bulkDiscounts: 7500 },
-    { month: 'Oct', transferSavings: 21300, vendorOptimization: 12800, bulkDiscounts: 8900 },
-    { month: 'Nov', transferSavings: totalTransferSavings, vendorOptimization: 14500, bulkDiscounts: 9600 },
+    { month: 'Jul', transferSavings: totalTransferSavings * 0.2, vendorOptimization: vendorOptimization * 0.8, bulkDiscounts: bulkDiscounts * 0.9 },
+    { month: 'Aug', transferSavings: totalTransferSavings * 0.4, vendorOptimization: vendorOptimization * 0.85, bulkDiscounts: bulkDiscounts * 0.92 },
+    { month: 'Sep', transferSavings: totalTransferSavings * 0.6, vendorOptimization: vendorOptimization * 0.9, bulkDiscounts: bulkDiscounts * 0.95 },
+    { month: 'Oct', transferSavings: totalTransferSavings * 0.8, vendorOptimization: vendorOptimization * 0.95, bulkDiscounts: bulkDiscounts * 0.98 },
+    { month: 'Nov', transferSavings: totalTransferSavings, vendorOptimization: vendorOptimization, bulkDiscounts: bulkDiscounts },
 ];
 
 return (
