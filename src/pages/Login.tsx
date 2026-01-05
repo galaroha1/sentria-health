@@ -181,6 +181,30 @@ export function Login() {
                             {isLoading ? (isLogin ? 'Signing in...' : 'Creating Account...') : (isLogin ? 'Sign In' : 'Create Account')}
                         </button>
 
+                        {isLogin && (
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-slate-300" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="bg-white px-2 text-slate-500">Or continue with</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {isLogin && (
+                            <button
+                                type="button"
+                                onClick={() => alert("Enterprise SSO (Okta/AD) Integration is maintained by IT. Endpoint: https://sso.pennmedicine.org (Simulated)")}
+                                className="w-full flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            >
+                                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Sign in with Hospital SSO
+                            </button>
+                        )}
+
                         <div className="text-center">
                             <button
                                 type="button"
