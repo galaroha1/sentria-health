@@ -133,6 +133,50 @@ export function SystemSettings() {
                     </p>
                 </div>
             </div>
+
+            {/* Danger Zone */}
+            <div className="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-red-900">Danger Zone</h3>
+                        <p className="text-sm text-red-600">Irreversible actions for data management.</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-red-100">
+                    <div>
+                        <p className="font-medium text-slate-900">Reset Simulation Data</p>
+                        <p className="text-sm text-slate-500">Wipes all inventory, audits, and transfers. Resets to mock baseline.</p>
+                    </div>
+                    <ResetButton />
+                </div>
+            </div>
         </div>
     );
+}
+
+function ResetButton() {
+    // Import locally to avoid circular dependencies if possible, or use hook
+    const { resetSimulation, isLoading } = useSystemReset();
+
+    return (
+        <button
+            onClick={resetSimulation}
+            disabled={isLoading}
+            className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+        >
+            {isLoading ? 'Resetting...' : 'Reset Demo'}
+        </button>
+    );
+}
+
+// Helper hook to access reset from context without direct AppContext import if simpler, 
+// OR just import useApp at top.
+import { useApp } from '../../../context/AppContext';
+function useSystemReset() {
+    const { resetSimulation, isLoading } = useApp();
+    return { resetSimulation, isLoading };
 }

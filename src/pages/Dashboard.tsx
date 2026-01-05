@@ -38,14 +38,7 @@ export function Dashboard() {
                     <p className="text-sm text-slate-500 mt-1">Intelligent insights and real-time metrics for your hospital network.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {user?.role === UserRole.SUPER_ADMIN && (
-                        <button
-                            onClick={resetSimulation}
-                            className="text-sm text-secondary-600 hover:text-secondary-700 font-medium px-3 py-1 rounded-md hover:bg-secondary-50 transition-colors"
-                        >
-                            Reset Demo
-                        </button>
-                    )}
+                    {/* Reset Demo moved to Settings */}
                     <button
                         onClick={() => {
                             // Export actual transfer requests

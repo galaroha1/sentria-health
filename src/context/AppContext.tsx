@@ -239,7 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
             // Clear Transfers
             await FirestoreService.deleteAllDocuments('transfers');
-            setRequests([]); // Clear local state
+            // requests are cleared via Firestore subscription in LogisticsContext
 
             // Clear Notifications
             await FirestoreService.deleteAllDocuments('notifications');
