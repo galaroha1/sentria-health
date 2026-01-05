@@ -25,7 +25,7 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours (Extended for "Stay Logged In")
 const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before timeout
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -36,10 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const [sessionWarning, setSessionWarning] = useState(false);
-    const [lastActivity, setLastActivity] = useState(() => {
-        const saved = localStorage.getItem('sentria_last_activity');
-        return saved ? parseInt(saved, 10) : Date.now();
-    });
+    const [lastActivity, setLastActivity] = useState(() => Date.now());
     const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,18 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
             if (firebaseUser) {
                 try {
-                    // Check session timeout immediately on restore
-                    const now = Date.now();
-                    const savedActivity = localStorage.getItem('sentria_last_activity');
-                    const lastActiveTime = savedActivity ? parseInt(savedActivity, 10) : now;
-
-                    if (now - lastActiveTime > SESSION_TIMEOUT) {
-                        console.warn('Session expired during reload');
-                        await signOut(auth);
-                        setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-                        localStorage.removeItem('sentria_last_activity');
-                        return;
-                    }
+                    // REMOVED Aggressive Timeout on Load to allow "Stay Logged In"
+                    // checking session age only while active
 
                     // Fetch user details from Firestore
                     const userDoc = await FirestoreService.getById<User>('users', firebaseUser.uid);
