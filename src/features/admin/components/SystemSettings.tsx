@@ -36,7 +36,7 @@ export function SystemSettings() {
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setKeys(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        setKeys((prev: any) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
