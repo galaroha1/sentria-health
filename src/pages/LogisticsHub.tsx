@@ -115,15 +115,26 @@ export function LogisticsHub() {
                                     placeholder="Search locations..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                    className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
+                            <div className="mt-3 flex items-center gap-4 text-xs text-slate-500 px-1">
+                                <div className="flex items-center gap-1.5" title="Site has critical stockouts">
+                                    <div className="h-2 w-2 rounded-full bg-red-500 shadow-sm" />
+                                    <span>Critical</span>
+                                </div>
+                                <div className="flex items-center gap-1.5" title="All systems normal">
+                                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm" />
+                                    <span>Operational</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="p-2 space-y-1 max-h-[400px] md:max-h-none overflow-y-auto md:overflow-visible">
+                        <div className="p-2 space-y-1 overflow-y-auto">
                             {filteredSites.map((site) => {
                                 const isSelected = selectedSiteId === site.id;
-                                // Mock status logic
-                                const hasShortage = Math.random() > 0.8;
+                                // REAL LOGIC: Check if this site has any critical inventory items
+                                const siteInventory = inventories.find(inv => inv.siteId === site.id);
+                                const hasIssues = siteInventory?.drugs.some(d => d.status === 'critical' || d.quantity === 0) || false;
 
                                 return (
                                     <button
@@ -134,7 +145,7 @@ export function LogisticsHub() {
                                             : 'hover:bg-slate-100'
                                             }`}
                                     >
-                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isSelected ? 'bg-primary-50 text-primary-600' : 'bg-white text-slate-400 shadow-sm'
+                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isSelected ? 'bg-blue-50 text-blue-600' : 'bg-white text-slate-400 shadow-sm'
                                             }`}>
                                             <Building2 className="h-5 w-5" />
                                         </div>
@@ -143,8 +154,11 @@ export function LogisticsHub() {
                                                 <p className={`font-medium truncate ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
                                                     {site.name}
                                                 </p>
-                                                {/* Status Dot */}
-                                                <div className={`h-2 w-2 rounded-full ${hasShortage ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                                                {/* Status Dot with Tooltip */}
+                                                <div
+                                                    className={`h-2.5 w-2.5 rounded-full ${hasIssues ? 'bg-red-500 ring-2 ring-red-100' : 'bg-emerald-500 ring-2 ring-emerald-100'}`}
+                                                    title={hasIssues ? "Action Required: Stockouts Detected" : "Status: Operational"}
+                                                />
                                             </div>
                                             <p className="text-xs text-slate-500 truncate capitalize">{site.type}</p>
                                         </div>
