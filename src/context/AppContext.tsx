@@ -257,24 +257,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // ------------------------------------------------------------------
     const resetSimulation = async () => {
         setIsLoading(true);
+        console.group("🔥 RESET SIMULATION STARTED");
         try {
-            console.log("🔥 RESETTING SIMULATION (Scoped)...");
+            console.log("Step 1: Calling resetInventoryData()...");
 
             // 1. Reset Inventory (Delegated)
             await resetInventoryData();
+            console.log("Step 1: resetInventoryData() DONE.");
 
             // 2. Clear Patients (Simulations)
             if (user?.id) {
-                console.log("Clearing Patients...");
+                console.log(`Step 2: Clearing Patients for user ${user.id}...`);
                 await FirestoreService.deleteAllDocuments(`users/${user.id}/simulations`);
                 setPatients([]);
+                console.log("Step 2: Patients cleared.");
+            } else {
+                console.warn("Step 2 SKIPPED: No user ID found.");
             }
 
             // 3. Clear System Memory (Proposals)
-            console.log("Clearing Proposals...");
+            console.log("Step 3: Clearing Proposals (Memory + LocalStorage)...");
             await SystemMemoryService.save('currentProposals', []);
             localStorage.removeItem('sentria_proposals_backup');
             _setProposalsLocal([]);
+            console.log("Step 3: Proposals cleared.");
 
             // NOTE: We deliberately DO NOT clear:
             // - Transfers
@@ -283,9 +289,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             // Per user request to keep history but reset state.
 
             console.log("✅ RESET COMPLETE. Reloading...");
-            window.location.reload();
+            console.groupEnd();
+            setTimeout(() => window.location.reload(), 2000);
         } catch (error) {
-            console.error("Failed to reset simulation:", error);
+            console.error("❌ RESET FAILED:", error);
+            console.groupEnd();
         } finally {
             setIsLoading(false);
         }

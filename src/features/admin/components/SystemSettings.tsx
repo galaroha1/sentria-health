@@ -149,7 +149,7 @@ export function SystemSettings() {
                 <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-red-100">
                     <div>
                         <p className="font-medium text-slate-900">Reset Simulation Data</p>
-                        <p className="text-sm text-slate-500">Wipes all inventory, audits, and transfers. Resets to mock baseline.</p>
+                        <p className="text-sm text-slate-500">Wipes inventory, patients, and proposals. Preserves sites and history.</p>
                     </div>
                     <ResetButton />
                 </div>
