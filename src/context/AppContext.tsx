@@ -273,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             // 3. Clear System Memory (Proposals)
             console.log("Clearing Proposals...");
             await SystemMemoryService.save('currentProposals', []);
+            localStorage.removeItem('sentria_proposals_backup');
             _setProposalsLocal([]);
 
             // NOTE: We deliberately DO NOT clear:

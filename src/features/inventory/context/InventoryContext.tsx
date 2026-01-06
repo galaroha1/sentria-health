@@ -37,8 +37,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
                 console.log('Seeding sites...');
                 initialSites.forEach(s => FirestoreService.set('sites', s.id, s));
             } else {
-                const validIds = new Set(initialSites.map(s => s.id));
-                setSites(data.filter(s => validIds.has(s.id)));
+                setSites(data);
             }
         });
 
@@ -47,8 +46,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
                 console.log('Seeding inventory data...');
                 initialInventories.forEach(inv => FirestoreService.set('inventoryItems', inv.siteId, inv));
             } else {
-                const validIds = new Set(initialSites.map(s => s.id));
-                setInventories(data.filter(inv => validIds.has(inv.siteId)));
+                setInventories(data);
             }
             setLoading(false);
         });
