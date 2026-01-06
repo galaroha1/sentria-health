@@ -140,22 +140,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             // 1. Reset Inventory
             await FirestoreService.deleteAllDocuments('inventoryItems');
 
-            // 2. Reset Sites (Fix for Zombie Sites)
-            await FirestoreService.deleteAllDocuments('sites');
-
-            // 3. Re-seed Data
-            // Import fresh data
-            const { siteInventories, sites: freshSites } = await import('../../../data/location/mockData');
-
-            // Re-seed Sites
-            const sitePromises = freshSites.map(s => FirestoreService.set('sites', s.id, s));
-            await Promise.all(sitePromises);
+            // 2. Re-seed Inventory Data Only
+            const { siteInventories } = await import('../../../data/location/mockData');
 
             // Re-seed Inventory
             const inventoryPromises = siteInventories.map(inv => FirestoreService.set('inventoryItems', inv.siteId, inv));
             await Promise.all(inventoryPromises);
 
-            console.log("Inventory & Site Data Reset Complete.");
+            console.log("Inventory Data Reset Complete.");
         } catch (error) {
             console.error("Failed to reset inventory:", error);
         } finally {

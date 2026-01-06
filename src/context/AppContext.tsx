@@ -258,24 +258,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const resetSimulation = async () => {
         setIsLoading(true);
         try {
-            console.log("🔥 RESETTING SIMULATION...");
+            console.log("🔥 RESETTING SIMULATION (Scoped)...");
+
+            // 1. Reset Inventory (Delegated)
             await resetInventoryData();
 
-            // Clear Transfers
-            await FirestoreService.deleteAllDocuments('transfers');
-            // requests are cleared via Firestore subscription in LogisticsContext
+            // 2. Clear Patients (Simulations)
+            if (user?.id) {
+                console.log("Clearing Patients...");
+                await FirestoreService.deleteAllDocuments(`users/${user.id}/simulations`);
+                setPatients([]);
+            }
 
-            // Clear Notifications
-            await FirestoreService.deleteAllDocuments('notifications');
-            setNotifications([]);
-
-            // Clear Audit Logs
-            await FirestoreService.deleteAllDocuments('auditLogs');
-            setAuditLogs([]);
-
-            // Clear System Memory (Proposals)
+            // 3. Clear System Memory (Proposals)
+            console.log("Clearing Proposals...");
             await SystemMemoryService.save('currentProposals', []);
             _setProposalsLocal([]);
+
+            // NOTE: We deliberately DO NOT clear:
+            // - Transfers
+            // - Notifications
+            // - Audit Logs
+            // Per user request to keep history but reset state.
 
             console.log("✅ RESET COMPLETE. Reloading...");
             window.location.reload();
