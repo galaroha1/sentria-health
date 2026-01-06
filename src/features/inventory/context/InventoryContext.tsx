@@ -136,17 +136,26 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         try {
             console.log("Resetting simulation data...");
+
+            // 1. Reset Inventory
             await FirestoreService.deleteAllDocuments('inventoryItems');
 
-            // Re-seed is handled by subscription effectively, but we can force it
-            // Actually, deleting docs triggers empty subscription which triggers re-seed logic in useEffect!
-            // But we must wait. 
-            // Or just force set.
-            const { siteInventories } = await import('../../../data/location/mockData');
-            for (const inv of siteInventories) {
-                await FirestoreService.set('inventoryItems', inv.siteId, inv);
-            }
-            console.log("Inventory Data Reset Complete.");
+            // 2. Reset Sites (Fix for Zombie Sites)
+            await FirestoreService.deleteAllDocuments('sites');
+
+            // 3. Re-seed Data
+            // Import fresh data
+            const { siteInventories, sites: freshSites } = await import('../../../data/location/mockData');
+
+            // Re-seed Sites
+            const sitePromises = freshSites.map(s => FirestoreService.set('sites', s.id, s));
+            await Promise.all(sitePromises);
+
+            // Re-seed Inventory
+            const inventoryPromises = siteInventories.map(inv => FirestoreService.set('inventoryItems', inv.siteId, inv));
+            await Promise.all(inventoryPromises);
+
+            console.log("Inventory & Site Data Reset Complete.");
         } catch (error) {
             console.error("Failed to reset inventory:", error);
         } finally {
