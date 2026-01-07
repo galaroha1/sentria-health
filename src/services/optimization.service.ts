@@ -115,14 +115,36 @@ export class OptimizationService {
             }
             // STRATEGY B: AI-Driven Demand (The New Engine)
             else {
-                // "Ask the AI"
+                // "Ask the AI" (or use pre-computed result)
                 try {
-                    // We only predict 1 'Need' per patient for this simulation
-                    // In reality, this would be a full care plan prediction
-                    const recs = await RecommendationEngine.recommend(patient);
-                    if (recs && recs.length > 0) {
-                        const topRec = recs[0]; // Highest confidence drug
-                        // console.log(`[Optimization] Patient ${patient.id} - ${topRec.drugName} (${topRec.confidenceScore}%)`);
+                    let topRec: any = null;
+
+                    // CASE 1: Pre-computed Prediction (from Simulation Context)
+                    // The SimulationResult object has 'aiPrediction' with 'recommendedDrug'
+                    if (patient.aiPrediction) {
+                        topRec = {
+                            drugName: patient.aiPrediction.recommendedDrug,
+                            confidenceScore: patient.aiPrediction.confidenceScore,
+                            predictedQuantity: 30 // Default for simulation
+                        };
+                    }
+                    // CASE 2: Live Inference
+                    else {
+                        // We only predict 1 'Need' per patient for this simulation
+                        // In reality, this would be a full care plan prediction
+                        const recs = await RecommendationEngine.recommend(patient);
+                        if (recs && recs.length > 0) {
+                            topRec = recs[0]; // Highest confidence drug
+                        }
+                    }
+
+                    if (topRec) {
+                        // Business Logic: Check Insurance / Acquisition Method
+                        // 'Brown Bag' = Patient supplies own drug (No Demand)
+                        if (patient.aiPrediction?.acquisitionMethod === 'Brown Bag') {
+                            // console.log(`[Optimization] Skipping ${patient.id} - Brown Bag (Patient Supplied)`);
+                            continue;
+                        }
 
                         if (topRec.confidenceScore > 20) { // LOWERED THRESHOLD FOR V2 MODEL
                             const drugName = topRec.drugName;

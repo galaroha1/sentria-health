@@ -36,7 +36,7 @@ function StepItem({ step, current, label, desc }: { step: string, current: strin
 
 export function DecisionsTab() {
     const { requests, updateRequestStatus, sites, inventories, notifications, markNotificationAsRead, addRequest, updateInventory, currentProposals, setCurrentProposals, patients } = useApp();
-    const { fetchSimulations } = useSimulation();
+    const { fetchSimulations, simulationResults } = useSimulation();
     const [activeSection, setActiveSection] = useState<'approvals' | 'optimization' | 'alerts'>('approvals');
 
     // Optimization State
@@ -100,19 +100,38 @@ export function DecisionsTab() {
             await addLog('> STARTING_DEMAND_FORECAST_MODEL (v4.2.1)...');
             await addLog('> LOADING_TENSORFLOW_BACKEND... [OK]');
 
+            // Combine Active Patients + Simulation Results (from Firestore)
+            const allPatients = [
+                ...patients,
+                ...simulationResults.map(sim => ({
+                    id: sim.id,
+                    name: sim.patientName,
+                    diagnosis: sim.condition,
+                    assignedSiteId: sim.assignedSiteId || 'site-1',
+                    aiPrediction: sim.aiPrediction,
+                    treatmentSchedule: []
+                }))
+            ];
+
             // Simulate Analysis - SHOW REAL PATIENT PROCESSING
-            // We sample the first 8 patients to show specific activity
-            const samplePatients = patients.slice(0, 8);
-            for (const p of samplePatients) {
-                const treatment = p.treatmentSchedule.find((t: any) => new Date(t.date) > new Date());
-                const drug = treatment ? treatment.drugName : 'Assessment';
-                await addLog(`> ANALYZING PATIENT: ${p.name} [${p.diagnosis}]`, 100);
-                await addLog(`  └── Sourcing ${drug} for ${new Date(treatment?.date || Date.now()).toLocaleDateString()}`, 50);
+            await addLog(`> INGESTING_PATIENT_DATA: ${allPatients.length} records...`);
+
+            // Show a sample of the scanning to keep UI responsive but make it look busy
+            const scanLimit = Math.min(allPatients.length, 25);
+            for (let i = 0; i < scanLimit; i++) {
+                const p = allPatients[i];
+                const drug = p.aiPrediction?.recommendedDrug || p.treatmentSchedule?.[0]?.drugName || 'Assessment';
+                setScannedCount(prev => prev + 1);
+
+                // Only sleep for the first few to show the animation, then speed through
+                const delay = i < 5 ? 100 : 10;
+                await addLog(`> ANALYZING: ${p.id.substring(0, 8)}... [${p.diagnosis || 'General'}] -> ${drug}`, delay);
             }
-            if (patients.length > 8) {
-                await addLog(`> ... and ${patients.length - 8} others.`, 20);
+            if (allPatients.length > scanLimit) {
+                setScannedCount(allPatients.length);
+                await addLog(`> ... BATCH PROCESSED: ${allPatients.length - scanLimit} remaining records analyzed.`, 200);
             }
-            await addLog('> DETECTED: Seasonal spike pending for [Influenza Vaccine] in Region: Northeast');
+            await addLog('> DETECTED: Aggregate demand spikes in Oncology and Neurology.');
 
             setExecutionStep('market-analysis');
             await addLog('> INIT_SUPPLIER_GATEWAY...');
@@ -128,7 +147,7 @@ export function DecisionsTab() {
             }
 
             // Generate Results
-            const initialProposals = await OptimizationService.generateProposals(sites, inventories, patients);
+            const initialProposals = await OptimizationService.generateProposals(sites, inventories, allPatients);
 
             setExecutionStep('compliance');
             await addLog('> RUNNING_COMPLIANCE_CHECKS...');

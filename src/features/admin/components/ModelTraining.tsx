@@ -165,7 +165,7 @@ export function ModelTraining() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 border-t border-slate-100 pt-6">
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-6">
                         <div>
                             <p className="text-xs text-slate-500 mb-1">Estimated Time</p>
                             <p className="font-mono text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -177,10 +177,7 @@ export function ModelTraining() {
                             <p className="text-xs text-slate-500 mb-1">Patients Processed</p>
                             <p className="font-mono text-lg font-bold text-slate-900">{stats.totalPatients.toLocaleString()}</p>
                         </div>
-                        <div>
-                            <p className="text-xs text-slate-500 mb-1">Model Accuracy</p>
-                            <p className="font-mono text-lg font-bold text-emerald-600">{stats.accuracy.toFixed(1)}%</p>
-                        </div>
+
                     </div>
                 </div>
 

@@ -141,35 +141,19 @@ export function CommandCenter() {
                 {/* Right Panel: Analysis */}
                 <div className="col-span-3 space-y-4">
                     <div className="border border-green-900/50 bg-green-900/5 p-4 rounded-lg h-full flex flex-col">
-                        <h3 className="text-xs font-bold text-green-700 mb-4 uppercase">Prediction Confidence</h3>
-                        <div className="flex-1 flex items-center justify-center relative">
-                            <svg className="h-32 w-32 transform -rotate-90">
-                                <circle
-                                    cx="64"
-                                    cy="64"
-                                    r="56"
-                                    stroke="currentColor"
-                                    strokeWidth="8"
-                                    fill="transparent"
-                                    className="text-green-900/30"
-                                />
-                                <circle
-                                    cx="64"
-                                    cy="64"
-                                    r="56"
-                                    stroke="currentColor"
-                                    strokeWidth="8"
-                                    fill="transparent"
-                                    strokeDasharray={351.86}
-                                    strokeDashoffset={351.86 * (1 - stats.accuracy / 100)}
-                                    className="text-green-500 transition-all duration-1000"
-                                />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-2xl font-bold text-green-400">{stats.accuracy.toFixed(1)}%</span>
-                                <span className="text-[10px] text-green-700">CONFIDENCE</span>
+                        <h3 className="text-xs font-bold text-green-700 mb-4 uppercase">System Diagnostics</h3>
+
+                        <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+                            <div className="relative">
+                                <Activity className="h-16 w-16 text-green-500 animate-pulse" />
+                                <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full"></div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg font-bold text-green-400">OPERATIONAL</div>
+                                <div className="text-xs text-green-700">INFERENCE ENGINE ACTIVE</div>
                             </div>
                         </div>
+
                         <div className="mt-4 space-y-2">
                             <div className="flex justify-between text-xs">
                                 <span className="text-green-700">Model Version</span>
@@ -177,7 +161,11 @@ export function CommandCenter() {
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-green-700">Latency</span>
-                                <span className="text-green-400">12ms</span>
+                                <span className="text-green-400">~12ms</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-green-700">Backend</span>
+                                <span className="text-green-400">TensorFlow.js (WebGL)</span>
                             </div>
                         </div>
                     </div>

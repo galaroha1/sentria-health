@@ -28,6 +28,7 @@ export interface SimulationResult {
     aiPrediction?: PredictionResult; // AI analysis
     rawBundle?: any; // Full FHIR-like bundle
     manualOverride?: string; // Doctor's override
+    assignedSiteId?: string;
 }
 
 interface SimulationContextType {
@@ -39,7 +40,6 @@ interface SimulationContextType {
     stats: {
         totalPatients: number;
         conditionsIdentified: number;
-        accuracy: number;
     };
     startTraining: (patientCount: number) => Promise<void>;
     clearData: () => Promise<void>;
@@ -71,7 +71,6 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     const [stats, setStats] = useState({
         totalPatients: 0,
         conditionsIdentified: 0,
-        accuracy: 87.5
     });
 
     // Pagination State
@@ -393,7 +392,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             // Use the recursive delete method to efficiently wipe the entire collection
             await FirestoreService.deleteAllDocuments(`users/${user.id}/simulations`);
 
-            setStats({ totalPatients: 0, conditionsIdentified: 0, accuracy: 87.5 });
+            setStats({ totalPatients: 0, conditionsIdentified: 0 });
             setLogs([]);
             setSimulationResults([]); // Clear local view
             toast.success('Simulation data cleared.');
