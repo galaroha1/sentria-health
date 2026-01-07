@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import { MEDICAL_DATABASE } from '../../../data/medicalDatabase';
-import type { PatientProfile } from '../../../utils/aiPrediction';
+import type { PatientProfile } from '../types';
 
 // --- TYPES ---
 
@@ -71,7 +71,17 @@ export class RecommendationEngine {
             // 2. Load Topology
             const modelRes = await fetch(`${baseUrl}ai_model/model_final.json`);
             if (!modelRes.ok) throw new Error(`Model fetch failed: ${modelRes.statusText}`);
-            const modelJson = await modelRes.json();
+            let modelJson = await modelRes.json();
+
+            // Fix: Handle double-serialization (if file contains a stringified JSON string)
+            if (typeof modelJson === 'string') {
+                try {
+                    modelJson = JSON.parse(modelJson);
+                } catch (e) {
+                    console.error("Failed to parse double-serialized model JSON", e);
+                }
+            }
+
             this.model = await tf.models.modelFromJSON({ modelTopology: modelJson });
 
             // 3. Load Weights (Manual Reshape Strategy)

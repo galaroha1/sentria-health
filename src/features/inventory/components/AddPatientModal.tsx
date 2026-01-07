@@ -4,14 +4,17 @@ import { format, addDays } from 'date-fns';
 import { useSimulation, type SimulationResult } from '../../clinical/context/SimulationContext';
 import { useApp } from '../../../context/AppContext';
 import { MEDICAL_DATABASE, ALLERGIES_LIST, COMORBIDITIES_LIST } from '../../../data/medicalDatabase';
-import type { PatientProfile } from '../../../utils/aiPrediction';
+import type { PatientProfile } from '../../clinical/types';
+
+import { RecommendationEngine } from '../../clinical/services/recommendation.engine';
+import { toast } from 'react-hot-toast';
 
 interface AddPatientModalProps {
     onClose: () => void;
 }
 
 export function AddPatientModal({ onClose }: AddPatientModalProps) {
-    const { addSimulationResult, predictTreatment } = useSimulation();
+    const { addSimulationResult } = useSimulation();
     const { addNotification } = useApp();
 
     // Form State
@@ -62,13 +65,12 @@ export function AddPatientModal({ onClose }: AddPatientModalProps) {
         );
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!name || !conditionId) return;
 
         setIsAnalyzing(true);
 
-        // Simulate AI thinking time
-        setTimeout(() => {
+        try {
             const profile: PatientProfile = {
                 name,
                 age,
@@ -85,7 +87,14 @@ export function AddPatientModal({ onClose }: AddPatientModalProps) {
                 allergies: selectedAllergies
             };
 
-            const prediction = predictTreatment(profile);
+            // Use Primary AI Model (Async)
+            const recommendations = await RecommendationEngine.recommend(profile);
+
+            if (!recommendations || recommendations.length === 0) {
+                throw new Error("AI Model returned no prediction.");
+            }
+
+            const topRec = recommendations[0];
             const condition = MEDICAL_DATABASE[conditionId];
 
             const newResult: SimulationResult = {
@@ -96,28 +105,42 @@ export function AddPatientModal({ onClose }: AddPatientModalProps) {
                 condition: condition.name,
                 visitType: 'New Patient Consult',
                 location: 'Main Clinic',
-                drug: prediction.recommendedDrug,
-                acquisitionMethod: prediction.acquisitionMethod,
-                status: prediction.contraindicated ? 'Transport Needed' : 'Scheduled',
-                price: prediction.price,
+                drug: topRec.drugName,
+                acquisitionMethod: 'Clear Bag', // Default or derived
+                status: topRec.contraindications.length > 0 ? 'Transport Needed' : 'Scheduled',
+                price: 50, // Mock price or derived
                 profile: profile,
-                aiPrediction: prediction
+                aiPrediction: {
+                    recommendedDrug: topRec.drugName,
+                    confidenceScore: topRec.confidenceScore,
+                    reasoning: [topRec.reasoning],
+                    contraindicated: topRec.contraindications.length > 0,
+                    dosage: 'Standard',
+                    frequency: 'Daily',
+                    price: 50,
+                    acquisitionMethod: 'Clear Bag',
+                    warnings: topRec.contraindications,
+                }
             };
 
             addSimulationResult(newResult);
             addNotification({
                 id: Date.now().toString(),
                 type: 'success',
-                message: `Scheduled ${name}. AI recommended ${prediction.recommendedDrug}`,
+                message: `Scheduled ${name}. AI recommended ${topRec.drugName}`,
                 timestamp: new Date().toISOString(),
                 read: false,
                 category: 'system',
                 title: 'Patient Scheduled'
             });
 
-            setIsAnalyzing(false);
             onClose();
-        }, 1500);
+        } catch (error) {
+            console.error("Manual Patient AI Error", error);
+            toast.error("Failed to generate AI prediciton. Please try again.");
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     return (

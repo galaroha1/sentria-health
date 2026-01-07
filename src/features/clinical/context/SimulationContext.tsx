@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
-import { predictTreatment, type PatientProfile, type PredictionResult } from '../../../utils/aiPrediction';
+import { type PatientProfile, type PredictionResult } from '../types';
 import { MEDICAL_DATABASE } from '../../../data/medicalDatabase';
 import { useAuth } from '../../../context/AuthContext';
 import { useApp } from '../../../context/AppContext';
@@ -44,7 +44,7 @@ interface SimulationContextType {
     startTraining: (patientCount: number) => Promise<void>;
     clearData: () => Promise<void>;
     addSimulationResult: (result: SimulationResult) => void;
-    predictTreatment: (profile: PatientProfile) => PredictionResult;
+    // predictTreatment removed for Strict Mode
     selectedPatient: SimulationResult | null;
     setSelectedPatient: (patient: SimulationResult | null) => void;
     viewPatientDetails: (patient: SimulationResult) => void;
@@ -172,10 +172,6 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             `Connecting to Live Data Stream (randomuser.me) to fetch ${patientCount} identities...`
         ]);
 
-        // Capture initial count to add to
-        // We use functional updates for stats so we don't need to capture this, but 
-        // for the progress calculation we just need to know how many we added in *this* session.
-
         try {
             let data: SyntheticBundle[] = [];
 
@@ -194,36 +190,22 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 await RecommendationEngine.loadModel();
                 addLog('✓ V2 Model Loaded. Running inference...');
             } catch (e) {
-                addLog('⚠️ Model Load Failed. Using Rule-Based fallback.');
+                addLog('❌ Model Load Failed. Aborting simulation (Strict Mode).');
                 console.error(e);
+                setIsTraining(false);
+                isTrainingRef.current = false;
+                toast.error('AI Model failed to load. Aborting.');
+                return;
             }
 
             const inferenceStartTime = Date.now();
             const totalPatients = data.length;
 
-            // We'll prepare results in memory then batch save
-            // This replaces the "Training Loop" with an "Inference Loop"
-
-            // We reuse the existing save logic, but we need to inject the AI prediction *before* saving.
-            // But saveToDatabase creates the profile and calls prediction internally? 
-            // Let's check saveToDatabase logic below. 
-            // It calls `predictTreatment(profile)`. We should update predictTreatment to use the Engine?
-            // "predictTreatment" in this file (line 3) imports from utils/aiPrediction. 
-            // We should change saveToDatabase to use RecommendationEngine.recommend directly? 
-            // Or update predictTreatment?
-            // Let's update `saveToDatabase` to accept pre-calculated predictions or call the async engine.
-
-            // Since `predictTreatment` is synchronous and likely rule-based, we'll perform async inference here
-            // and pass the result to the saver, OR we modify `saveToDatabase` to handle it.
-            // Let's run inference here to show progress.
-
             const enrichedData: { bundle: SyntheticBundle; prediction: any }[] = [];
 
             for (let i = 0; i < totalPatients; i++) {
                 const bundle = data[i];
-                // Extract profile (simplified logic duplicate from saveToDatabase, could be refactored)
                 const patient = bundle.patient;
-                // const conditionName = bundle.conditions[0]?.code.coding[0].display; // Unused
                 const birthDate = new Date(patient.birthDate);
                 const age = new Date().getFullYear() - birthDate.getFullYear();
 
@@ -239,7 +221,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                         bpDiastolic: 80,
                         heartRate: 72,
                         temperature: 98.6
-                    }, // Mock
+                    },
                     allergies: []
                 };
 
@@ -276,8 +258,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
             addLog('Inference Complete. Syncing to database...');
 
-            // 3. Save (Modified to use our enriched predictions)
-            await saveToDatabase(data, enrichedData); // Need to update signature
+            // 3. Save (Strict Mode: Fail if no prediction)
+            await saveToDatabase(data, enrichedData);
 
             // Refresh
             fetchSimulations();
@@ -300,11 +282,13 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         addLog('Syncing generated patients to database...');
 
         const conditionEntries = Object.entries(MEDICAL_DATABASE);
-        const SAVE_BATCH_SIZE = 500; // Maximize batch size for fewer writes
-
+        const SAVE_BATCH_SIZE = 500;
 
         // Prepare all data first to avoid computation during write loop
-        const allResults: SimulationResult[] = data.map((bundle, i) => {
+        const allResults: SimulationResult[] = [];
+
+        for (let i = 0; i < data.length; i++) {
+            const bundle = data[i];
             const patient = bundle.patient;
             const conditionName = bundle.conditions[0]?.code.coding[0].display;
             const conditionEntry = conditionEntries.find(([_, c]) => c.name === conditionName);
@@ -313,8 +297,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             const age = new Date().getFullYear() - birthDate.getFullYear();
 
             // Generate Biometrics
-            const weight = 45 + Math.random() * 75; // 45-120kg
-            const height = 150 + Math.random() * 45; // 150-195cm
+            const weight = 45 + Math.random() * 75;
+            const height = 150 + Math.random() * 45;
             const bsa = 0.007184 * Math.pow(weight, 0.425) * Math.pow(height, 0.725);
             const biometrics = {
                 weight: parseFloat(weight.toFixed(1)),
@@ -329,7 +313,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 conditionId: conditionId,
                 medicalHistory: bundle.conditions.slice(1).map(c => c.code.coding[0].display),
                 vitals: {
-                    bpSystolic: 120 + Math.floor(Math.random() * 20), // Mock
+                    bpSystolic: 120 + Math.floor(Math.random() * 20),
                     bpDiastolic: 80 + Math.floor(Math.random() * 10),
                     heartRate: 60 + Math.floor(Math.random() * 40),
                     temperature: 98.6,
@@ -343,13 +327,14 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             if (enrichedPredictions && enrichedPredictions[i] && enrichedPredictions[i].prediction) {
                 prediction = enrichedPredictions[i].prediction;
             } else {
-                prediction = predictTreatment(profile);
+                // Strict Mode: No fallback
+                throw new Error(`Strict Mode Error: No AI prediction for patient index ${i}`);
             }
 
             // Deterministic Location Assignment
             const location = PatientService.assignLocation(conditionName || 'General');
 
-            return {
+            allResults.push({
                 id: patient.id,
                 date: new Date(),
                 timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -364,11 +349,12 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
                 profile: profile,
                 aiPrediction: prediction,
                 rawBundle: bundle,
+                // @ts-ignore - biometrics prop might be dynamic
                 biometrics: biometrics,
                 assignedSiteId: location.siteId,
                 assignedDepartmentId: location.assignedDepartmentId
-            };
-        });
+            });
+        }
 
         const { writeBatch, doc } = await import('firebase/firestore');
         const { db } = await import('../../../core/config/firebase');
@@ -428,8 +414,6 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         setSimulationResults(prev => [result, ...prev]);
 
         // SYNC TO GLOBAL APP CONTEXT (Clinical View)
-        // Convert SimulationResult to Patient
-        // Ideally we use a helper, but doing inline for speed and robustness
         const newPatient = {
             id: result.id,
             mrn: `MRN-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -439,10 +423,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             diagnosis: result.condition,
             type: 'adult',
             attendingPhysician: 'Dr. Auto',
-            treatmentSchedule: [] // We could generate a schedule based on the drug
+            treatmentSchedule: []
         };
 
-        // Generate consistent biometrics for the sync
         const weight = 50 + Math.random() * 70;
         const height = 150 + Math.random() * 40;
         const bsa = 0.007184 * Math.pow(weight, 0.425) * Math.pow(height, 0.725);
@@ -472,11 +455,11 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
             startTraining,
             clearData,
             addSimulationResult,
-            predictTreatment,
+            // predictTreatment removed
             selectedPatient,
             setSelectedPatient,
             viewPatientDetails,
-            fetchSimulations, // Exported for manual fetching
+            fetchSimulations,
             loading
         }}>
             {children}
