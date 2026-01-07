@@ -69,6 +69,8 @@ export class OptimizationService {
         // =================================================================================
         // DemandMap[SiteID][DrugNDC] = TotalUnitsRequired
         const demandMap = new Map<string, Map<string, number>>();
+        // PatientCountMap[SiteID][DrugNDC] = Set<PatientID>
+        const patientCountMap = new Map<string, Map<string, Set<string>>>();
         const drugDetailsMap = new Map<string, { name: string }>(); // Helper to keep names
 
         // NDC Lookup for AI-Predicted Drugs (Mapping known names to real NDCs if possible, or common ones)
@@ -157,6 +159,13 @@ export class OptimizationService {
                             const siteDemand = demandMap.get(siteId)!;
                             const currentDemand = siteDemand.get(ndc) || 0;
                             siteDemand.set(ndc, currentDemand + qty);
+
+                            // Track Patient Count for this Demand Bucket
+                            // We use a separate map: Map<SiteID, Map<NDC, Set<PatientID>>>
+                            if (!patientCountMap.has(siteId)) patientCountMap.set(siteId, new Map());
+                            const sitePatientMap = patientCountMap.get(siteId)!;
+                            if (!sitePatientMap.has(ndc)) sitePatientMap.set(ndc, new Set());
+                            sitePatientMap.get(ndc)!.add(patient.id);
 
                             if (!drugDetailsMap.has(ndc)) {
                                 drugDetailsMap.set(ndc, { name: drugName });
@@ -285,7 +294,8 @@ export class OptimizationService {
                                     fulfillmentNode: 'Internal',
                                     vendorName: otherSite.name,
                                     regulatoryJustification: { passed: true, details: ['Internal Approved'] },
-                                    trigger: 'patient_demand'
+                                    trigger: 'patient_demand',
+                                    affectedPatientCount: patientCountMap.get(siteId)?.get(ndc)?.size || 0
                                 });
 
                                 // Reduce NetDeficit
@@ -331,7 +341,8 @@ export class OptimizationService {
                         },
                         fulfillmentNode: 'External',
                         regulatoryJustification: { passed: true, details: ['Vendor Approved'] },
-                        trigger: 'patient_demand'
+                        trigger: 'patient_demand',
+                        affectedPatientCount: patientCountMap.get(siteId)?.get(ndc)?.size || 0
                     });
                 }
             }

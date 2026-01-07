@@ -17,6 +17,7 @@ export interface ProcurementProposal {
     channel?: DrugChannel;
     transferSubType?: 'inter_dept' | 'network_transfer' | 'purchase'; // New Field for Distinction
     trigger?: 'patient_demand' | 'stock_refill'; // Marker for origin
+    affectedPatientCount?: number; // New metric for impact
     costAnalysis: {
         distanceKm: number;
         transportCost: number;
