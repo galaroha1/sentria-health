@@ -109,7 +109,14 @@ export function DecisionsTab() {
                     diagnosis: sim.condition,
                     assignedSiteId: sim.assignedSiteId || 'site-1',
                     aiPrediction: sim.aiPrediction,
-                    treatmentSchedule: []
+                    treatmentSchedule: [{
+                        id: `tx-${sim.id}`,
+                        date: new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(), // Random future date (0-90 days)
+                        drugName: sim.aiPrediction?.recommendedDrug || 'Unknown',
+                        ndc: '00000-0000-00',
+                        status: 'scheduled',
+                        dose: sim.aiPrediction?.dosage || 'Standard'
+                    }]
                 }))
             ];
 

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Search, Pill, AlertTriangle } from 'lucide-react';
 import type { Patient, Treatment } from '../types/patient';
 import { useApp } from '../context/AppContext';
+import { useSimulation } from '../features/clinical/context/SimulationContext';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -10,6 +11,7 @@ export function PatientCalendar() {
     const { patients } = useApp();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
+    const { simulationResults } = useSimulation(); // Get 10,000+ generated patients
 
     // Generate static mock data (memoized to prevent hydration mismatches in real app, though here it's static)
     // const patients = useMemo(() => PatientService.generateMockPatients(15), []);
@@ -20,6 +22,7 @@ export function PatientCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
 
+        // 1. Process Active Patients
         patients.forEach(patient => {
             patient.treatmentSchedule.forEach((tx: Treatment) => {
                 const txDate = new Date(tx.date);
@@ -33,8 +36,56 @@ export function PatientCalendar() {
                 }
             });
         });
+
+        // 2. Process Simulated Patients (inject synthetic schedule)
+        simulationResults.forEach(sim => {
+            // Generate deterministic date based on ID to keep it stable across renders
+            const hash = sim.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const dayOffset = hash % 90; // 0-90 days in future
+            const futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + dayOffset);
+
+            const txDate = futureDate;
+            const drugName = sim.aiPrediction?.recommendedDrug || 'Simulated Treatment';
+
+            if (txDate.getFullYear() === year && txDate.getMonth() === month &&
+                (sim.patientName.toLowerCase().includes(searchQuery.toLowerCase()) || drugName.toLowerCase().includes(searchQuery.toLowerCase()))) {
+
+                // Construct pseudo-patient object
+                const simPatient: Patient = {
+                    id: sim.id,
+                    name: sim.patientName,
+                    mrn: `SIM-${sim.id.substring(0, 6)}`,
+                    dateOfBirth: '1980-01-01',
+                    gender: 'female',
+                    diagnosis: sim.condition,
+                    type: 'adult',
+                    attendingPhysician: 'Dr. AI',
+                    treatmentSchedule: [],
+                    biometrics: {
+                        weight: 70,
+                        height: 170
+                    },
+                    assignedSiteId: sim.assignedSiteId || 'site-1'
+                };
+
+                apps.push({
+                    day: txDate.getDate(),
+                    patient: simPatient,
+                    treatment: {
+                        id: `tx-${sim.id}`,
+                        date: txDate.toISOString(),
+                        drugName: drugName,
+                        ndc: '00000-0000-00',
+                        status: 'scheduled',
+                        dose: sim.aiPrediction?.dosage || 'Standard'
+                    }
+                });
+            }
+        });
+
         return apps.sort((a, b) => new Date(a.treatment.date).getTime() - new Date(b.treatment.date).getTime());
-    }, [patients, currentDate, searchQuery]);
+    }, [patients, simulationResults, currentDate, searchQuery]);
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
