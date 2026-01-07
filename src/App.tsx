@@ -20,7 +20,7 @@ import { Settings } from './pages/SettingsPage';
 import { ClinicalHub } from './pages/ClinicalHub';
 import { NetworkHub } from './pages/NetworkHub';
 import { DataGeneration } from './pages/DataGeneration';
-import { Vendors } from './pages/Vendors';
+
 import { CommandCenter } from './features/clinical/components/CommandCenter';
 import { DoctorSchedule } from './features/clinical/components/DoctorSchedule';
 import { DoctorPreferenceBuilder } from './features/clinical/components/DoctorPreferenceBuilder';
@@ -150,7 +150,6 @@ function AppContent() {
           />
 
           {/* Legacy Redirects */}
-          <Route path="vendors" element={<Vendors />} />
           <Route path="locations" element={<Navigate to="/logistics" replace />} />
 
 

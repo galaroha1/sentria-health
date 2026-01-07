@@ -124,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isAuthenticated: false,
                 isLoading: false,
             });
+            setSessionWarning(false);
         } catch (error) {
             console.error('Logout error:', error);
         }
