@@ -139,10 +139,11 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             await FirestoreService.deleteAllDocuments('inventoryItems');
 
             // 2. Re-seed Inventory Data Only
-            const { siteInventories } = await import('../../../data/location/mockData');
+            const { getFreshSiteInventories } = await import('../../../data/location/mockData');
+            const freshInventories = getFreshSiteInventories();
 
             // Re-seed Inventory
-            const inventoryPromises = siteInventories.map(inv => FirestoreService.set('inventoryItems', inv.siteId, inv));
+            const inventoryPromises = freshInventories.map(inv => FirestoreService.set('inventoryItems', inv.siteId, inv));
             await Promise.all(inventoryPromises);
 
             console.log("Inventory Data Reset Complete.");

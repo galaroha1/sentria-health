@@ -538,6 +538,16 @@ export const siteInventories: SiteInventory[] = allSites.flatMap(site => {
     return [generateInventory(site.id)];
 });
 
+// SAFE FACTORY FOR RESETS
+export const getFreshSiteInventories = (): SiteInventory[] => {
+    return allSites.flatMap(site => {
+        if (site.departments && site.departments.length > 0) {
+            return site.departments.map(dept => generateInventory(site.id, dept.id));
+        }
+        return [generateInventory(site.id)];
+    });
+};
+
 // Network transfer requests
 export const networkRequests: NetworkRequest[] = [
     {
